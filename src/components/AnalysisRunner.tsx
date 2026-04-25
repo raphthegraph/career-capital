@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Check } from "lucide-react";
 
 interface Phase {
   key: string;
@@ -30,8 +31,8 @@ const PHASES: Phase[] = [
     title: "Forming recommendation",
     steps: [
       "Comparing stay vs leave scenarios",
-      "Generating asset rating",
-      "Preparing next-step questions",
+      "Preparing asset rating",
+      "Generating next-step questions",
     ],
   },
 ];
@@ -54,13 +55,13 @@ export function AnalysisRunner({ company, role, done, onComplete }: Props) {
     if (step >= FLAT.length) return;
     const isLast = step === FLAT.length - 1;
     if (isLast && !done) return;
-    const t = setTimeout(() => setStep((s) => s + 1), 850);
+    const t = setTimeout(() => setStep((s) => s + 1), 750);
     return () => clearTimeout(t);
   }, [step, done]);
 
   useEffect(() => {
     if (step >= FLAT.length) {
-      const t = setTimeout(onComplete, 700);
+      const t = setTimeout(onComplete, 600);
       return () => clearTimeout(t);
     }
   }, [step, onComplete]);
@@ -68,39 +69,43 @@ export function AnalysisRunner({ company, role, done, onComplete }: Props) {
   const activePhase = step >= FLAT.length ? PHASES.length - 1 : FLAT[step].phaseIdx;
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6">
-      <div className="w-full max-w-md space-y-10 animate-fade-in">
-        <div className="text-center space-y-2">
-          <div className="font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
+    <div className="min-h-screen flex items-center justify-center px-6">
+      <div className="w-full max-w-md animate-fade-in">
+        <div className="text-center space-y-2 mb-14">
+          <div className="text-xs text-muted-foreground">
             {company} · {role}
           </div>
-          <h2 className="font-display text-xl md:text-2xl font-medium text-foreground/90">
+          <h2 className="font-display text-2xl md:text-[26px] font-semibold tracking-tight">
             Pricing your career asset
           </h2>
         </div>
 
-        <div className="space-y-8">
+        <div className="space-y-10">
           {PHASES.map((phase, pi) => {
             const phaseStart = PHASES.slice(0, pi).reduce((n, p) => n + p.steps.length, 0);
-            const stepsDoneInPhase = Math.max(0, Math.min(phase.steps.length, step - phaseStart));
             const isActive = pi === activePhase && step < FLAT.length;
             const isComplete = pi < activePhase || step >= FLAT.length;
-            const stateDot = isComplete
-              ? "bg-primary"
-              : isActive
-                ? "bg-foreground/70"
-                : "bg-border";
+            const isPending = !isActive && !isComplete;
 
             return (
-              <div key={phase.key} className="space-y-3">
-                <div className="flex items-center gap-3">
+              <div
+                key={phase.key}
+                className={`transition-opacity duration-500 ${
+                  isPending ? "opacity-30" : "opacity-100"
+                }`}
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="relative w-5 h-5 flex items-center justify-center shrink-0">
+                    {isComplete ? (
+                      <Check className="w-4 h-4 text-primary" strokeWidth={2.5} />
+                    ) : isActive ? (
+                      <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                    ) : (
+                      <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/40" />
+                    )}
+                  </span>
                   <span
-                    className={`w-1.5 h-1.5 rounded-full transition-colors ${stateDot} ${
-                      isActive ? "animate-pulse" : ""
-                    }`}
-                  />
-                  <span
-                    className={`font-mono text-[11px] uppercase tracking-[0.18em] transition-colors ${
+                    className={`text-[15px] font-medium tracking-tight ${
                       isActive || isComplete ? "text-foreground" : "text-muted-foreground"
                     }`}
                   >
@@ -108,32 +113,28 @@ export function AnalysisRunner({ company, role, done, onComplete }: Props) {
                   </span>
                 </div>
 
-                <ul className="pl-5 space-y-1.5">
-                  {phase.steps.map((s, si) => {
-                    const globalIdx = phaseStart + si;
-                    if (globalIdx > step) return null;
-                    const isCurrent = globalIdx === step && step < FLAT.length;
-                    return (
-                      <li
-                        key={s}
-                        className={`text-sm transition-all duration-500 animate-fade-in ${
-                          isCurrent
-                            ? "text-foreground"
-                            : "text-muted-foreground"
-                        }`}
-                      >
-                        {isCurrent ? (
-                          <>
-                            {s}
-                            <span className="ml-1 text-foreground/50 animate-pulse">…</span>
-                          </>
-                        ) : (
-                          <span className="opacity-70">{s}</span>
-                        )}
-                      </li>
-                    );
-                  })}
-                </ul>
+                {(isActive || isComplete) && (
+                  <ul className="pl-8 space-y-2">
+                    {phase.steps.map((s, si) => {
+                      const globalIdx = phaseStart + si;
+                      if (globalIdx > step) return null;
+                      const isCurrent = globalIdx === step && step < FLAT.length;
+                      return (
+                        <li
+                          key={s}
+                          className={`text-[13.5px] leading-relaxed transition-colors animate-fade-in-soft ${
+                            isCurrent ? "text-foreground/90" : "text-muted-foreground"
+                          }`}
+                        >
+                          {s}
+                          {isCurrent && (
+                            <span className="ml-1 text-foreground/40 animate-pulse">…</span>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
               </div>
             );
           })}

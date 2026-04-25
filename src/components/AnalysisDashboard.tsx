@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Analysis, DecisionContext, Intent } from "@/lib/job-types";
 import { RatingPill, ratingColorClass } from "@/components/RatingPill";
 import { Button } from "@/components/ui/button";
@@ -18,21 +18,21 @@ const SECTIONS = [
     title: "Why to keep this job",
     field: "bullCase" as const,
     accent: "text-buy",
-    border: "border-buy/30",
+    dotClass: "bg-buy",
   },
   {
     key: "bear" as const,
     title: "Why to be careful",
     field: "bearCase" as const,
     accent: "text-short",
-    border: "border-short/30",
+    dotClass: "bg-short",
   },
   {
     key: "triggers" as const,
     title: "What would change the rating",
     field: "ratingChangeTriggers" as const,
     accent: "text-hold",
-    border: "border-hold/30",
+    dotClass: "bg-hold",
   },
 ];
 
@@ -57,7 +57,7 @@ const SUB_INTENT: Record<Exclude<Intent, "other">, { question: string; options: 
   options: {
     question: "What kind of optionality do you want?",
     options: [
-      "Similar role at stronger company",
+      "Similar role at a stronger company",
       "Higher-growth startup",
       "More stable company",
       "Founder path later",
@@ -76,12 +76,56 @@ const SUB_INTENT: Record<Exclude<Intent, "other">, { question: string; options: 
   },
 };
 
+// Third-question library — narrows the recommendation further
+const THIRD_QUESTION: Record<Intent, { question: string; options: string[] }> = {
+  stay: {
+    question: "What's your biggest constraint?",
+    options: [
+      "Limited time outside work",
+      "No internal sponsor yet",
+      "Comp ceiling at this level",
+      "Unclear next role",
+      "Other",
+    ],
+  },
+  options: {
+    question: "What timeline are you optimizing for?",
+    options: [
+      "Move within 3 months",
+      "Move within 6–12 months",
+      "Just exploring quietly",
+      "Wait for the right signal",
+      "Other",
+    ],
+  },
+  leave: {
+    question: "What would make this move successful?",
+    options: [
+      "Significant comp jump",
+      "Faster path to leadership",
+      "Equity / ownership upside",
+      "Better learning environment",
+      "Other",
+    ],
+  },
+  other: {
+    question: "What would make this successful for you?",
+    options: [
+      "Clarity on next 6 months",
+      "Lower personal risk",
+      "Higher upside",
+      "Better day-to-day energy",
+      "Other",
+    ],
+  },
+};
+
 export function AnalysisDashboard({ company, role, analysis, onDecision }: Props) {
   const [showThesis, setShowThesis] = useState(false);
   const [showIntent, setShowIntent] = useState(false);
 
   useEffect(() => {
-    const t1 = setTimeout(() => setShowThesis(true), 400);
+    const t1 = setTimeout(() => setShowThesis(true), 350);
     const t2 = setTimeout(() => setShowIntent(true), 1100);
     return () => {
       clearTimeout(t1);
@@ -90,53 +134,37 @@ export function AnalysisDashboard({ company, role, analysis, onDecision }: Props
   }, []);
 
   return (
-    <div className="min-h-screen pb-24">
+    <div className="min-h-screen pb-32">
       {/* minimal header */}
-      <div className="border-b border-border/60 bg-background/60 backdrop-blur sticky top-0 z-30">
+      <div className="border-b border-border/50 bg-background/70 backdrop-blur-md sticky top-0 z-30">
         <div className="container py-4 flex items-center justify-between">
           <div>
-            <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+            <div className="text-[11px] text-muted-foreground">
               {company} · {role}
             </div>
-            <div className="font-mono text-base font-semibold">{analysis.ticker}</div>
+            <div className="font-mono text-sm font-medium text-foreground/90">{analysis.ticker}</div>
           </div>
           <RatingPill rating={analysis.rating} size="md" />
         </div>
       </div>
 
-      <div className="container py-16 max-w-2xl space-y-16">
+      <div className="container py-16 max-w-2xl space-y-20">
         {/* verdict line */}
         <section className="text-center space-y-4 animate-fade-in-up">
           <p
-            className={`font-display text-3xl md:text-4xl font-semibold ${ratingColorClass(
+            className={`font-display text-3xl md:text-4xl font-semibold tracking-tight ${ratingColorClass(
               analysis.rating,
             )}`}
           >
             {analysis.wouldBuy}.
           </p>
-          <p className="text-lg text-muted-foreground italic max-w-xl mx-auto leading-relaxed">
-            "{analysis.oneLineVerdict}"
+          <p className="text-[15px] md:text-base text-muted-foreground max-w-xl mx-auto leading-relaxed">
+            {analysis.oneLineVerdict}
           </p>
         </section>
 
-        {/* investment thesis — 3 expandable cards */}
-        {showThesis && (
-          <section className="space-y-3 animate-fade-in-up">
-            <div className="font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground text-center mb-4">
-              Investment Thesis
-            </div>
-            {SECTIONS.map((s, i) => (
-              <ThesisCard
-                key={s.key}
-                title={s.title}
-                items={(analysis as any)[s.field] as string[]}
-                accent={s.accent}
-                border={s.border}
-                delay={i * 120}
-              />
-            ))}
-          </section>
-        )}
+        {/* investment thesis — auto-sequenced */}
+        {showThesis && <ThesisSequence analysis={analysis} />}
 
         {/* AI-native intent flow */}
         {showIntent && (
@@ -144,6 +172,7 @@ export function AnalysisDashboard({ company, role, analysis, onDecision }: Props
             onDecide={(d) => onDecision(d)}
             options={INTENT_OPTIONS}
             subQuestions={SUB_INTENT}
+            thirdQuestions={THIRD_QUESTION}
           />
         )}
       </div>
@@ -151,214 +180,404 @@ export function AnalysisDashboard({ company, role, analysis, onDecision }: Props
   );
 }
 
-/* -------------------- Thesis card -------------------- */
+/* -------------------- Thesis sequence (auto open/close) -------------------- */
 
-function ThesisCard({
-  title,
-  items,
-  accent,
-  border,
-  delay,
-}: {
-  title: string;
-  items: string[];
-  accent: string;
-  border: string;
-  delay: number;
-}) {
-  const [open, setOpen] = useState(false);
-  const [revealed, setRevealed] = useState(0);
+function ThesisSequence({ analysis }: { analysis: Analysis }) {
+  // 0 = none, 1..3 = which is currently active, 4 = sequence done
+  const [activeIdx, setActiveIdx] = useState(0);
+  const [revealedPerSection, setRevealedPerSection] = useState<Record<number, number>>({});
+  const [manualOpen, setManualOpen] = useState<Record<number, boolean>>({});
+  const sectionRefs = [useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null)];
 
+  // Drive auto sequence
   useEffect(() => {
-    if (!open) return;
-    setRevealed(0);
-    items.slice(0, 3).forEach((_, i) => {
-      setTimeout(() => setRevealed((r) => Math.max(r, i + 1)), 200 + i * 280);
-    });
-  }, [open, items]);
+    let cancelled = false;
+    const run = async () => {
+      for (let i = 0; i < SECTIONS.length; i++) {
+        if (cancelled) return;
+        setActiveIdx(i + 1);
+        sectionRefs[i].current?.scrollIntoView({ behavior: "smooth", block: "center" });
+        const items = (analysis as any)[SECTIONS[i].field] as string[];
+        const total = Math.min(3, items?.length ?? 0);
+        for (let j = 0; j < total; j++) {
+          await new Promise((r) => setTimeout(r, 700));
+          if (cancelled) return;
+          setRevealedPerSection((prev) => ({ ...prev, [i]: j + 1 }));
+        }
+        // pause then close (de-emphasize)
+        await new Promise((r) => setTimeout(r, 900));
+      }
+      if (!cancelled) setActiveIdx(SECTIONS.length + 1);
+    };
+    const start = setTimeout(run, 200);
+    return () => {
+      cancelled = true;
+      clearTimeout(start);
+    };
+  }, [analysis]);
 
   return (
-    <div
-      className={`rounded-xl border ${open ? border : "border-border/60"} bg-card/30 backdrop-blur transition-colors animate-fade-in-up`}
-      style={{ animationDelay: `${delay}ms` }}
-    >
-      <button
-        onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center justify-between gap-3 p-5 text-left hover:bg-card/40 transition-colors"
-      >
-        <span className={`font-display text-base md:text-lg font-medium ${open ? accent : "text-foreground"}`}>
-          {title}
-        </span>
-        <ChevronDown
-          className={`w-4 h-4 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`}
-        />
-      </button>
-      {open && (
-        <div className="px-5 pb-5 -mt-1 space-y-2.5 border-t border-border/40 pt-4">
-          {items.slice(0, 3).map((it, i) =>
-            i < revealed ? (
-              <p
-                key={i}
-                className="text-sm md:text-[15px] text-foreground/85 leading-relaxed animate-fade-in-up flex gap-2"
-              >
-                <span className={`shrink-0 ${accent}`}>·</span>
-                <span>{it}</span>
-              </p>
-            ) : null,
-          )}
-        </div>
-      )}
-    </div>
+    <section className="space-y-3 animate-fade-in-up">
+      <div className="text-[11px] text-muted-foreground text-center mb-5 tracking-wide">
+        Investment thesis
+      </div>
+      {SECTIONS.map((s, i) => {
+        const items = ((analysis as any)[s.field] as string[]) ?? [];
+        const revealed = revealedPerSection[i] ?? 0;
+        const isAuto = activeIdx === i + 1;
+        const isDone = activeIdx > i + 1;
+        const isSequenceDone = activeIdx > SECTIONS.length;
+        const userOpen = manualOpen[i];
+        const open = isAuto || (isSequenceDone && (userOpen ?? false));
+
+        return (
+          <div
+            key={s.key}
+            ref={sectionRefs[i]}
+            className={`surface rounded-2xl overflow-hidden transition-all duration-500 ${
+              open ? "" : isDone || isSequenceDone ? "opacity-70" : "opacity-50"
+            }`}
+          >
+            <button
+              onClick={() => {
+                if (!isSequenceDone) return;
+                setManualOpen((p) => ({ ...p, [i]: !p[i] }));
+              }}
+              disabled={!isSequenceDone}
+              className={`w-full flex items-center justify-between gap-3 px-6 py-5 text-left transition-colors ${
+                isSequenceDone ? "hover:bg-card/40 cursor-pointer" : "cursor-default"
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <span className={`w-1.5 h-1.5 rounded-full ${s.dotClass}`} />
+                <span
+                  className={`text-[15px] font-medium tracking-tight ${
+                    open ? s.accent : "text-foreground/90"
+                  }`}
+                >
+                  {s.title}
+                </span>
+              </div>
+              <ChevronDown
+                className={`w-4 h-4 text-muted-foreground transition-transform duration-300 ${
+                  open ? "rotate-180" : ""
+                } ${!isSequenceDone ? "opacity-0" : ""}`}
+              />
+            </button>
+            {open && (
+              <div className="px-6 pb-6 space-y-3">
+                {items.slice(0, 3).map((it, j) => {
+                  const visible = isAuto ? j < revealed : true;
+                  if (!visible) return null;
+                  return (
+                    <p
+                      key={j}
+                      className="text-[14.5px] text-foreground/85 leading-relaxed flex gap-3 animate-fade-in-soft"
+                    >
+                      <span className={`shrink-0 mt-2 w-1 h-1 rounded-full ${s.dotClass}`} />
+                      <span className="flex-1">{it}</span>
+                    </p>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </section>
   );
 }
 
-/* -------------------- Intent flow -------------------- */
+/* -------------------- Intent flow (3 questions) -------------------- */
 
 function IntentFlow({
   onDecide,
   options,
   subQuestions,
+  thirdQuestions,
 }: {
   onDecide: (d: DecisionContext) => void;
   options: { id: Intent; label: string }[];
   subQuestions: Record<Exclude<Intent, "other">, { question: string; options: string[] }>;
+  thirdQuestions: Record<Intent, { question: string; options: string[] }>;
 }) {
   const [intent, setIntent] = useState<Intent | null>(null);
   const [otherText, setOtherText] = useState("");
+  const [sub, setSub] = useState<string | null>(null);
   const [subText, setSubText] = useState("");
+  const [third, setThird] = useState<string | null>(null);
+  const [thirdText, setThirdText] = useState("");
 
-  // Step 1
-  if (!intent) {
-    return (
-      <section className="space-y-6 animate-fade-in-up">
-        <h3 className="font-display text-xl md:text-2xl font-medium text-center">
-          Given this rating, what are you considering?
-        </h3>
-        <div className="space-y-2 max-w-md mx-auto">
-          {options.map((o, i) => (
-            <button
-              key={o.id}
-              onClick={() => setIntent(o.id)}
-              className="w-full text-left px-5 py-4 rounded-lg border border-border/60 bg-card/30 hover:bg-card/60 hover:border-foreground/30 transition-all animate-fade-in-up"
-              style={{ animationDelay: `${i * 80}ms` }}
-            >
-              <span className="text-[15px]">{o.label}</span>
-            </button>
-          ))}
-        </div>
-      </section>
-    );
-  }
+  const q2Ref = useRef<HTMLDivElement>(null);
+  const q3Ref = useRef<HTMLDivElement>(null);
 
-  // Step 2 — "other" → freetext only
-  if (intent === "other") {
-    return (
-      <section className="space-y-6 animate-fade-in-up max-w-md mx-auto">
-        <Locked label={options.find((o) => o.id === "other")!.label} onChange={() => setIntent(null)} />
-        <h3 className="font-display text-xl font-medium text-center">
-          Tell $JOB what you're thinking…
-        </h3>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            const v = otherText.trim();
-            if (!v) return;
-            onDecide({ intent: "other", subIntent: v, freeText: v });
-          }}
-          className="space-y-3"
-        >
-          <Input
-            autoFocus
-            value={otherText}
-            onChange={(e) => setOtherText(e.target.value)}
-            placeholder="e.g. take a sabbatical, switch industries…"
-            className="h-12 bg-background/40"
-          />
-          <Button
-            type="submit"
-            disabled={!otherText.trim()}
-            className="w-full h-11 gap-2 bg-primary text-primary-foreground"
-          >
-            Continue <ArrowRight className="w-4 h-4" />
-          </Button>
-        </form>
-      </section>
-    );
-  }
+  useEffect(() => {
+    if (intent) q2Ref.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [intent]);
+  useEffect(() => {
+    if (sub) q3Ref.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [sub]);
 
-  const sub = subQuestions[intent];
+  // When all 3 answered → submit
+  useEffect(() => {
+    if (intent && sub && third) {
+      const composed = `${sub} → ${third}`;
+      onDecide({
+        intent,
+        subIntent: composed,
+        freeText: intent === "other" ? otherText : undefined,
+      });
+    }
+  }, [intent, sub, third, otherText, onDecide]);
 
   return (
-    <section className="space-y-6 animate-fade-in-up max-w-md mx-auto">
-      <Locked
-        label={options.find((o) => o.id === intent)!.label}
+    <section className="space-y-12">
+      {/* Q1 */}
+      <Question
+        index={1}
+        title="Given this rating, what are you considering?"
+        locked={!!intent}
+        lockedAnswer={intent ? options.find((o) => o.id === intent)?.label ?? "" : ""}
         onChange={() => {
           setIntent(null);
+          setSub(null);
+          setThird(null);
+          setOtherText("");
           setSubText("");
+          setThirdText("");
         }}
-      />
-      <h3 className="font-display text-xl font-medium text-center">{sub.question}</h3>
-      <div className="space-y-2">
-        {sub.options.map((o, i) => {
-          const isOther = o === "Other";
-          if (isOther) {
-            return (
-              <form
-                key={o}
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  const v = subText.trim();
-                  if (!v) return;
-                  onDecide({ intent, subIntent: v, freeText: v });
-                }}
-                className="flex gap-2 animate-fade-in-up"
-                style={{ animationDelay: `${i * 70}ms` }}
-              >
-                <Input
-                  value={subText}
-                  onChange={(e) => setSubText(e.target.value)}
-                  placeholder="Other…"
-                  className="h-11 bg-background/40"
-                />
-                <Button
-                  type="submit"
-                  disabled={!subText.trim()}
-                  variant="outline"
-                  className="h-11"
-                >
-                  <ArrowRight className="w-4 h-4" />
-                </Button>
-              </form>
-            );
-          }
-          return (
-            <button
-              key={o}
-              onClick={() => onDecide({ intent, subIntent: o })}
-              className="w-full text-left px-5 py-3.5 rounded-lg border border-border/60 bg-card/30 hover:bg-card/60 hover:border-foreground/30 transition-all animate-fade-in-up"
-              style={{ animationDelay: `${i * 70}ms` }}
+      >
+        <Options
+          items={options.map((o) => o.label)}
+          onPick={(label) => {
+            const found = options.find((o) => o.label === label);
+            if (found) setIntent(found.id);
+          }}
+        />
+      </Question>
+
+      {/* Q2 */}
+      {intent && (
+        <div ref={q2Ref}>
+          {intent === "other" ? (
+            <Question
+              index={2}
+              title="Tell $JOB what you're thinking…"
+              locked={!!sub}
+              lockedAnswer={sub ?? ""}
+              onChange={() => {
+                setSub(null);
+                setThird(null);
+                setSubText("");
+                setThirdText("");
+              }}
             >
-              <span className="text-[15px]">{o}</span>
-            </button>
-          );
-        })}
-      </div>
+              <FreeText
+                value={otherText}
+                onChange={setOtherText}
+                placeholder="e.g. take a sabbatical, switch industries, go solo…"
+                onSubmit={(v) => setSub(v)}
+              />
+            </Question>
+          ) : (
+            <Question
+              index={2}
+              title={subQuestions[intent].question}
+              locked={!!sub}
+              lockedAnswer={sub ?? ""}
+              onChange={() => {
+                setSub(null);
+                setThird(null);
+                setSubText("");
+                setThirdText("");
+              }}
+            >
+              <OptionsWithOther
+                items={subQuestions[intent].options}
+                otherValue={subText}
+                onOtherChange={setSubText}
+                onPick={(v) => setSub(v)}
+              />
+            </Question>
+          )}
+        </div>
+      )}
+
+      {/* Q3 */}
+      {intent && sub && (
+        <div ref={q3Ref}>
+          <Question
+            index={3}
+            title={thirdQuestions[intent].question}
+            locked={!!third}
+            lockedAnswer={third ?? ""}
+            onChange={() => {
+              setThird(null);
+              setThirdText("");
+            }}
+          >
+            <OptionsWithOther
+              items={thirdQuestions[intent].options}
+              otherValue={thirdText}
+              onOtherChange={setThirdText}
+              onPick={(v) => setThird(v)}
+            />
+          </Question>
+        </div>
+      )}
     </section>
   );
 }
 
-function Locked({ label, onChange }: { label: string; onChange: () => void }) {
+function Question({
+  index,
+  title,
+  locked,
+  lockedAnswer,
+  onChange,
+  children,
+}: {
+  index: number;
+  title: string;
+  locked: boolean;
+  lockedAnswer: string;
+  onChange: () => void;
+  children: React.ReactNode;
+}) {
   return (
-    <div className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-lg border border-border/60 bg-card/20 text-sm">
-      <span className="text-muted-foreground">
-        Considering: <span className="text-foreground">{label}</span>
-      </span>
-      <button
-        onClick={onChange}
-        className="font-mono text-[11px] text-muted-foreground hover:text-foreground transition-colors"
-      >
-        change
-      </button>
+    <div className="space-y-5 animate-fade-in-up max-w-md mx-auto">
+      <div className="text-center space-y-2">
+        <div className="text-[11px] text-muted-foreground tracking-wide">
+          Question {index} of 3
+        </div>
+        <h3 className="font-display text-xl md:text-2xl font-medium tracking-tight">{title}</h3>
+      </div>
+      {locked ? (
+        <div className="surface rounded-xl px-5 py-3.5 flex items-center justify-between gap-3">
+          <span className="text-[14.5px] text-foreground/90">{lockedAnswer}</span>
+          <button
+            onClick={onChange}
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            change
+          </button>
+        </div>
+      ) : (
+        children
+      )}
     </div>
+  );
+}
+
+function Options({ items, onPick }: { items: string[]; onPick: (v: string) => void }) {
+  return (
+    <div className="space-y-2">
+      {items.map((label, i) => (
+        <button
+          key={label}
+          onClick={() => onPick(label)}
+          className="w-full text-left px-5 py-4 rounded-xl border border-border/60 bg-card/30 hover:bg-card/60 hover:border-foreground/30 transition-all animate-fade-in-soft"
+          style={{ animationDelay: `${i * 60}ms` }}
+        >
+          <span className="text-[14.5px] text-foreground/90">{label}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function OptionsWithOther({
+  items,
+  otherValue,
+  onOtherChange,
+  onPick,
+}: {
+  items: string[];
+  otherValue: string;
+  onOtherChange: (v: string) => void;
+  onPick: (v: string) => void;
+}) {
+  return (
+    <div className="space-y-2">
+      {items.map((label, i) => {
+        if (label === "Other") {
+          return (
+            <form
+              key={label}
+              onSubmit={(e) => {
+                e.preventDefault();
+                const v = otherValue.trim();
+                if (v) onPick(v);
+              }}
+              className="flex gap-2 animate-fade-in-soft"
+              style={{ animationDelay: `${i * 60}ms` }}
+            >
+              <Input
+                value={otherValue}
+                onChange={(e) => onOtherChange(e.target.value)}
+                placeholder="Other…"
+                className="h-12 bg-background/40 rounded-xl border-border/60"
+              />
+              <Button
+                type="submit"
+                disabled={!otherValue.trim()}
+                variant="outline"
+                className="h-12 w-12 p-0 rounded-xl border-border/60"
+              >
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </form>
+          );
+        }
+        return (
+          <button
+            key={label}
+            onClick={() => onPick(label)}
+            className="w-full text-left px-5 py-3.5 rounded-xl border border-border/60 bg-card/30 hover:bg-card/60 hover:border-foreground/30 transition-all animate-fade-in-soft"
+            style={{ animationDelay: `${i * 60}ms` }}
+          >
+            <span className="text-[14.5px] text-foreground/90">{label}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function FreeText({
+  value,
+  onChange,
+  placeholder,
+  onSubmit,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+  onSubmit: (v: string) => void;
+}) {
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        const v = value.trim();
+        if (v) onSubmit(v);
+      }}
+      className="space-y-3"
+    >
+      <Input
+        autoFocus
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="h-12 bg-background/40 rounded-xl border-border/60"
+      />
+      <Button
+        type="submit"
+        disabled={!value.trim()}
+        className="w-full h-12 gap-2 rounded-xl bg-primary text-primary-foreground hover:opacity-95"
+      >
+        Continue <ArrowRight className="w-4 h-4" />
+      </Button>
+    </form>
   );
 }

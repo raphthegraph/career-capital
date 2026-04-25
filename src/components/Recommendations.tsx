@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Analysis, ChatMessage, DecisionContext, Recommendation } from "@/lib/job-types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Send, AlertTriangle, Sparkles, Calendar, Compass } from "lucide-react";
+import { ArrowLeft, ArrowUp, AlertTriangle, Sparkles, Calendar, Compass } from "lucide-react";
 
 interface Props {
   company: string;
@@ -18,7 +18,7 @@ const LOAD_STEPS = [
   "Understanding your intent",
   "Repricing your current role",
   "Comparing alternative paths",
-  "Creating recommendation",
+  "Generating recommendation",
 ];
 
 export function Recommendations({
@@ -60,16 +60,16 @@ export function Recommendations({
   }, [decision, company, role]);
 
   return (
-    <div className="min-h-screen pb-12">
-      <div className="border-b border-border/60 bg-background/60 backdrop-blur sticky top-0 z-20">
+    <div className="min-h-screen pb-40">
+      <div className="border-b border-border/50 bg-background/70 backdrop-blur-md sticky top-0 z-20">
         <div className="container py-4 flex items-center justify-between">
-          <Button variant="ghost" onClick={onBack} className="gap-2 font-mono text-xs">
-            <ArrowLeft className="w-4 h-4" /> Back
+          <Button variant="ghost" onClick={onBack} className="gap-2 text-xs h-9">
+            <ArrowLeft className="w-3.5 h-3.5" /> Back
           </Button>
-          <div className="font-mono text-[11px] text-muted-foreground">
+          <div className="text-[11px] text-muted-foreground truncate max-w-[60%]">
             {analysis.ticker} · {decision.subIntent}
           </div>
-          <Button variant="ghost" onClick={onRestart} className="font-mono text-xs">
+          <Button variant="ghost" onClick={onRestart} className="text-xs h-9">
             New analysis
           </Button>
         </div>
@@ -78,24 +78,21 @@ export function Recommendations({
       <div className="container py-16 max-w-2xl space-y-16">
         {!data && !error && <Loading />}
         {error && (
-          <div className="rounded-lg border border-short/40 bg-card/30 p-6 text-short text-sm">
-            {error}
-          </div>
+          <div className="surface rounded-2xl p-6 text-short text-sm">{error}</div>
         )}
-
-        {data && (
-          <>
-            <RecommendationView data={data} />
-            <ChatPanel
-              company={company}
-              role={role}
-              analysis={analysis}
-              decision={decision}
-              recommendation={data}
-            />
-          </>
-        )}
+        {data && <RecommendationView data={data} />}
       </div>
+
+      {/* Floating chat */}
+      {data && (
+        <FloatingChat
+          company={company}
+          role={role}
+          analysis={analysis}
+          decision={decision}
+          recommendation={data}
+        />
+      )}
     </div>
   );
 }
@@ -106,23 +103,23 @@ function Loading() {
   const [step, setStep] = useState(0);
   useEffect(() => {
     if (step >= LOAD_STEPS.length) return;
-    const t = setTimeout(() => setStep((s) => s + 1), 900);
+    const t = setTimeout(() => setStep((s) => s + 1), 800);
     return () => clearTimeout(t);
   }, [step]);
 
   return (
-    <div className="max-w-md mx-auto space-y-8 animate-fade-in py-8">
-      <h2 className="font-display text-xl md:text-2xl font-medium text-center">
+    <div className="max-w-md mx-auto space-y-8 animate-fade-in py-10">
+      <h2 className="font-display text-2xl md:text-[26px] font-semibold text-center tracking-tight">
         Building your next move…
       </h2>
-      <ul className="space-y-3">
+      <ul className="space-y-3.5">
         {LOAD_STEPS.map((s, i) => {
           if (i > step) return null;
           const isCurrent = i === step;
           return (
             <li
               key={s}
-              className={`flex items-center gap-3 text-sm animate-fade-in-up ${
+              className={`flex items-center gap-3 text-[14.5px] animate-fade-in-soft ${
                 isCurrent ? "text-foreground" : "text-muted-foreground"
               }`}
             >
@@ -141,48 +138,68 @@ function Loading() {
   );
 }
 
-/* -------------------- Recommendation -------------------- */
+/* -------------------- Recommendation (sequential reveal) -------------------- */
+
+const SECTION_DELAYS = [0, 600, 1300, 2100, 2900];
 
 function RecommendationView({ data }: { data: Recommendation }) {
+  const [revealed, setRevealed] = useState(0);
+
+  useEffect(() => {
+    setRevealed(0);
+    const timers = SECTION_DELAYS.map((d, i) =>
+      setTimeout(() => setRevealed((r) => Math.max(r, i + 1)), d + 100),
+    );
+    return () => timers.forEach(clearTimeout);
+  }, [data]);
+
   return (
-    <section className="space-y-12 animate-fade-in-up">
-      <div className="text-center space-y-4">
-        <div className="font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
-          Recommended move
+    <section className="space-y-14">
+      {revealed >= 1 && (
+        <div className="text-center space-y-4 animate-fade-in-up">
+          <div className="text-[11px] text-muted-foreground tracking-wide">Recommended move</div>
+          <h2 className="font-display text-2xl md:text-[32px] font-semibold leading-[1.15] tracking-tight max-w-xl mx-auto">
+            {data.recommendedMove}
+          </h2>
         </div>
-        <h2 className="font-display text-2xl md:text-3xl font-semibold leading-tight max-w-xl mx-auto">
-          {data.recommendedMove}
-        </h2>
-      </div>
+      )}
 
-      <Block title="Why" icon={Sparkles} accent="text-buy">
-        {data.why.slice(0, 3).map((w, i) => (
-          <Bullet key={i} text={w} dotClass="text-buy" />
-        ))}
-      </Block>
-
-      <Block title="Next 30 days" icon={Calendar} accent="text-primary">
-        {data.next30Days.slice(0, 3).map((w, i) => (
-          <Bullet key={i} text={w} dotClass="text-primary" />
-        ))}
-      </Block>
-
-      <Block title="Watch-outs" icon={AlertTriangle} accent="text-short">
-        {data.watchOuts.slice(0, 2).map((w, i) => (
-          <Bullet key={i} text={w} dotClass="text-short" />
-        ))}
-      </Block>
-
-      <Block title="Alternative paths" icon={Compass} accent="text-hold">
-        <div className="space-y-3">
-          {data.alternativePaths.slice(0, 3).map((p, i) => (
-            <div key={i} className="space-y-1">
-              <div className="font-medium text-[15px]">{p.label}</div>
-              <p className="text-sm text-muted-foreground leading-relaxed">{p.detail}</p>
-            </div>
+      {revealed >= 2 && (
+        <Block title="Why this move" icon={Sparkles} accent="text-buy" dot="bg-buy">
+          {data.why.slice(0, 3).map((w, i) => (
+            <Bullet key={i} text={w} dot="bg-buy" />
           ))}
-        </div>
-      </Block>
+        </Block>
+      )}
+
+      {revealed >= 3 && (
+        <Block title="Next 30 days" icon={Calendar} accent="text-primary" dot="bg-primary">
+          {data.next30Days.slice(0, 3).map((w, i) => (
+            <Bullet key={i} text={w} dot="bg-primary" />
+          ))}
+        </Block>
+      )}
+
+      {revealed >= 4 && (
+        <Block title="Watch-outs" icon={AlertTriangle} accent="text-short" dot="bg-short">
+          {data.watchOuts.slice(0, 2).map((w, i) => (
+            <Bullet key={i} text={w} dot="bg-short" />
+          ))}
+        </Block>
+      )}
+
+      {revealed >= 5 && (
+        <Block title="Alternative paths" icon={Compass} accent="text-hold" dot="bg-hold">
+          <div className="space-y-3.5">
+            {data.alternativePaths.slice(0, 3).map((p, i) => (
+              <div key={i} className="space-y-1.5 animate-fade-in-soft" style={{ animationDelay: `${i * 100}ms` }}>
+                <div className="font-medium text-[15px] text-foreground/95">{p.label}</div>
+                <p className="text-[14px] text-muted-foreground leading-relaxed">{p.detail}</p>
+              </div>
+            ))}
+          </div>
+        </Block>
+      )}
     </section>
   );
 }
@@ -191,38 +208,38 @@ function Block({
   title,
   icon: Icon,
   accent,
+  dot,
   children,
 }: {
   title: string;
   icon: any;
   accent: string;
+  dot: string;
   children: React.ReactNode;
 }) {
   return (
-    <div className="space-y-3">
-      <div className="flex items-center gap-2">
+    <div className="space-y-4 animate-fade-in-up">
+      <div className="flex items-center gap-2.5">
         <Icon className={`w-3.5 h-3.5 ${accent}`} />
-        <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
-          {title}
-        </span>
+        <span className="text-[11px] text-muted-foreground tracking-wide">{title}</span>
       </div>
-      <div className="space-y-2 pl-5">{children}</div>
+      <div className="space-y-2.5">{children}</div>
     </div>
   );
 }
 
-function Bullet({ text, dotClass }: { text: string; dotClass: string }) {
+function Bullet({ text, dot }: { text: string; dot: string }) {
   return (
-    <p className="text-[15px] text-foreground/90 leading-relaxed flex gap-2">
-      <span className={`shrink-0 ${dotClass}`}>·</span>
-      <span>{text}</span>
+    <p className="text-[14.5px] text-foreground/90 leading-relaxed flex gap-3">
+      <span className={`shrink-0 mt-2 w-1 h-1 rounded-full ${dot}`} />
+      <span className="flex-1">{text}</span>
     </p>
   );
 }
 
-/* -------------------- Chat -------------------- */
+/* -------------------- Floating Chat -------------------- */
 
-function ChatPanel({
+function FloatingChat({
   company,
   role,
   analysis,
@@ -238,19 +255,21 @@ function ChatPanel({
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, loading]);
 
-  const send = async (text?: string) => {
-    const content = (text ?? input).trim();
+  const send = async () => {
+    const content = input.trim();
     if (!content || loading) return;
     const next: ChatMessage[] = [...messages, { role: "user", content }];
     setMessages(next);
     setInput("");
     setLoading(true);
+    setOpen(true);
     try {
       const { data, error } = await supabase.functions.invoke("career-chat", {
         body: { company, role, decision, analysis, recommendation, messages: next },
@@ -269,70 +288,80 @@ function ChatPanel({
   };
 
   return (
-    <section className="pt-8 border-t border-border/60 space-y-5">
-      <div className="text-center space-y-1">
-        <h3 className="font-display text-xl font-medium">Ask $JOB about your next move</h3>
-        <p className="text-sm text-muted-foreground">
-          Promotion, switching companies, startup ideas, salary negotiation…
-        </p>
-      </div>
-
-      {messages.length > 0 && (
-        <div
-          ref={scrollRef}
-          className="rounded-xl border border-border/60 bg-card/20 max-h-[420px] overflow-y-auto p-4 space-y-3"
-        >
-          {messages.map((m, i) => (
-            <div
-              key={i}
-              className={`flex animate-fade-in-up ${
-                m.role === "user" ? "justify-end" : "justify-start"
-              }`}
-            >
-              <div
-                className={`max-w-[88%] rounded-xl px-4 py-2.5 text-[14px] leading-relaxed whitespace-pre-wrap ${
-                  m.role === "user"
-                    ? "bg-primary/15 text-foreground"
-                    : "bg-background/60 text-foreground/90 border border-border/60"
-                }`}
+    <div className="fixed bottom-0 left-0 right-0 z-40 pointer-events-none">
+      <div className="container max-w-2xl pb-6 pt-4 pointer-events-auto">
+        {open && messages.length > 0 && (
+          <div className="mb-3 surface-elevated rounded-2xl overflow-hidden animate-fade-in-up">
+            <div className="flex items-center justify-between px-5 py-3 border-b border-border/50">
+              <span className="text-[11px] text-muted-foreground tracking-wide">
+                Chat with $JOB
+              </span>
+              <button
+                onClick={() => setOpen(false)}
+                className="text-[11px] text-muted-foreground hover:text-foreground"
               >
-                {m.content}
-              </div>
+                hide
+              </button>
             </div>
-          ))}
-          {loading && (
-            <div className="flex justify-start">
-              <div className="rounded-xl px-4 py-2.5 text-sm font-mono text-muted-foreground">
-                thinking<span className="animate-pulse">…</span>
-              </div>
+            <div
+              ref={scrollRef}
+              className="max-h-[360px] overflow-y-auto p-4 space-y-3"
+            >
+              {messages.map((m, i) => (
+                <div
+                  key={i}
+                  className={`flex animate-fade-in-soft ${
+                    m.role === "user" ? "justify-end" : "justify-start"
+                  }`}
+                >
+                  <div
+                    className={`max-w-[88%] rounded-2xl px-4 py-2.5 text-[14px] leading-relaxed whitespace-pre-wrap ${
+                      m.role === "user"
+                        ? "bg-primary/15 text-foreground"
+                        : "bg-background/60 text-foreground/90 border border-border/50"
+                    }`}
+                  >
+                    {m.content}
+                  </div>
+                </div>
+              ))}
+              {loading && (
+                <div className="flex justify-start">
+                  <div className="rounded-2xl px-4 py-2.5 text-sm text-muted-foreground">
+                    thinking<span className="animate-pulse">…</span>
+                  </div>
+                </div>
+              )}
             </div>
-          )}
-        </div>
-      )}
+          </div>
+        )}
 
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          send();
-        }}
-        className="flex gap-2"
-      >
-        <Input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask about promotion, switching companies, startup ideas, salary negotiation…"
-          className="h-12 bg-background/40"
-          disabled={loading}
-        />
-        <Button
-          type="submit"
-          size="icon"
-          disabled={loading || !input.trim()}
-          className="h-12 w-12 bg-primary text-primary-foreground hover:opacity-90"
+        {/* Floating input bar */}
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            send();
+          }}
+          className="surface-elevated rounded-2xl flex items-center gap-2 p-2 pl-4"
+          onFocus={() => messages.length > 0 && setOpen(true)}
         >
-          <Send className="w-4 h-4" />
-        </Button>
-      </form>
-    </section>
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Ask $JOB about your next move"
+            className="flex-1 h-11 bg-transparent text-[15px] text-foreground placeholder:text-muted-foreground/70 outline-none"
+            disabled={loading}
+          />
+          <Button
+            type="submit"
+            size="icon"
+            disabled={loading || !input.trim()}
+            className="h-10 w-10 rounded-xl bg-primary text-primary-foreground hover:opacity-95"
+          >
+            <ArrowUp className="w-4 h-4" />
+          </Button>
+        </form>
+      </div>
+    </div>
   );
 }

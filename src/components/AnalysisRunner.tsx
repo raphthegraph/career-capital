@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Check } from "lucide-react";
+import { SignalGrid } from "@/components/SignalGrid";
 
 interface Phase {
   key: string;
@@ -69,17 +70,19 @@ export function AnalysisRunner({ company, role, done, onComplete }: Props) {
   const activePhase = step >= FLAT.length ? PHASES.length - 1 : FLAT[step].phaseIdx;
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-6">
-      <div className="w-full max-w-[440px] animate-fade-in">
+    <div className="min-h-screen flex items-center justify-center px-6 relative">
+      <SignalGrid pulses />
+
+      <div className="relative z-10 w-full max-w-[480px] animate-fade-in">
         <div className="text-center space-y-3 mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full surface text-[11px] text-muted-foreground tracking-wide">
-            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-breathe" />
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full surface text-[11px] text-muted-foreground tracking-wide">
+            <span className="w-1.5 h-1.5 rounded-full bg-primary-strong animate-breathe" />
             {company} · {role}
           </div>
-          <h2 className="font-display text-[26px] md:text-[30px] font-semibold tracking-tight">
+          <h2 className="font-display text-[28px] md:text-[34px] font-[680] tracking-[-0.035em] text-foreground">
             Pricing your career asset
           </h2>
-          <p className="text-[13.5px] text-muted-foreground">
+          <p className="text-[14px] text-muted-foreground">
             $JOB is analyzing your role in real time
           </p>
         </div>
@@ -95,26 +98,26 @@ export function AnalysisRunner({ company, role, done, onComplete }: Props) {
               <div
                 key={phase.key}
                 className={`transition-all duration-700 ${
-                  isPending ? "opacity-25" : "opacity-100"
+                  isPending ? "opacity-30" : "opacity-100"
                 }`}
               >
                 <div className="flex items-center gap-3.5 mb-4">
                   <span className="relative w-5 h-5 flex items-center justify-center shrink-0">
                     {isComplete ? (
-                      <span className="w-5 h-5 rounded-full bg-primary/15 flex items-center justify-center">
-                        <Check className="w-3 h-3 text-primary" strokeWidth={3} />
+                      <span className="w-5 h-5 rounded-full bg-primary/30 border border-primary/40 flex items-center justify-center">
+                        <Check className="w-3 h-3 text-primary-strong" strokeWidth={3} />
                       </span>
                     ) : isActive ? (
                       <>
-                        <span className="absolute w-5 h-5 rounded-full border border-primary/30" />
-                        <span className="w-1.5 h-1.5 rounded-full bg-primary animate-breathe" />
+                        <span className="absolute w-5 h-5 rounded-full border border-primary/50" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-primary-strong animate-breathe" />
                       </>
                     ) : (
                       <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30" />
                     )}
                   </span>
                   <span
-                    className={`text-[15px] font-medium tracking-tight transition-colors ${
+                    className={`text-[15px] font-semibold tracking-tight transition-colors ${
                       isActive || isComplete ? "text-foreground" : "text-muted-foreground"
                     }`}
                   >
@@ -132,7 +135,7 @@ export function AnalysisRunner({ company, role, done, onComplete }: Props) {
                         <li
                           key={s}
                           className={`text-[13.5px] leading-relaxed transition-colors animate-fade-in-soft ${
-                            isCurrent ? "text-foreground/85" : "text-muted-foreground/75"
+                            isCurrent ? "text-foreground/90" : "text-muted-foreground"
                           }`}
                         >
                           {s}

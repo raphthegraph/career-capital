@@ -15,22 +15,22 @@ interface Props {
 
 const TITLES: Record<Decision, { title: string; tagline: string; loading: string; tag: string; accent: string }> = {
   increase: {
-    title: "Increase Position",
+    title: "Stay & Double Down",
     tagline: "Repricing your upside…",
     loading: "Building your repricing playbook",
     tag: "DOUBLE DOWN",
     accent: "bg-buy",
   },
   reduce: {
-    title: "Reduce Position",
+    title: "Start Transitioning",
     tagline: "Scanning alternative career assets…",
     loading: "Sourcing higher-yield opportunities",
     tag: "REBALANCE",
     accent: "bg-hold",
   },
   exit: {
-    title: "Exit Position",
-    tagline: "Simulating full portfolio reallocation…",
+    title: "Exit & Reallocate",
+    tagline: "Simulating full career reallocation…",
     loading: "Modeling pivot scenarios and timeline",
     tag: "LIQUIDATE",
     accent: "bg-short",

@@ -51,6 +51,7 @@ export interface Analysis {
   };
   chartData: { month: string; price: number }[];
   _warning?: string;
+  analysisId?: string;
 }
 
 /* ---------- Decision / intent flow ---------- */

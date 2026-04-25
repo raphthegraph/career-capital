@@ -225,7 +225,7 @@ function ThesisSequence({ analysis }: { analysis: Analysis }) {
 
   return (
     <section className="space-y-3 animate-fade-in-up">
-      <div className="text-[11px] text-muted-foreground text-center mb-5 tracking-wide">
+      <div className="text-[10px] text-muted-foreground/70 text-center mb-6 tracking-[0.18em] uppercase">
         Investment thesis
       </div>
       {SECTIONS.map((s, i) => {
@@ -452,19 +452,21 @@ function Question({
   children: React.ReactNode;
 }) {
   return (
-    <div className="space-y-5 animate-fade-in-up max-w-md mx-auto">
-      <div className="text-center space-y-2">
-        <div className="text-[11px] text-muted-foreground tracking-wide">
+    <div className="space-y-6 animate-fade-in-up max-w-md mx-auto">
+      <div className="text-center space-y-2.5">
+        <div className="text-[10px] text-muted-foreground/70 tracking-[0.18em] uppercase">
           Question {index} of 3
         </div>
-        <h3 className="font-display text-xl md:text-2xl font-medium tracking-tight">{title}</h3>
+        <h3 className="font-display text-[22px] md:text-[26px] font-semibold tracking-[-0.025em] leading-[1.2]">
+          {title}
+        </h3>
       </div>
       {locked ? (
-        <div className="surface rounded-xl px-5 py-3.5 flex items-center justify-between gap-3">
+        <div className="surface rounded-xl px-5 py-4 flex items-center justify-between gap-3">
           <span className="text-[14.5px] text-foreground/90">{lockedAnswer}</span>
           <button
             onClick={onChange}
-            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+            className="text-[11px] uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
           >
             change
           </button>

@@ -55,13 +55,13 @@ export function AnalysisRunner({ company, role, done, onComplete }: Props) {
     if (step >= FLAT.length) return;
     const isLast = step === FLAT.length - 1;
     if (isLast && !done) return;
-    const t = setTimeout(() => setStep((s) => s + 1), 750);
+    const t = setTimeout(() => setStep((s) => s + 1), 720);
     return () => clearTimeout(t);
   }, [step, done]);
 
   useEffect(() => {
     if (step >= FLAT.length) {
-      const t = setTimeout(onComplete, 600);
+      const t = setTimeout(onComplete, 700);
       return () => clearTimeout(t);
     }
   }, [step, onComplete]);
@@ -70,17 +70,21 @@ export function AnalysisRunner({ company, role, done, onComplete }: Props) {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-6">
-      <div className="w-full max-w-md animate-fade-in">
-        <div className="text-center space-y-2 mb-14">
-          <div className="text-xs text-muted-foreground">
+      <div className="w-full max-w-[440px] animate-fade-in">
+        <div className="text-center space-y-3 mb-16">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full surface text-[11px] text-muted-foreground tracking-wide">
+            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-breathe" />
             {company} · {role}
           </div>
-          <h2 className="font-display text-2xl md:text-[26px] font-semibold tracking-tight">
+          <h2 className="font-display text-[26px] md:text-[30px] font-semibold tracking-tight">
             Pricing your career asset
           </h2>
+          <p className="text-[13.5px] text-muted-foreground">
+            $JOB is analyzing your role in real time
+          </p>
         </div>
 
-        <div className="space-y-10">
+        <div className="space-y-12">
           {PHASES.map((phase, pi) => {
             const phaseStart = PHASES.slice(0, pi).reduce((n, p) => n + p.steps.length, 0);
             const isActive = pi === activePhase && step < FLAT.length;
@@ -90,22 +94,27 @@ export function AnalysisRunner({ company, role, done, onComplete }: Props) {
             return (
               <div
                 key={phase.key}
-                className={`transition-opacity duration-500 ${
-                  isPending ? "opacity-30" : "opacity-100"
+                className={`transition-all duration-700 ${
+                  isPending ? "opacity-25" : "opacity-100"
                 }`}
               >
-                <div className="flex items-center gap-3 mb-4">
+                <div className="flex items-center gap-3.5 mb-4">
                   <span className="relative w-5 h-5 flex items-center justify-center shrink-0">
                     {isComplete ? (
-                      <Check className="w-4 h-4 text-primary" strokeWidth={2.5} />
+                      <span className="w-5 h-5 rounded-full bg-primary/15 flex items-center justify-center">
+                        <Check className="w-3 h-3 text-primary" strokeWidth={3} />
+                      </span>
                     ) : isActive ? (
-                      <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                      <>
+                        <span className="absolute w-5 h-5 rounded-full border border-primary/30" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-primary animate-breathe" />
+                      </>
                     ) : (
-                      <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/40" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30" />
                     )}
                   </span>
                   <span
-                    className={`text-[15px] font-medium tracking-tight ${
+                    className={`text-[15px] font-medium tracking-tight transition-colors ${
                       isActive || isComplete ? "text-foreground" : "text-muted-foreground"
                     }`}
                   >
@@ -114,7 +123,7 @@ export function AnalysisRunner({ company, role, done, onComplete }: Props) {
                 </div>
 
                 {(isActive || isComplete) && (
-                  <ul className="pl-8 space-y-2">
+                  <ul className="pl-[34px] space-y-2.5">
                     {phase.steps.map((s, si) => {
                       const globalIdx = phaseStart + si;
                       if (globalIdx > step) return null;
@@ -123,7 +132,7 @@ export function AnalysisRunner({ company, role, done, onComplete }: Props) {
                         <li
                           key={s}
                           className={`text-[13.5px] leading-relaxed transition-colors animate-fade-in-soft ${
-                            isCurrent ? "text-foreground/90" : "text-muted-foreground"
+                            isCurrent ? "text-foreground/85" : "text-muted-foreground/75"
                           }`}
                         >
                           {s}

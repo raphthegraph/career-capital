@@ -1,8 +1,7 @@
 import type { Analysis, Decision } from "@/lib/job-types";
 import { RatingPill, ratingColorClass } from "@/components/RatingPill";
-import { Button } from "@/components/ui/button";
-import { TrendingUp, TrendingDown, Zap, ArrowRightLeft, Building2, ChevronDown, Plus } from "lucide-react";
-import { useMemo, useState } from "react";
+import { TrendingUp, TrendingDown, Zap, ArrowRightLeft, Building2, ChevronDown, ArrowRight } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface Props {
   company: string;
@@ -11,7 +10,21 @@ interface Props {
   onDecision: (d: Decision) => void;
 }
 
+type SectionKey = "bull" | "bear" | "triggers";
+
 export function AnalysisDashboard({ company, role, analysis, onDecision }: Props) {
+  // Sequential reveal of sections — user clicks to advance.
+  const [unlocked, setUnlocked] = useState<number>(1); // first section auto-open
+  const [decisionRevealed, setDecisionRevealed] = useState(false);
+
+  // When all 3 sections unlocked, reveal decision after a beat
+  useEffect(() => {
+    if (unlocked >= 3 && !decisionRevealed) {
+      const t = setTimeout(() => setDecisionRevealed(true), 600);
+      return () => clearTimeout(t);
+    }
+  }, [unlocked, decisionRevealed]);
+
   return (
     <div className="min-h-screen pb-24">
       {/* Header */}
@@ -19,57 +32,61 @@ export function AnalysisDashboard({ company, role, analysis, onDecision }: Props
         <div className="container py-4 flex flex-wrap gap-4 items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="font-mono">
-              <div className="text-xs text-muted-foreground uppercase tracking-wider">{company} · {role}</div>
+              <div className="text-xs text-muted-foreground uppercase tracking-wider">
+                {company} · {role}
+              </div>
               <div className="text-2xl font-bold">{analysis.ticker}</div>
             </div>
             <RatingPill rating={analysis.rating} size="lg" />
           </div>
-          <div className="flex items-center gap-6 font-mono">
-            <div>
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Asset Score</div>
-              <div className={`text-2xl font-bold ${ratingColorClass(analysis.rating)}`}>{analysis.careerAssetScore.toFixed(0)}</div>
+          <div className="font-mono text-right">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+              Asset Score
             </div>
-            <div>
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Confidence</div>
-              <div className="text-2xl font-bold">{analysis.confidence}%</div>
+            <div className={`text-2xl font-bold ${ratingColorClass(analysis.rating)}`}>
+              {analysis.careerAssetScore.toFixed(0)}
+              <span className="text-xs text-muted-foreground ml-2">
+                · {analysis.confidence}% conf.
+              </span>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="container py-10 space-y-10">
+      <div className="container py-12 max-w-4xl space-y-8">
         {analysis._warning && (
           <div className="card-terminal rounded p-3 font-mono text-xs text-hold border-hold/40">
             ⚠ {analysis._warning}
           </div>
         )}
 
-        {/* Hero verdict line */}
+        {/* Verdict line */}
         <section className="text-center space-y-3 animate-fade-in-up">
           <div className="font-mono text-xs uppercase tracking-[0.3em] text-muted-foreground">
             Verdict
           </div>
-          <p className={`font-display text-3xl md:text-5xl font-bold ${ratingColorClass(analysis.rating)}`}>
+          <p
+            className={`font-display text-3xl md:text-5xl font-bold ${ratingColorClass(
+              analysis.rating
+            )}`}
+          >
             {analysis.wouldBuy}.
           </p>
-          <p className="text-lg text-foreground/90 italic max-w-2xl mx-auto">"{analysis.oneLineVerdict}"</p>
-        </section>
-
-        {/* Mini chart */}
-        <section className="card-terminal rounded-lg p-6 animate-fade-in-up">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Price Action · 12M Synthetic</h2>
-            <span className="font-mono text-xs text-muted-foreground">{analysis.ticker}</span>
+          <p className="text-lg text-foreground/90 italic max-w-2xl mx-auto">
+            "{analysis.oneLineVerdict}"
+          </p>
+          <div className="font-mono text-xs text-muted-foreground pt-2">
+            Read each section below — click to continue.
           </div>
-          <PriceChart data={analysis.chartData} rating={analysis.rating} />
         </section>
 
-        {/* Three expandable narrative sections */}
+        {/* Sequential narrative sections */}
         <section className="space-y-3">
-          <div className="font-mono text-xs uppercase tracking-widest text-muted-foreground mb-2">
-            Full Analysis · expand to read
-          </div>
-          <ExpandableSection
+          <NarrativeSection
+            index={0}
+            unlocked={unlocked >= 1}
+            isCurrent={unlocked === 1}
+            onContinue={() => setUnlocked((u) => Math.max(u, 2))}
             title="Why this job works"
             icon={TrendingUp}
             accent="text-buy"
@@ -77,9 +94,13 @@ export function AnalysisDashboard({ company, role, analysis, onDecision }: Props
             items={analysis.bullCase}
             evidence={analysis.evidence.momentumSignals}
             evidenceLabel="Momentum signals"
-            defaultOpen
+            continueLabel="Show what could break it"
           />
-          <ExpandableSection
+          <NarrativeSection
+            index={1}
+            unlocked={unlocked >= 2}
+            isCurrent={unlocked === 2}
+            onContinue={() => setUnlocked((u) => Math.max(u, 3))}
             title="Why this job breaks"
             icon={TrendingDown}
             accent="text-short"
@@ -87,8 +108,13 @@ export function AnalysisDashboard({ company, role, analysis, onDecision }: Props
             items={analysis.bearCase}
             evidence={analysis.evidence.riskSignals}
             evidenceLabel="Risk signals"
+            continueLabel="Show what changes the rating"
           />
-          <ExpandableSection
+          <NarrativeSection
+            index={2}
+            unlocked={unlocked >= 3}
+            isCurrent={unlocked === 3}
+            onContinue={() => setDecisionRevealed(true)}
             title="What changes the rating"
             icon={Zap}
             accent="text-hold"
@@ -96,54 +122,81 @@ export function AnalysisDashboard({ company, role, analysis, onDecision }: Props
             items={analysis.ratingChangeTriggers}
             evidence={[...analysis.evidence.hiringSignals, ...analysis.evidence.companySignals]}
             evidenceLabel="Watch signals"
+            continueLabel="Make a decision"
           />
         </section>
 
-        {/* Decision section */}
-        <section className="pt-4">
-          <div className="text-center mb-6 space-y-2">
-            <div className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Trade Ticket</div>
-            <h2 className="font-display text-3xl md:text-4xl font-bold">
-              Given this rating, what would you do?
-            </h2>
-            <p className="text-sm text-muted-foreground">Pick a stance. We'll generate a personalized playbook next.</p>
-          </div>
-          <div className="grid md:grid-cols-3 gap-4">
-            <DecisionCard
-              title="Stay & Double Down"
-              tag="DOUBLE DOWN"
-              desc="Maximize upside in this role — promotion path, leverage, comp."
-              micro="Best if your asset score is strong and you see a clear path to 10x impact here."
-              accent="bg-buy"
-              onClick={() => onDecision("increase")}
-              icon={TrendingUp}
-            />
-            <DecisionCard
-              title="Start Transitioning"
-              tag="REBALANCE"
-              desc="Quietly explore higher-yield career assets before you have to."
-              micro="Best when momentum is fading or alternatives clearly outperform your current role."
-              accent="bg-hold"
-              onClick={() => onDecision("reduce")}
-              icon={ArrowRightLeft}
-            />
-            <DecisionCard
-              title="Exit & Reallocate"
-              tag="LIQUIDATE"
-              desc="Liquidate this position. Redeploy your career capital."
-              micro="Best when risk dominates upside, or you're ready to start something of your own."
-              accent="bg-short"
-              onClick={() => onDecision("exit")}
-              icon={Building2}
-            />
-          </div>
-        </section>
+        {/* Decision */}
+        {decisionRevealed && (
+          <section className="pt-8 animate-fade-in-up">
+            <div className="text-center mb-2 space-y-2">
+              <div className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+                Trade Ticket
+              </div>
+              <h2 className="font-display text-3xl md:text-4xl font-bold">
+                What would you do with this position?
+              </h2>
+            </div>
+
+            {/* Allocation banner */}
+            <div className="card-terminal rounded-lg p-4 mb-6 mt-4 flex items-center justify-between">
+              <div className="font-mono text-sm">
+                <span className="text-muted-foreground">Your portfolio:</span>{" "}
+                <span className="text-foreground font-bold">
+                  100% allocated to {analysis.ticker}
+                </span>
+              </div>
+              <div className="hidden sm:flex items-center gap-2">
+                <div className="w-32 h-2 bg-muted rounded overflow-hidden">
+                  <div className="h-full w-full bg-buy" />
+                </div>
+                <span className="font-mono text-xs text-muted-foreground">100%</span>
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-4">
+              <DecisionCard
+                title="Stay & Double Down"
+                tag="DOUBLE DOWN"
+                desc="Maximize upside. Promotion path, leverage, comp."
+                accent="bg-buy"
+                hoverGlow="hover:shadow-[0_0_30px_hsl(var(--buy)/0.4)]"
+                onClick={() => onDecision("increase")}
+                icon={TrendingUp}
+              />
+              <DecisionCard
+                title="Start Transitioning"
+                tag="REBALANCE"
+                desc="Quietly explore higher-yield career assets."
+                accent="bg-hold"
+                hoverGlow="hover:shadow-[0_0_30px_hsl(var(--hold)/0.4)]"
+                onClick={() => onDecision("reduce")}
+                icon={ArrowRightLeft}
+              />
+              <DecisionCard
+                title="Exit & Reallocate"
+                tag="LIQUIDATE"
+                desc="Liquidate. Redeploy your career capital."
+                accent="bg-short"
+                hoverGlow="hover:shadow-[0_0_30px_hsl(var(--short)/0.4)]"
+                onClick={() => onDecision("exit")}
+                icon={Building2}
+              />
+            </div>
+          </section>
+        )}
       </div>
     </div>
   );
 }
 
-function ExpandableSection({
+/* -------------------- Sequential narrative section -------------------- */
+
+function NarrativeSection({
+  index,
+  unlocked,
+  isCurrent,
+  onContinue,
   title,
   icon: Icon,
   accent,
@@ -151,8 +204,12 @@ function ExpandableSection({
   items,
   evidence,
   evidenceLabel,
-  defaultOpen = false,
+  continueLabel,
 }: {
+  index: number;
+  unlocked: boolean;
+  isCurrent: boolean;
+  onContinue: () => void;
   title: string;
   icon: any;
   accent: string;
@@ -160,28 +217,48 @@ function ExpandableSection({
   items: string[];
   evidence: string[];
   evidenceLabel: string;
-  defaultOpen?: boolean;
+  continueLabel: string;
 }) {
-  const [open, setOpen] = useState(defaultOpen);
-  const [revealed, setRevealed] = useState(defaultOpen ? items.length : 0);
+  const [open, setOpen] = useState(false);
+  const [revealed, setRevealed] = useState(0);
 
-  const toggle = () => {
-    if (!open) {
+  // Auto-open when this section unlocks
+  useEffect(() => {
+    if (unlocked && !open) {
       setOpen(true);
-      // staggered reveal
-      setRevealed(0);
-      items.forEach((_, i) => {
-        setTimeout(() => setRevealed((r) => Math.max(r, i + 1)), 120 + i * 180);
-      });
-    } else {
-      setOpen(false);
     }
-  };
+  }, [unlocked, open]);
+
+  // Stagger insight reveals when opened
+  useEffect(() => {
+    if (!open) return;
+    setRevealed(0);
+    items.forEach((_, i) => {
+      setTimeout(() => setRevealed((r) => Math.max(r, i + 1)), 200 + i * 260);
+    });
+  }, [open, items]);
+
+  if (!unlocked) {
+    return (
+      <div className="card-terminal rounded-lg p-5 opacity-40 select-none">
+        <div className="flex items-center gap-3">
+          <div className="w-5 h-5 rounded-full border border-dashed border-border" />
+          <div className="font-display text-lg font-bold text-muted-foreground">
+            {String(index + 1).padStart(2, "0")} · Locked
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className={`card-terminal rounded-lg overflow-hidden border ${open ? border : "border-border"} transition-colors`}>
+    <div
+      className={`card-terminal rounded-lg overflow-hidden border ${
+        open ? border : "border-border"
+      } transition-all animate-fade-in-up`}
+    >
       <button
-        onClick={toggle}
+        onClick={() => setOpen((o) => !o)}
         className="w-full flex items-center justify-between gap-4 p-5 text-left hover:bg-card/60 transition-colors"
       >
         <div className="flex items-center gap-3">
@@ -189,7 +266,11 @@ function ExpandableSection({
           <h3 className="font-display text-xl md:text-2xl font-bold">{title}</h3>
           <span className="font-mono text-xs text-muted-foreground">· {items.length} insights</span>
         </div>
-        <div className={`shrink-0 w-8 h-8 rounded-full grid place-items-center border border-border ${open ? "rotate-180" : ""} transition-transform`}>
+        <div
+          className={`shrink-0 w-8 h-8 rounded-full grid place-items-center border border-border ${
+            open ? "rotate-180" : ""
+          } transition-transform`}
+        >
           <ChevronDown className="w-4 h-4" />
         </div>
       </button>
@@ -210,16 +291,29 @@ function ExpandableSection({
             )}
           </ul>
 
-          {evidence.length > 0 && (
-            <div className="border-t border-border/60 pt-4">
+          {revealed >= items.length && evidence.length > 0 && (
+            <div className="border-t border-border/60 pt-4 animate-fade-in">
               <div className={`font-mono text-[10px] uppercase tracking-widest mb-2 ${accent}`}>
                 {evidenceLabel}
               </div>
               <ul className="grid sm:grid-cols-2 gap-x-4 gap-y-1">
-                {evidence.slice(0, 6).map((e, i) => (
-                  <li key={i} className="text-xs text-muted-foreground">· {e}</li>
+                {evidence.slice(0, 4).map((e, i) => (
+                  <li key={i} className="text-xs text-muted-foreground">
+                    · {e}
+                  </li>
                 ))}
               </ul>
+            </div>
+          )}
+
+          {isCurrent && revealed >= items.length && (
+            <div className="pt-4 flex justify-end animate-fade-in">
+              <button
+                onClick={onContinue}
+                className={`font-mono text-xs px-4 py-2 rounded border ${border} ${accent} hover:bg-card/60 transition-colors flex items-center gap-2`}
+              >
+                {continueLabel} <ArrowRight className="w-3 h-3" />
+              </button>
             </div>
           )}
         </div>
@@ -228,87 +322,42 @@ function ExpandableSection({
   );
 }
 
-function DecisionCard({ title, tag, desc, micro, accent, onClick, icon: Icon }: any) {
+function DecisionCard({
+  title,
+  tag,
+  desc,
+  accent,
+  hoverGlow,
+  onClick,
+  icon: Icon,
+}: {
+  title: string;
+  tag: string;
+  desc: string;
+  accent: string;
+  hoverGlow: string;
+  onClick: () => void;
+  icon: any;
+}) {
   return (
     <button
       onClick={onClick}
-      className="card-terminal rounded-lg p-6 text-left hover:scale-[1.02] hover:border-primary/60 transition-all group relative overflow-hidden"
+      className={`card-terminal rounded-lg p-6 text-left transition-all duration-300 group relative overflow-hidden hover:-translate-y-1 hover:border-primary/60 ${hoverGlow}`}
     >
       <div className={`absolute top-0 left-0 right-0 h-1 ${accent}`} />
       <div className="flex items-center justify-between mb-4">
         <Icon className="w-5 h-5 text-foreground/60 group-hover:text-foreground transition" />
-        <span className={`font-mono text-[10px] px-2 py-0.5 rounded ${accent} text-background font-bold`}>{tag}</span>
-      </div>
-      <h3 className="font-display text-xl font-bold mb-2">{title}</h3>
-      <p className="text-sm text-foreground/85 mb-3">{desc}</p>
-      <p className="text-xs text-muted-foreground italic">{micro}</p>
-      <div className="mt-4 font-mono text-xs text-primary opacity-0 group-hover:opacity-100 transition flex items-center gap-1">
-        EXECUTE <Plus className="w-3 h-3" />
-      </div>
-    </button>
-  );
-}
-
-function PriceChart({ data, rating }: { data: { month: string; price: number }[]; rating: string }) {
-  const w = 700, h = 220, pad = 30;
-  const max = Math.max(...data.map((d) => d.price));
-  const min = Math.min(...data.map((d) => d.price));
-  const range = max - min || 1;
-  const dx = (w - pad * 2) / (data.length - 1);
-  const points = data.map((d, i) => ({
-    x: pad + i * dx,
-    y: pad + (h - pad * 2) - ((d.price - min) / range) * (h - pad * 2),
-    p: d.price,
-    m: d.month,
-  }));
-  const path = points.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
-  const last = points[points.length - 1];
-  const first = points[0];
-  const trendUp = last.p >= first.p;
-  const color = useMemo(() => {
-    if (rating === "BUY") return "hsl(var(--buy))";
-    if (rating === "HOLD") return "hsl(var(--hold))";
-    if (rating === "SELL") return "hsl(var(--sell))";
-    return "hsl(var(--short))";
-  }, [rating]);
-
-  return (
-    <div className="space-y-3">
-      <div className="flex items-baseline gap-3">
-        <span className="font-mono text-4xl font-bold">{last.p.toFixed(2)}</span>
-        <span className={`font-mono text-sm ${trendUp ? "text-buy" : "text-short"}`}>
-          {trendUp ? "▲" : "▼"} {(last.p - first.p).toFixed(2)} ({(((last.p - first.p) / first.p) * 100).toFixed(1)}%)
+        <span
+          className={`font-mono text-[10px] px-2 py-0.5 rounded ${accent} text-background font-bold`}
+        >
+          {tag}
         </span>
       </div>
-      <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-56">
-        <defs>
-          <linearGradient id="chart-fill" x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0%" stopColor={color} stopOpacity="0.35" />
-            <stop offset="100%" stopColor={color} stopOpacity="0" />
-          </linearGradient>
-        </defs>
-        {[0, 1, 2, 3].map((i) => (
-          <line
-            key={i}
-            x1={pad}
-            x2={w - pad}
-            y1={pad + (i * (h - pad * 2)) / 3}
-            y2={pad + (i * (h - pad * 2)) / 3}
-            stroke="hsl(var(--terminal-grid))"
-            strokeDasharray="2 4"
-          />
-        ))}
-        <path d={`${path} L ${last.x} ${h - pad} L ${first.x} ${h - pad} Z`} fill="url(#chart-fill)" />
-        <path d={path} stroke={color} strokeWidth="2" fill="none" />
-        <circle cx={last.x} cy={last.y} r="4" fill={color} className="animate-price-pulse" />
-        {points.map((p, i) =>
-          i % 2 === 0 ? (
-            <text key={i} x={p.x} y={h - 8} textAnchor="middle" className="fill-muted-foreground" fontSize="10" fontFamily="monospace">
-              {p.m}
-            </text>
-          ) : null
-        )}
-      </svg>
-    </div>
+      <h3 className="font-display text-xl font-bold mb-2">{title}</h3>
+      <p className="text-sm text-foreground/85">{desc}</p>
+      <div className="mt-4 font-mono text-xs text-primary opacity-0 group-hover:opacity-100 transition flex items-center gap-1">
+        EXECUTE <ArrowRight className="w-3 h-3" />
+      </div>
+    </button>
   );
 }

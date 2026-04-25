@@ -75,8 +75,8 @@ export function AnalysisDashboard({ company, role, analysis, onDecision }: Props
   const [showIntent, setShowIntent] = useState(false);
 
   useEffect(() => {
-    const t1 = setTimeout(() => setShowThesis(true), 350);
-    const t2 = setTimeout(() => setShowIntent(true), 1100);
+    const t1 = setTimeout(() => setShowThesis(true), 400);
+    const t2 = setTimeout(() => setShowIntent(true), 1200);
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
@@ -87,11 +87,10 @@ export function AnalysisDashboard({ company, role, analysis, onDecision }: Props
     <div className="min-h-screen pb-32 relative">
       <SignalGrid />
 
-      {/* refined header */}
       <div className="relative z-20 border-b hairline bg-background/70 backdrop-blur-xl sticky top-0">
         <div className="container py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-[12px] bg-primary/25 border border-primary/30 flex items-center justify-center font-mono text-[10.5px] font-semibold text-primary-strong">
+            <div className="w-9 h-9 rounded-[11px] bg-primary flex items-center justify-center font-mono text-[10.5px] font-semibold text-primary-foreground">
               {analysis.ticker.slice(0, 3)}
             </div>
             <div>
@@ -106,16 +105,15 @@ export function AnalysisDashboard({ company, role, analysis, onDecision }: Props
       </div>
 
       <div className="relative z-10 container py-20 max-w-2xl space-y-24">
-        {/* verdict line */}
         <section className="text-center space-y-5 animate-fade-in-up">
           <p
-            className={`font-display text-[36px] md:text-[48px] font-[680] tracking-[-0.035em] leading-[1.05] ${ratingColorClass(
+            className={`font-display text-[36px] md:text-[52px] font-[680] tracking-[-0.04em] leading-[1.05] ${ratingColorClass(
               analysis.rating,
             )}`}
           >
             {analysis.wouldBuy}.
           </p>
-          <p className="text-[16px] md:text-[18px] text-foreground/80 max-w-xl mx-auto leading-[1.55]">
+          <p className="text-[16px] md:text-[18px] text-foreground/80 max-w-xl mx-auto leading-[1.6]">
             {analysis.oneLineVerdict}
           </p>
         </section>
@@ -138,9 +136,10 @@ export function AnalysisDashboard({ company, role, analysis, onDecision }: Props
 /* -------------------- Thesis sequence -------------------- */
 
 function ThesisSequence({ analysis }: { analysis: Analysis }) {
-  const [activeIdx, setActiveIdx] = useState(0);
+  // openMap = sections that have been opened (and stay open)
+  const [openMap, setOpenMap] = useState<Record<number, boolean>>({});
+  const [activeIdx, setActiveIdx] = useState(0); // currently focused section (1-based), 0 = none yet, >SECTIONS.length = done
   const [revealedPerSection, setRevealedPerSection] = useState<Record<number, number>>({});
-  const [manualOpen, setManualOpen] = useState<Record<number, boolean>>({});
   const sectionRefs = [useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null)];
 
   useEffect(() => {
@@ -149,82 +148,89 @@ function ThesisSequence({ analysis }: { analysis: Analysis }) {
       for (let i = 0; i < SECTIONS.length; i++) {
         if (cancelled) return;
         setActiveIdx(i + 1);
+        // open and keep open
+        setOpenMap((p) => ({ ...p, [i]: true }));
+        // give the section a beat to expand before scrolling
+        await new Promise((r) => setTimeout(r, 250));
         sectionRefs[i].current?.scrollIntoView({ behavior: "smooth", block: "center" });
+
         const items = (analysis as any)[SECTIONS[i].field] as string[];
         const total = Math.min(3, items?.length ?? 0);
         for (let j = 0; j < total; j++) {
-          await new Promise((r) => setTimeout(r, 700));
+          await new Promise((r) => setTimeout(r, 850));
           if (cancelled) return;
           setRevealedPerSection((prev) => ({ ...prev, [i]: j + 1 }));
         }
-        await new Promise((r) => setTimeout(r, 900));
+        // dwell so the user can read
+        await new Promise((r) => setTimeout(r, 1400));
       }
       if (!cancelled) setActiveIdx(SECTIONS.length + 1);
     };
-    const start = setTimeout(run, 200);
+    const start = setTimeout(run, 250);
     return () => {
       cancelled = true;
       clearTimeout(start);
     };
   }, [analysis]);
 
+  const sequenceDone = activeIdx > SECTIONS.length;
+
   return (
     <section className="space-y-3 animate-fade-in-up">
-      <div className="text-[10px] text-muted-foreground text-center mb-6 tracking-[0.18em] uppercase">
-        Investment thesis
-      </div>
+      <div className="eyebrow text-center mb-6">Investment thesis</div>
       {SECTIONS.map((s, i) => {
         const items = ((analysis as any)[s.field] as string[]) ?? [];
         const revealed = revealedPerSection[i] ?? 0;
-        const isAuto = activeIdx === i + 1;
-        const isDone = activeIdx > i + 1;
-        const isSequenceDone = activeIdx > SECTIONS.length;
-        const userOpen = manualOpen[i];
-        const open = isAuto || (isSequenceDone && (userOpen ?? false));
+        const isOpened = openMap[i] === true;
+        const isFocus = activeIdx === i + 1;
+        // de-emphasize sections not yet visited (or completed sections when another is focused), but keep opened content visible
+        const dim = !sequenceDone && !isFocus && !isOpened;
+        const softDim = !sequenceDone && !isFocus && isOpened;
+        const isAutoRevealing = isFocus;
 
         return (
           <div
             key={s.key}
             ref={sectionRefs[i]}
-            className={`surface rounded-[24px] overflow-hidden transition-all duration-500 ${
-              open ? "" : isDone || isSequenceDone ? "opacity-80" : "opacity-55"
-            }`}
+            className={`surface rounded-[22px] overflow-hidden transition-all duration-700 ${
+              dim ? "opacity-50" : softDim ? "opacity-80" : "opacity-100"
+            } ${isFocus ? "ring-1 ring-primary/15 shadow-[0_24px_60px_-30px_hsl(var(--primary)/0.35)]" : ""}`}
           >
             <button
               onClick={() => {
-                if (!isSequenceDone) return;
-                setManualOpen((p) => ({ ...p, [i]: !p[i] }));
+                if (!sequenceDone) return;
+                setOpenMap((p) => ({ ...p, [i]: !p[i] }));
               }}
-              disabled={!isSequenceDone}
+              disabled={!sequenceDone}
               className={`w-full flex items-center justify-between gap-3 px-7 py-6 text-left transition-colors ${
-                isSequenceDone ? "hover:bg-background/40 cursor-pointer" : "cursor-default"
+                sequenceDone ? "hover:bg-background/40 cursor-pointer" : "cursor-default"
               }`}
             >
               <div className="flex items-center gap-3">
                 <span className={`w-2 h-2 rounded-full ${s.dotClass}`} />
                 <span
                   className={`text-[16px] font-semibold tracking-tight ${
-                    open ? s.accent : "text-foreground"
+                    isOpened ? s.accent : "text-foreground"
                   }`}
                 >
                   {s.title}
                 </span>
               </div>
               <ChevronDown
-                className={`w-4 h-4 text-muted-foreground transition-transform duration-300 ${
-                  open ? "rotate-180" : ""
-                } ${!isSequenceDone ? "opacity-0" : ""}`}
+                className={`w-4 h-4 text-muted-foreground transition-transform duration-500 ${
+                  isOpened ? "rotate-180" : ""
+                } ${!sequenceDone ? "opacity-0" : "opacity-100"}`}
               />
             </button>
-            {open && (
+            {isOpened && (
               <div className="px-7 pb-7 space-y-3.5">
                 {items.slice(0, 3).map((it, j) => {
-                  const visible = isAuto ? j < revealed : true;
+                  const visible = isAutoRevealing ? j < revealed : true;
                   if (!visible) return null;
                   return (
                     <p
                       key={j}
-                      className="text-[15px] text-foreground/85 leading-[1.6] flex gap-3 animate-fade-in-soft"
+                      className="text-[15px] text-foreground/85 leading-[1.65] flex gap-3 animate-fade-in-soft"
                     >
                       <span className={`shrink-0 mt-2 w-1.5 h-1.5 rounded-full ${s.dotClass}`} />
                       <span className="flex-1">{it}</span>
@@ -286,7 +292,6 @@ function IntentFlow({
 
   return (
     <section className="space-y-14">
-      {/* Q1 */}
       <Question
         index={1}
         title="Given this rating, what are you considering?"
@@ -313,7 +318,6 @@ function IntentFlow({
         />
       </Question>
 
-      {/* Q2 */}
       {intent && (
         <div ref={q2Ref}>
           <Question
@@ -333,7 +337,6 @@ function IntentFlow({
         </div>
       )}
 
-      {/* Q3 */}
       {intent && sub && (
         <div ref={q3Ref}>
           <Question
@@ -374,16 +377,17 @@ function Question({
   return (
     <div className="space-y-7 animate-fade-in-up max-w-xl mx-auto">
       <div className="text-center space-y-3">
-        <div className="text-[10px] text-muted-foreground tracking-[0.18em] uppercase">
-          Question {index} of 3
-        </div>
+        <div className="eyebrow">Question {index} of 3</div>
         <h3 className="font-display text-[24px] md:text-[30px] font-[680] tracking-[-0.03em] leading-[1.18] text-foreground">
           {title}
         </h3>
       </div>
       {locked ? (
-        <div className="surface rounded-[18px] px-5 py-4 flex items-center justify-between gap-3 border border-primary/30 bg-primary-tint/60">
-          <span className="text-[14.5px] text-foreground font-medium">{lockedAnswer}</span>
+        <div className="surface rounded-[16px] px-5 py-4 flex items-center justify-between gap-3 border border-primary/20 bg-primary-tint/60">
+          <div className="flex items-center gap-3">
+            <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+            <span className="text-[14.5px] text-foreground font-medium">{lockedAnswer}</span>
+          </div>
           <button
             onClick={onChange}
             className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground hover:text-foreground transition-colors"
@@ -419,10 +423,11 @@ function SuggestionsWithFreeText({
             key={label}
             type="button"
             onClick={() => onPick(label)}
-            className="group w-full text-left px-5 py-4 rounded-[18px] surface hover:bg-primary-tint/60 hover:border-primary/30 lift-on-hover animate-fade-in-soft"
-            style={{ animationDelay: `${i * 80}ms` }}
+            className="group w-full text-left px-5 py-4 rounded-[16px] surface hover:bg-primary-tint/50 hover:border-primary/25 lift-on-hover animate-fade-in-soft flex items-center justify-between gap-3"
+            style={{ animationDelay: `${i * 90}ms` }}
           >
             <span className="text-[15px] font-medium text-foreground/95">{label}</span>
+            <ArrowRight className="w-3.5 h-3.5 text-muted-foreground/50 group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
           </button>
         ))}
       </div>
@@ -433,10 +438,10 @@ function SuggestionsWithFreeText({
           const v = text.trim();
           if (v) onFreeText(v);
         }}
-        className="surface-elevated rounded-[18px] flex items-center gap-2 p-2 pl-5 animate-fade-in-soft"
-        style={{ animationDelay: `${items.length * 80 + 80}ms` }}
+        className="surface-elevated rounded-[16px] flex items-center gap-2 p-2 pl-5 animate-fade-in-soft"
+        style={{ animationDelay: `${items.length * 90 + 80}ms` }}
       >
-        <Sparkles className="w-4 h-4 text-primary-strong shrink-0" />
+        <Sparkles className="w-4 h-4 text-primary shrink-0" />
         <input
           value={text}
           onChange={(e) => setText(e.target.value)}
@@ -447,7 +452,7 @@ function SuggestionsWithFreeText({
           type="submit"
           size="icon"
           disabled={!text.trim()}
-          className="h-10 w-10 rounded-[14px] bg-primary text-primary-foreground hover:bg-primary-hover disabled:opacity-40"
+          className="h-10 w-10 rounded-[12px] bg-primary text-primary-foreground hover:bg-primary-hover disabled:opacity-40"
         >
           <ArrowRight className="w-4 h-4" />
         </Button>

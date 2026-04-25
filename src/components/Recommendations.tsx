@@ -60,22 +60,22 @@ export function Recommendations({
   }, [decision, company, role]);
 
   return (
-    <div className="min-h-screen pb-40">
-      <div className="border-b border-border/50 bg-background/70 backdrop-blur-md sticky top-0 z-20">
+    <div className="min-h-screen pb-44">
+      <div className="border-b hairline bg-background/60 backdrop-blur-xl sticky top-0 z-20">
         <div className="container py-4 flex items-center justify-between">
-          <Button variant="ghost" onClick={onBack} className="gap-2 text-xs h-9">
+          <Button variant="ghost" onClick={onBack} className="gap-2 text-[12px] h-9 text-muted-foreground hover:text-foreground">
             <ArrowLeft className="w-3.5 h-3.5" /> Back
           </Button>
-          <div className="text-[11px] text-muted-foreground truncate max-w-[60%]">
-            {analysis.ticker} · {decision.subIntent}
+          <div className="text-[11px] text-muted-foreground truncate max-w-[60%] tracking-wide">
+            {analysis.ticker}
           </div>
-          <Button variant="ghost" onClick={onRestart} className="text-xs h-9">
+          <Button variant="ghost" onClick={onRestart} className="text-[12px] h-9 text-muted-foreground hover:text-foreground">
             New analysis
           </Button>
         </div>
       </div>
 
-      <div className="container py-16 max-w-2xl space-y-16">
+      <div className="container py-20 max-w-2xl space-y-16">
         {!data && !error && <Loading />}
         {error && (
           <div className="surface rounded-2xl p-6 text-short text-sm">{error}</div>
@@ -154,11 +154,13 @@ function RecommendationView({ data }: { data: Recommendation }) {
   }, [data]);
 
   return (
-    <section className="space-y-14">
+    <section className="space-y-16">
       {revealed >= 1 && (
         <div className="text-center space-y-4 animate-fade-in-up">
-          <div className="text-[11px] text-muted-foreground tracking-wide">Recommended move</div>
-          <h2 className="font-display text-2xl md:text-[32px] font-semibold leading-[1.15] tracking-tight max-w-xl mx-auto">
+          <div className="text-[10px] text-muted-foreground/70 tracking-[0.18em] uppercase">
+            Recommended move
+          </div>
+          <h2 className="font-display text-[28px] md:text-[38px] font-semibold leading-[1.1] tracking-[-0.03em] max-w-xl mx-auto text-elegant">
             {data.recommendedMove}
           </h2>
         </div>
@@ -190,11 +192,17 @@ function RecommendationView({ data }: { data: Recommendation }) {
 
       {revealed >= 5 && (
         <Block title="Alternative paths" icon={Compass} accent="text-hold" dot="bg-hold">
-          <div className="space-y-3.5">
+          <div className="space-y-4">
             {data.alternativePaths.slice(0, 3).map((p, i) => (
-              <div key={i} className="space-y-1.5 animate-fade-in-soft" style={{ animationDelay: `${i * 100}ms` }}>
-                <div className="font-medium text-[15px] text-foreground/95">{p.label}</div>
-                <p className="text-[14px] text-muted-foreground leading-relaxed">{p.detail}</p>
+              <div
+                key={i}
+                className="surface rounded-xl p-4 space-y-1.5 animate-fade-in-soft"
+                style={{ animationDelay: `${i * 100}ms` }}
+              >
+                <div className="font-medium text-[14.5px] text-foreground/95 tracking-tight">
+                  {p.label}
+                </div>
+                <p className="text-[13.5px] text-muted-foreground leading-[1.55]">{p.detail}</p>
               </div>
             ))}
           </div>
@@ -218,20 +226,22 @@ function Block({
   children: React.ReactNode;
 }) {
   return (
-    <div className="space-y-4 animate-fade-in-up">
+    <div className="space-y-5 animate-fade-in-up">
       <div className="flex items-center gap-2.5">
         <Icon className={`w-3.5 h-3.5 ${accent}`} />
-        <span className="text-[11px] text-muted-foreground tracking-wide">{title}</span>
+        <span className="text-[10px] text-muted-foreground/70 tracking-[0.18em] uppercase">
+          {title}
+        </span>
       </div>
-      <div className="space-y-2.5">{children}</div>
+      <div className="space-y-3">{children}</div>
     </div>
   );
 }
 
 function Bullet({ text, dot }: { text: string; dot: string }) {
   return (
-    <p className="text-[14.5px] text-foreground/90 leading-relaxed flex gap-3">
-      <span className={`shrink-0 mt-2 w-1 h-1 rounded-full ${dot}`} />
+    <p className="text-[15px] text-foreground/85 leading-[1.6] flex gap-3">
+      <span className={`shrink-0 mt-2.5 w-1 h-1 rounded-full ${dot}`} />
       <span className="flex-1">{text}</span>
     </p>
   );

@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { ArrowRight } from "lucide-react";
 
 interface Props {
@@ -27,18 +26,18 @@ export function Landing({ onSubmit }: Props) {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="container py-6 flex items-center justify-between">
-        <div className="font-mono text-sm font-semibold tracking-wider">$JOB</div>
-        <span className="font-mono text-[11px] text-muted-foreground">career asset engine</span>
+      <header className="container py-7 flex items-center justify-between">
+        <div className="font-semibold tracking-tight text-base">$JOB</div>
+        <span className="text-xs text-muted-foreground">career asset engine</span>
       </header>
 
-      <main className="flex-1 container flex items-center justify-center py-16">
-        <div className="w-full max-w-xl space-y-10 text-center animate-fade-in-up">
-          <div className="space-y-5">
-            <h1 className="font-display text-4xl md:text-6xl font-semibold leading-[1.1] tracking-tight">
-              Your job is your biggest asset.
+      <main className="flex-1 container flex items-center justify-center py-12 md:py-20">
+        <div className="w-full max-w-[480px] space-y-12 animate-fade-in-up">
+          <div className="space-y-5 text-center">
+            <h1 className="font-display text-[44px] md:text-[56px] font-semibold leading-[1.05] tracking-[-0.03em]">
+              Your job is your<br />biggest asset.
             </h1>
-            <p className="text-base md:text-lg text-muted-foreground leading-relaxed max-w-md mx-auto">
+            <p className="text-[15px] md:text-base text-muted-foreground leading-relaxed max-w-[400px] mx-auto">
               You invest most of your time, energy, and upside into it. $JOB prices that asset and
               helps you decide what to do next.
             </p>
@@ -46,63 +45,61 @@ export function Landing({ onSubmit }: Props) {
 
           <form
             onSubmit={submit}
-            className="rounded-xl border border-border bg-card/40 backdrop-blur p-6 space-y-4 text-left animate-fade-in-up"
-            style={{ animationDelay: "200ms" }}
+            className="surface rounded-2xl p-6 md:p-7 space-y-4 text-left animate-fade-in-up"
+            style={{ animationDelay: "150ms" }}
           >
             <div className="space-y-2">
-              <Label className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-                Company
-              </Label>
+              <label className="text-xs font-medium text-muted-foreground">Company</label>
               <Input
                 placeholder="N26"
                 value={company}
                 onChange={(e) => setCompany(e.target.value)}
-                className="h-11 bg-background/40 border-border/70"
+                className="h-12 bg-background/40 border-border/60 rounded-xl text-[15px] focus-visible:ring-1 focus-visible:ring-primary/40 focus-visible:ring-offset-0"
               />
             </div>
             <div className="space-y-2">
-              <Label className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-                Role
-              </Label>
+              <label className="text-xs font-medium text-muted-foreground">Role</label>
               <Input
                 placeholder="Product Manager"
                 value={role}
                 onChange={(e) => setRole(e.target.value)}
-                className="h-11 bg-background/40 border-border/70"
+                className="h-12 bg-background/40 border-border/60 rounded-xl text-[15px] focus-visible:ring-1 focus-visible:ring-primary/40 focus-visible:ring-offset-0"
               />
             </div>
             <Button
               type="submit"
               size="lg"
-              className="w-full h-12 text-base font-medium gap-2 bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+              className="w-full h-12 text-[15px] font-medium gap-2 rounded-xl bg-primary text-primary-foreground hover:opacity-95 transition-opacity mt-2"
             >
               Price my job <ArrowRight className="w-4 h-4" />
             </Button>
           </form>
 
           <div
-            className="flex flex-col gap-1.5 items-center text-sm text-muted-foreground animate-fade-in-up"
-            style={{ animationDelay: "400ms" }}
+            className="space-y-3 animate-fade-in-up"
+            style={{ animationDelay: "300ms" }}
           >
-            <span className="font-mono text-[10px] uppercase tracking-[0.2em] mb-1">try</span>
-            {examples.map((ex) => (
-              <button
-                key={ex.company}
-                type="button"
-                onClick={() => {
-                  setCompany(ex.company);
-                  setRole(ex.role);
-                }}
-                className="font-mono text-xs hover:text-foreground transition-colors"
-              >
-                {ex.company} · {ex.role}
-              </button>
-            ))}
+            <div className="text-center text-xs text-muted-foreground">Try one</div>
+            <div className="flex flex-wrap gap-2 justify-center">
+              {examples.map((ex) => (
+                <button
+                  key={ex.company}
+                  type="button"
+                  onClick={() => {
+                    setCompany(ex.company);
+                    setRole(ex.role);
+                  }}
+                  className="px-3.5 py-2 rounded-full border border-border/60 bg-card/30 text-xs text-foreground/80 hover:text-foreground hover:border-foreground/30 hover:bg-card/50 transition-all"
+                >
+                  {ex.company} · {ex.role}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </main>
 
-      <footer className="container py-6 font-mono text-[11px] text-muted-foreground text-center">
+      <footer className="container py-7 text-xs text-muted-foreground text-center">
         Not financial advice. Definitely career advice.
       </footer>
     </div>

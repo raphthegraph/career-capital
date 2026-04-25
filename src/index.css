@@ -2,68 +2,62 @@
 @tailwind components;
 @tailwind utilities;
 
-/* $JOB — Bloomberg Terminal × Stripe × Linear. Dark, financial, cinematic. */
+/* $JOB — Minimal, premium, AI-native fintech. Trade Republic × Linear × OpenAI. */
 
 @layer base {
   :root {
-    --background: 220 30% 4%;
-    --foreground: 60 20% 96%;
+    /* Calm dark base, slight green undertone */
+    --background: 160 14% 5%;
+    --foreground: 150 8% 96%;
 
-    --card: 220 25% 7%;
-    --card-foreground: 60 20% 96%;
+    --card: 160 12% 8%;
+    --card-foreground: 150 8% 96%;
 
-    --popover: 220 25% 7%;
-    --popover-foreground: 60 20% 96%;
+    --popover: 160 12% 8%;
+    --popover-foreground: 150 8% 96%;
 
-    --primary: 142 76% 56%;
-    --primary-foreground: 220 30% 4%;
+    /* Restrained green accent — used sparingly */
+    --primary: 152 52% 52%;
+    --primary-foreground: 160 14% 5%;
 
-    --secondary: 220 20% 12%;
-    --secondary-foreground: 60 20% 96%;
+    --secondary: 160 10% 12%;
+    --secondary-foreground: 150 8% 96%;
 
-    --muted: 220 20% 10%;
-    --muted-foreground: 220 10% 60%;
+    --muted: 160 10% 11%;
+    --muted-foreground: 155 6% 60%;
 
-    --accent: 38 92% 60%;
-    --accent-foreground: 220 30% 4%;
+    --accent: 152 30% 22%;
+    --accent-foreground: 150 8% 96%;
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 60 20% 96%;
+    --destructive: 0 70% 58%;
+    --destructive-foreground: 150 8% 96%;
 
-    --border: 220 20% 14%;
-    --input: 220 20% 14%;
-    --ring: 142 76% 56%;
+    --border: 160 10% 14%;
+    --input: 160 10% 16%;
+    --ring: 152 52% 52%;
 
-    --radius: 0.375rem;
+    --radius: 0.875rem;
 
-    /* Asset rating semantic colors */
-    --buy: 142 76% 56%;
-    --hold: 38 92% 60%;
-    --sell: 16 90% 60%;
-    --short: 0 84% 60%;
+    /* Asset rating semantic colors — slightly desaturated */
+    --buy: 152 52% 55%;
+    --hold: 38 75% 60%;
+    --sell: 16 75% 60%;
+    --short: 0 70% 60%;
 
-    --terminal-green: 142 76% 56%;
-    --terminal-amber: 38 92% 60%;
-    --terminal-red: 0 84% 60%;
-    --terminal-cyan: 180 70% 55%;
-    --terminal-grid: 220 20% 12%;
+    /* Subtle gradients only */
+    --gradient-hero: radial-gradient(ellipse 80% 60% at 50% 0%, hsl(152 50% 14% / 0.55), transparent 70%),
+                     radial-gradient(ellipse 60% 50% at 90% 100%, hsl(160 30% 10% / 0.5), transparent 70%),
+                     hsl(160 14% 5%);
+    --gradient-buy: linear-gradient(135deg, hsl(152 52% 55%), hsl(160 50% 48%));
+    --gradient-sell: linear-gradient(135deg, hsl(16 75% 60%), hsl(0 70% 58%));
+    --gradient-hold: linear-gradient(135deg, hsl(38 75% 60%), hsl(48 80% 55%));
+    --gradient-short: linear-gradient(135deg, hsl(340 65% 55%), hsl(0 70% 58%));
 
-    /* Gradients */
-    --gradient-hero: radial-gradient(ellipse at top, hsl(142 76% 20% / 0.35), transparent 60%),
-                     radial-gradient(ellipse at bottom right, hsl(38 92% 30% / 0.25), transparent 60%),
-                     hsl(220 30% 4%);
-    --gradient-buy: linear-gradient(135deg, hsl(142 76% 56%), hsl(160 76% 50%));
-    --gradient-sell: linear-gradient(135deg, hsl(16 90% 60%), hsl(0 84% 60%));
-    --gradient-hold: linear-gradient(135deg, hsl(38 92% 60%), hsl(48 95% 55%));
-    --gradient-short: linear-gradient(135deg, hsl(340 80% 55%), hsl(0 84% 60%));
-    --gradient-card: linear-gradient(180deg, hsl(220 25% 8%), hsl(220 25% 5%));
+    --shadow-soft: 0 1px 2px hsl(0 0% 0% / 0.3), 0 8px 24px -8px hsl(0 0% 0% / 0.4);
+    --shadow-elevated: 0 1px 2px hsl(0 0% 0% / 0.3), 0 20px 50px -20px hsl(0 0% 0% / 0.6);
+    --glow-primary: 0 0 0 1px hsl(var(--primary) / 0.15), 0 8px 32px hsl(var(--primary) / 0.18);
 
-    /* Shadows / glows */
-    --glow-primary: 0 0 40px hsl(142 76% 56% / 0.35);
-    --glow-accent: 0 0 40px hsl(38 92% 60% / 0.3);
-    --shadow-terminal: 0 20px 60px -20px hsl(0 0% 0% / 0.6), 0 0 0 1px hsl(220 20% 14%);
-
-    --font-display: 'Space Grotesk', system-ui, sans-serif;
+    --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
     --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 
     --transition-smooth: cubic-bezier(0.16, 1, 0.3, 1);
@@ -75,26 +69,19 @@
   html, body, #root { @apply min-h-screen; }
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: var(--font-display);
+    font-family: var(--font-sans);
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     background: var(--gradient-hero);
     background-attachment: fixed;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
-  ::selection { background: hsl(var(--primary) / 0.3); }
+  ::selection { background: hsl(var(--primary) / 0.25); }
 }
 
 @layer utilities {
   .font-mono { font-family: var(--font-mono); }
-  .font-display { font-family: var(--font-display); }
-
-  .terminal-grid {
-    background-image:
-      linear-gradient(hsl(var(--terminal-grid)) 1px, transparent 1px),
-      linear-gradient(90deg, hsl(var(--terminal-grid)) 1px, transparent 1px);
-    background-size: 40px 40px;
-  }
-
-  .glow-primary { box-shadow: var(--glow-primary); }
-  .glow-accent { box-shadow: var(--glow-accent); }
+  .font-display { font-family: var(--font-sans); letter-spacing: -0.02em; }
 
   .text-buy { color: hsl(var(--buy)); }
   .text-hold { color: hsl(var(--hold)); }
@@ -106,44 +93,27 @@
   .bg-sell { background: var(--gradient-sell); }
   .bg-short { background: var(--gradient-short); }
 
-  .ticker-tape {
-    animation: ticker 30s linear infinite;
+  .surface {
+    background: hsl(var(--card) / 0.5);
+    backdrop-filter: blur(12px);
+    border: 1px solid hsl(var(--border) / 0.7);
+    box-shadow: var(--shadow-soft);
   }
 
-  .scan-line::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(180deg, transparent, hsl(var(--primary) / 0.08), transparent);
-    animation: scan 2.5s linear infinite;
-    pointer-events: none;
-  }
-
-  .blink { animation: blink 1.2s steps(2) infinite; }
-
-  .card-terminal {
-    background: var(--gradient-card);
+  .surface-elevated {
+    background: hsl(var(--card) / 0.7);
+    backdrop-filter: blur(16px);
     border: 1px solid hsl(var(--border));
-    box-shadow: var(--shadow-terminal);
+    box-shadow: var(--shadow-elevated);
   }
+
+  .glow-primary { box-shadow: var(--glow-primary); }
+
+  /* Smooth premium scroll */
+  html { scroll-behavior: smooth; }
 }
 
-@keyframes ticker {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
-}
-
-@keyframes scan {
-  0% { transform: translateY(-100%); }
-  100% { transform: translateY(100%); }
-}
-
-@keyframes blink {
-  0%, 50% { opacity: 1; }
-  51%, 100% { opacity: 0; }
-}
-
-@keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 20px hsl(var(--primary) / 0.3); }
-  50% { box-shadow: 0 0 40px hsl(var(--primary) / 0.6); }
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }

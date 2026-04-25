@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { Analysis, QualitativeInsight } from "@/lib/job-types";
 import { RatingPill, ratingColorClass } from "@/components/RatingPill";
@@ -12,18 +12,18 @@ interface Props {
 }
 
 // 0 idle → 1 priced → 2 ticker → 3 rating → 4 question → 5 answer → 6 verdict → 7 signals → 8 cta
-const TIMINGS = [350, 1200, 900, 1100, 950, 800, 950, 700];
+const TIMINGS = [350, 1100, 850, 1000, 900, 800, 900, 700];
 
-const LEVEL_TONE: Record<string, { color: string; label: string }> = {
-  strong: { color: "text-buy", label: "Positive" },
-  rising: { color: "text-buy", label: "Positive" },
-  low: { color: "text-buy", label: "Positive" },
-  neutral: { color: "text-hold", label: "Neutral" },
-  high: { color: "text-short", label: "Negative" },
-  declining: { color: "text-short", label: "Negative" },
-  blocked: { color: "text-short", label: "Negative" },
-  weak: { color: "text-short", label: "Negative" },
-  limited: { color: "text-hold", label: "Neutral" },
+const LEVEL_TONE: Record<string, { dot: string; chip: string; label: string }> = {
+  strong: { dot: "bg-buy", chip: "text-buy", label: "Positive" },
+  rising: { dot: "bg-buy", chip: "text-buy", label: "Positive" },
+  low: { dot: "bg-buy", chip: "text-buy", label: "Positive" },
+  neutral: { dot: "bg-hold", chip: "text-hold", label: "Neutral" },
+  high: { dot: "bg-short", chip: "text-short", label: "Negative" },
+  declining: { dot: "bg-short", chip: "text-short", label: "Negative" },
+  blocked: { dot: "bg-short", chip: "text-short", label: "Negative" },
+  weak: { dot: "bg-short", chip: "text-short", label: "Negative" },
+  limited: { dot: "bg-hold", chip: "text-hold", label: "Neutral" },
 };
 
 const FALLBACK_INSIGHTS: QualitativeInsight[] = [
@@ -37,6 +37,8 @@ const FALLBACK_INSIGHTS: QualitativeInsight[] = [
 export function VerdictReveal({ company, role, analysis, onContinue }: Props) {
   const [phase, setPhase] = useState(0);
   const [insightsRevealed, setInsightsRevealed] = useState(0);
+  const lastSignalRef = useRef<HTMLDivElement>(null);
+  const ctaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (phase >= TIMINGS.length) return;
@@ -55,20 +57,32 @@ export function VerdictReveal({ company, role, analysis, onContinue }: Props) {
   useEffect(() => {
     if (phase < 7) return;
     if (insightsRevealed >= insights.length) return;
-    const t = setTimeout(() => setInsightsRevealed((m) => m + 1), 380);
+    const t = setTimeout(() => setInsightsRevealed((m) => m + 1), 650);
     return () => clearTimeout(t);
   }, [phase, insightsRevealed, insights.length]);
 
+  // autoscroll as new signals appear
+  useEffect(() => {
+    if (insightsRevealed === 0) return;
+    lastSignalRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [insightsRevealed]);
+
+  useEffect(() => {
+    if (phase >= 8 && insightsRevealed >= insights.length) {
+      ctaRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [phase, insightsRevealed, insights.length]);
+
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 relative">
-      <div className="max-w-xl w-full text-center space-y-10 relative">
+    <div className="min-h-screen flex flex-col items-center px-6 py-20">
+      <div className="max-w-xl w-full text-center space-y-12">
         {/* 1 */}
         {phase >= 1 && (
-          <div className="animate-fade-in-up space-y-2">
-            <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+          <div className="animate-fade-in-up space-y-3">
+            <div className="text-xs text-muted-foreground">
               {company} · {role}
             </div>
-            <h2 className="font-display text-3xl md:text-4xl font-semibold">
+            <h2 className="font-display text-3xl md:text-4xl font-semibold tracking-tight">
               Your job has been priced.
             </h2>
           </div>
@@ -76,11 +90,9 @@ export function VerdictReveal({ company, role, analysis, onContinue }: Props) {
 
         {/* 2 */}
         {phase >= 2 && (
-          <div className="animate-fade-in space-y-1">
-            <div className="font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
-              Synthetic ticker
-            </div>
-            <div className="font-mono text-4xl md:text-5xl font-semibold tracking-wider">
+          <div className="animate-fade-in space-y-1.5">
+            <div className="text-[11px] text-muted-foreground tracking-wide">Synthetic ticker</div>
+            <div className="font-mono text-3xl md:text-4xl font-medium tracking-wider text-foreground/95">
               {analysis.ticker}
             </div>
           </div>
@@ -95,7 +107,7 @@ export function VerdictReveal({ company, role, analysis, onContinue }: Props) {
 
         {/* 4 */}
         {phase >= 4 && (
-          <h2 className="font-display text-xl md:text-2xl font-medium animate-fade-in-up text-muted-foreground">
+          <h2 className="font-display text-xl md:text-2xl font-medium animate-fade-in-up text-muted-foreground tracking-tight">
             Would you buy this job?
           </h2>
         )}
@@ -103,7 +115,7 @@ export function VerdictReveal({ company, role, analysis, onContinue }: Props) {
         {/* 5 */}
         {phase >= 5 && (
           <p
-            className={`font-display text-4xl md:text-5xl font-semibold animate-scale-in ${ratingColorClass(
+            className={`font-display text-5xl md:text-6xl font-semibold animate-scale-in tracking-tight ${ratingColorClass(
               analysis.rating,
             )}`}
           >
@@ -113,32 +125,39 @@ export function VerdictReveal({ company, role, analysis, onContinue }: Props) {
 
         {/* 6 */}
         {phase >= 6 && (
-          <p className="text-base md:text-lg text-foreground/80 max-w-lg mx-auto italic animate-fade-in-up leading-relaxed">
-            "{analysis.oneLineVerdict}"
+          <p className="text-base md:text-lg text-foreground/75 max-w-lg mx-auto animate-fade-in-up leading-relaxed">
+            {analysis.oneLineVerdict}
           </p>
         )}
 
-        {/* 7 — concrete signals */}
+        {/* 7 — concrete signals as elegant cards */}
         {phase >= 7 && (
-          <div className="space-y-2 max-w-lg mx-auto pt-4 text-left">
-            <div className="font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground text-center mb-3">
+          <div className="space-y-3 max-w-lg mx-auto pt-6 text-left">
+            <div className="text-[11px] text-muted-foreground text-center mb-5 tracking-wide">
               Key signals
             </div>
             {insights.map((ins, i) => {
               if (i >= insightsRevealed) return null;
               const tone = LEVEL_TONE[ins.level] ?? LEVEL_TONE.neutral;
+              const isLast = i === insightsRevealed - 1;
               return (
                 <div
                   key={ins.label}
-                  className="flex items-start gap-3 py-2.5 border-b border-border/40 animate-fade-in-up"
+                  ref={isLast ? lastSignalRef : null}
+                  className="surface rounded-2xl p-5 animate-fade-in-up"
                 >
-                  <span className={`mt-2 w-1.5 h-1.5 rounded-full shrink-0 ${tone.color.replace("text-", "bg-")}`} />
-                  <div className="flex-1 min-w-0">
-                    <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-                      {ins.label}
+                  <div className="flex items-center justify-between gap-3 mb-2">
+                    <div className="flex items-center gap-2.5">
+                      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${tone.dot}`} />
+                      <div className="text-[13px] font-medium text-foreground">
+                        {ins.label}
+                      </div>
                     </div>
-                    <div className="text-[14px] text-foreground/90 leading-snug">{ins.detail}</div>
+                    <span className={`text-[11px] ${tone.chip}`}>{tone.label}</span>
                   </div>
+                  <p className="text-[14.5px] text-foreground/80 leading-relaxed pl-4">
+                    {ins.detail}
+                  </p>
                 </div>
               );
             })}
@@ -147,12 +166,11 @@ export function VerdictReveal({ company, role, analysis, onContinue }: Props) {
 
         {/* 8 */}
         {phase >= 8 && insightsRevealed >= insights.length && (
-          <div className="animate-fade-in-up pt-4">
+          <div ref={ctaRef} className="animate-fade-in-up pt-6">
             <Button
               onClick={onContinue}
               size="lg"
-              variant="outline"
-              className="gap-2 hover:border-foreground/40"
+              className="gap-2 h-12 px-7 rounded-xl bg-primary text-primary-foreground hover:opacity-95"
             >
               Continue <ArrowDown className="w-4 h-4" />
             </Button>

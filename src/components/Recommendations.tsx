@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Analysis, ChatMessage, DecisionContext, Recommendation } from "@/lib/job-types";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { ArrowLeft, ArrowUp, AlertTriangle, Sparkles, Calendar, Compass } from "lucide-react";
+import { SignalGrid } from "@/components/SignalGrid";
 
 interface Props {
   company: string;
@@ -60,22 +60,32 @@ export function Recommendations({
   }, [decision, company, role]);
 
   return (
-    <div className="min-h-screen pb-44">
-      <div className="border-b hairline bg-background/60 backdrop-blur-xl sticky top-0 z-20">
+    <div className="min-h-screen pb-44 relative">
+      <SignalGrid />
+
+      <div className="relative z-20 border-b hairline bg-background/70 backdrop-blur-xl sticky top-0">
         <div className="container py-4 flex items-center justify-between">
-          <Button variant="ghost" onClick={onBack} className="gap-2 text-[12px] h-9 text-muted-foreground hover:text-foreground">
+          <Button
+            variant="ghost"
+            onClick={onBack}
+            className="gap-2 text-[12px] h-9 text-muted-foreground hover:text-foreground hover:bg-background/40"
+          >
             <ArrowLeft className="w-3.5 h-3.5" /> Back
           </Button>
-          <div className="text-[11px] text-muted-foreground truncate max-w-[60%] tracking-wide">
+          <div className="text-[11px] text-muted-foreground truncate max-w-[60%] tracking-wide font-mono">
             {analysis.ticker}
           </div>
-          <Button variant="ghost" onClick={onRestart} className="text-[12px] h-9 text-muted-foreground hover:text-foreground">
+          <Button
+            variant="ghost"
+            onClick={onRestart}
+            className="text-[12px] h-9 text-muted-foreground hover:text-foreground hover:bg-background/40"
+          >
             New analysis
           </Button>
         </div>
       </div>
 
-      <div className="container py-20 max-w-2xl space-y-16">
+      <div className="relative z-10 container py-20 max-w-2xl space-y-16">
         {!data && !error && <Loading />}
         {error && (
           <div className="surface rounded-2xl p-6 text-short text-sm">{error}</div>
@@ -83,7 +93,6 @@ export function Recommendations({
         {data && <RecommendationView data={data} />}
       </div>
 
-      {/* Floating chat */}
       {data && (
         <FloatingChat
           company={company}
@@ -97,8 +106,6 @@ export function Recommendations({
   );
 }
 
-/* -------------------- Loading -------------------- */
-
 function Loading() {
   const [step, setStep] = useState(0);
   useEffect(() => {
@@ -109,8 +116,8 @@ function Loading() {
 
   return (
     <div className="max-w-md mx-auto space-y-8 animate-fade-in py-10">
-      <h2 className="font-display text-2xl md:text-[26px] font-semibold text-center tracking-tight">
-        Building your next move…
+      <h2 className="font-display text-[26px] md:text-[30px] font-[680] text-center tracking-[-0.035em] text-foreground">
+        Composing your next move…
       </h2>
       <ul className="space-y-3.5">
         {LOAD_STEPS.map((s, i) => {
@@ -125,7 +132,7 @@ function Loading() {
             >
               <span
                 className={`w-1.5 h-1.5 rounded-full ${
-                  isCurrent ? "bg-foreground/70 animate-pulse" : "bg-primary"
+                  isCurrent ? "bg-primary-strong animate-breathe" : "bg-primary-strong/60"
                 }`}
               />
               {s}
@@ -137,8 +144,6 @@ function Loading() {
     </div>
   );
 }
-
-/* -------------------- Recommendation (sequential reveal) -------------------- */
 
 const SECTION_DELAYS = [0, 600, 1300, 2100, 2900];
 
@@ -157,10 +162,10 @@ function RecommendationView({ data }: { data: Recommendation }) {
     <section className="space-y-16">
       {revealed >= 1 && (
         <div className="text-center space-y-4 animate-fade-in-up">
-          <div className="text-[10px] text-muted-foreground/70 tracking-[0.18em] uppercase">
+          <div className="text-[10px] text-muted-foreground tracking-[0.18em] uppercase">
             Recommended move
           </div>
-          <h2 className="font-display text-[28px] md:text-[38px] font-semibold leading-[1.1] tracking-[-0.03em] max-w-xl mx-auto text-elegant">
+          <h2 className="font-display text-[32px] md:text-[44px] font-[680] leading-[1.08] tracking-[-0.04em] max-w-xl mx-auto text-foreground text-elegant">
             {data.recommendedMove}
           </h2>
         </div>
@@ -175,9 +180,9 @@ function RecommendationView({ data }: { data: Recommendation }) {
       )}
 
       {revealed >= 3 && (
-        <Block title="Next 30 days" icon={Calendar} accent="text-primary" dot="bg-primary">
+        <Block title="Next 30 days" icon={Calendar} accent="text-primary-strong" dot="bg-primary-strong">
           {data.next30Days.slice(0, 3).map((w, i) => (
-            <Bullet key={i} text={w} dot="bg-primary" />
+            <Bullet key={i} text={w} dot="bg-primary-strong" />
           ))}
         </Block>
       )}
@@ -192,17 +197,17 @@ function RecommendationView({ data }: { data: Recommendation }) {
 
       {revealed >= 5 && (
         <Block title="Alternative paths" icon={Compass} accent="text-hold" dot="bg-hold">
-          <div className="space-y-4">
+          <div className="space-y-3">
             {data.alternativePaths.slice(0, 3).map((p, i) => (
               <div
                 key={i}
-                className="surface rounded-xl p-4 space-y-1.5 animate-fade-in-soft"
+                className="surface rounded-[18px] p-5 space-y-1.5 animate-fade-in-soft lift-on-hover"
                 style={{ animationDelay: `${i * 100}ms` }}
               >
-                <div className="font-medium text-[14.5px] text-foreground/95 tracking-tight">
+                <div className="font-semibold text-[14.5px] text-foreground tracking-tight">
                   {p.label}
                 </div>
-                <p className="text-[13.5px] text-muted-foreground leading-[1.55]">{p.detail}</p>
+                <p className="text-[14px] text-muted-foreground leading-[1.55]">{p.detail}</p>
               </div>
             ))}
           </div>
@@ -229,7 +234,7 @@ function Block({
     <div className="space-y-5 animate-fade-in-up">
       <div className="flex items-center gap-2.5">
         <Icon className={`w-3.5 h-3.5 ${accent}`} />
-        <span className="text-[10px] text-muted-foreground/70 tracking-[0.18em] uppercase">
+        <span className="text-[10px] text-muted-foreground tracking-[0.18em] uppercase">
           {title}
         </span>
       </div>
@@ -240,8 +245,8 @@ function Block({
 
 function Bullet({ text, dot }: { text: string; dot: string }) {
   return (
-    <p className="text-[15px] text-foreground/85 leading-[1.6] flex gap-3">
-      <span className={`shrink-0 mt-2.5 w-1 h-1 rounded-full ${dot}`} />
+    <p className="text-[15.5px] text-foreground/85 leading-[1.6] flex gap-3">
+      <span className={`shrink-0 mt-2.5 w-1.5 h-1.5 rounded-full ${dot}`} />
       <span className="flex-1">{text}</span>
     </p>
   );
@@ -299,86 +304,84 @@ function FloatingChat({
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-40 pointer-events-none">
-      {/* Soft fade gradient behind composer */}
+      {/* soft fade behind composer */}
       <div className="absolute bottom-0 left-0 right-0 h-44 bg-gradient-to-t from-background via-background/85 to-transparent pointer-events-none" />
 
-      <div className="relative container max-w-2xl pb-7 pt-4 pointer-events-auto">
-        {open && messages.length > 0 && (
-          <div className="mb-3 surface-elevated rounded-2xl overflow-hidden animate-fade-in-up">
-            <div className="flex items-center justify-between px-5 py-3.5 border-b hairline">
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-3.5 h-3.5 text-primary" />
-                <span className="text-[12px] font-medium tracking-tight text-foreground/90">
-                  Chat with $JOB
-                </span>
-              </div>
-              <button
-                onClick={() => setOpen(false)}
-                className="text-[11px] uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
-              >
-                hide
-              </button>
-            </div>
-            <div
-              ref={scrollRef}
-              className="max-h-[380px] overflow-y-auto p-5 space-y-3"
-            >
-              {messages.map((m, i) => (
-                <div
-                  key={i}
-                  className={`flex animate-fade-in-soft ${
-                    m.role === "user" ? "justify-end" : "justify-start"
-                  }`}
+      <div className="relative px-6 pb-7 pt-4 pointer-events-auto flex justify-center">
+        <div className="w-full max-w-[820px] space-y-3">
+          {open && messages.length > 0 && (
+            <div className="surface-floating rounded-[24px] overflow-hidden animate-fade-in-up">
+              <div className="flex items-center justify-between px-5 py-3.5 border-b hairline">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-3.5 h-3.5 text-primary-strong" />
+                  <span className="text-[12px] font-semibold tracking-tight text-foreground">
+                    Chat with $JOB
+                  </span>
+                </div>
+                <button
+                  onClick={() => setOpen(false)}
+                  className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground hover:text-foreground transition-colors"
                 >
+                  hide
+                </button>
+              </div>
+              <div ref={scrollRef} className="max-h-[380px] overflow-y-auto p-5 space-y-3">
+                {messages.map((m, i) => (
                   <div
-                    className={`max-w-[88%] rounded-2xl px-4 py-3 text-[14px] leading-[1.55] whitespace-pre-wrap ${
-                      m.role === "user"
-                        ? "bg-primary/15 text-foreground border border-primary/20"
-                        : "bg-background/40 text-foreground/90 border border-border/50"
+                    key={i}
+                    className={`flex animate-fade-in-soft ${
+                      m.role === "user" ? "justify-end" : "justify-start"
                     }`}
                   >
-                    {m.content}
+                    <div
+                      className={`max-w-[88%] rounded-[18px] px-4 py-3 text-[14px] leading-[1.55] whitespace-pre-wrap ${
+                        m.role === "user"
+                          ? "bg-primary-tint text-foreground border border-primary/30"
+                          : "bg-secondary text-foreground/90 border border-border/[0.08]"
+                      }`}
+                    >
+                      {m.content}
+                    </div>
                   </div>
-                </div>
-              ))}
-              {loading && (
-                <div className="flex justify-start">
-                  <div className="rounded-2xl px-4 py-2.5 text-[13px] text-muted-foreground flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-primary animate-breathe" />
-                    thinking
+                ))}
+                {loading && (
+                  <div className="flex justify-start">
+                    <div className="rounded-[18px] px-4 py-2.5 text-[13px] text-muted-foreground flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary-strong animate-breathe" />
+                      thinking
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Floating input bar */}
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            send();
-          }}
-          className="surface-elevated rounded-2xl flex items-center gap-2 p-2 pl-5 glow-primary"
-          onFocus={() => messages.length > 0 && setOpen(true)}
-        >
-          <Sparkles className="w-4 h-4 text-primary/70 shrink-0" />
-          <input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask $JOB about your next move"
-            className="flex-1 h-12 bg-transparent text-[15px] text-foreground placeholder:text-muted-foreground/60 outline-none"
-            disabled={loading}
-          />
-          <Button
-            type="submit"
-            size="icon"
-            disabled={loading || !input.trim()}
-            className="h-10 w-10 rounded-xl bg-primary text-primary-foreground hover:opacity-95 disabled:opacity-40"
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              send();
+            }}
+            className="surface-floating rounded-full flex items-center gap-2 p-2 pl-6"
+            onFocus={() => messages.length > 0 && setOpen(true)}
           >
-            <ArrowUp className="w-4 h-4" />
-          </Button>
-        </form>
+            <Sparkles className="w-4 h-4 text-primary-strong shrink-0" />
+            <input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Ask $JOB about your next move"
+              className="flex-1 h-12 bg-transparent text-[15px] text-foreground placeholder:text-muted-foreground/70 outline-none"
+              disabled={loading}
+            />
+            <Button
+              type="submit"
+              size="icon"
+              disabled={loading || !input.trim()}
+              className="h-11 w-11 rounded-full bg-primary text-primary-foreground hover:bg-primary-hover disabled:opacity-40 glow-primary"
+            >
+              <ArrowUp className="w-4 h-4" />
+            </Button>
+          </form>
+        </div>
       </div>
     </div>
   );

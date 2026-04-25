@@ -2,77 +2,81 @@
 @tailwind components;
 @tailwind utilities;
 
-/* $JOB — Premium consumer fintech meets AI advisor.
-   Apple clarity × Trade Republic simplicity × OpenAI calm. */
+/* $JOB — Neo-minimal interface with character.
+   Bright AI-fintech: Peec × Trade Republic × Apple. */
 
 @layer base {
   :root {
-    /* Soft graphite base with very faint green undertone */
-    --background: 165 12% 7%;
-    --foreground: 150 6% 97%;
+    /* Bright soft base */
+    --background: 165 14% 97%;            /* #F6F8F7 */
+    --foreground: 222 32% 12%;            /* #111827 */
 
-    /* Elevated surface — slightly lifted, warmer */
-    --card: 165 10% 11%;
-    --card-foreground: 150 6% 97%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 32% 12%;
 
-    --popover: 165 10% 11%;
-    --popover-foreground: 150 6% 97%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 32% 12%;
 
-    /* One restrained green accent */
-    --primary: 152 48% 56%;
-    --primary-foreground: 165 14% 6%;
+    /* Light-blue brand accent */
+    --primary: 196 100% 71%;              /* #6DDCFF */
+    --primary-hover: 199 95% 60%;         /* #38BDF8 */
+    --primary-foreground: 200 78% 6%;     /* #06131A */
+    --primary-tint: 196 100% 95%;         /* #E8F8FF */
 
-    --secondary: 165 8% 14%;
-    --secondary-foreground: 150 6% 97%;
+    --secondary: 165 20% 95%;             /* #EEF3F2 */
+    --secondary-foreground: 222 32% 12%;
 
-    --muted: 165 8% 12%;
-    --muted-foreground: 155 5% 62%;
+    --muted: 165 16% 94%;
+    --muted-foreground: 220 9% 46%;       /* #667085 */
 
-    --accent: 152 24% 24%;
-    --accent-foreground: 150 6% 97%;
+    --accent: 196 100% 95%;               /* light blue tint */
+    --accent-foreground: 200 78% 14%;
 
-    --destructive: 4 70% 60%;
-    --destructive-foreground: 150 6% 97%;
+    --destructive: 0 100% 71%;            /* #FF6B6B */
+    --destructive-foreground: 0 0% 100%;
 
-    /* Hairline borders — almost invisible */
-    --border: 165 8% 16%;
-    --input: 165 8% 18%;
-    --ring: 152 48% 56%;
+    /* Hairline borders — #111827 @ 8% */
+    --border: 222 32% 12%;                /* used with /[0.08] */
+    --input: 222 32% 12%;
+    --ring: 196 100% 71%;
 
-    --radius: 1rem;
+    --radius: 1.25rem;                    /* 20px base */
 
-    /* Semantic asset colors — softer, more refined */
-    --buy: 152 48% 58%;
-    --hold: 38 70% 62%;
-    --sell: 16 70% 62%;
-    --short: 4 70% 62%;
+    /* Semantic asset colors */
+    --buy: 156 56% 50%;                   /* #35C98B */
+    --hold: 38 90% 63%;                   /* #F5B84B */
+    --sell: 0 100% 71%;                   /* #FF6B6B */
+    --short: 0 100% 71%;
+    --neutral: 215 20% 65%;               /* #94A3B8 */
 
-    /* Calm gradient — subtle radial wash, no neon */
+    /* Bright soft hero gradient */
     --gradient-hero:
-      radial-gradient(ellipse 90% 55% at 50% -10%, hsl(152 40% 16% / 0.45), transparent 65%),
-      radial-gradient(ellipse 70% 50% at 100% 110%, hsl(165 25% 11% / 0.45), transparent 60%),
-      hsl(165 12% 7%);
+      radial-gradient(ellipse 70% 45% at 85% -5%, hsl(196 100% 88% / 0.55), transparent 60%),
+      radial-gradient(ellipse 55% 40% at 10% 105%, hsl(165 30% 92% / 0.7), transparent 60%),
+      hsl(165 14% 97%);
 
-    --gradient-buy: linear-gradient(135deg, hsl(152 50% 58%), hsl(160 48% 50%));
-    --gradient-sell: linear-gradient(135deg, hsl(16 72% 60%), hsl(4 70% 58%));
-    --gradient-hold: linear-gradient(135deg, hsl(38 72% 62%), hsl(45 78% 56%));
-    --gradient-short: linear-gradient(135deg, hsl(345 60% 58%), hsl(4 70% 58%));
+    --gradient-buy: linear-gradient(135deg, hsl(156 60% 56%), hsl(160 56% 46%));
+    --gradient-sell: linear-gradient(135deg, hsl(8 95% 70%), hsl(0 95% 68%));
+    --gradient-hold: linear-gradient(135deg, hsl(38 92% 64%), hsl(45 95% 56%));
+    --gradient-short: linear-gradient(135deg, hsl(0 95% 70%), hsl(8 95% 64%));
 
-    /* Layered shadows — never harsh */
+    /* Soft shadows */
     --shadow-soft:
-      0 1px 2px hsl(0 0% 0% / 0.25),
-      0 8px 28px -10px hsl(0 0% 0% / 0.45);
+      0 1px 2px hsl(222 30% 12% / 0.04),
+      0 8px 28px -10px hsl(222 30% 12% / 0.08);
     --shadow-elevated:
-      0 1px 2px hsl(0 0% 0% / 0.3),
-      0 24px 60px -24px hsl(0 0% 0% / 0.6),
-      0 0 0 1px hsl(var(--border) / 0.6);
+      0 1px 2px hsl(222 30% 12% / 0.04),
+      0 20px 60px -16px hsl(222 30% 12% / 0.10);
+    --shadow-floating:
+      0 1px 2px hsl(222 30% 12% / 0.04),
+      0 24px 60px -20px hsl(222 30% 12% / 0.18);
     --shadow-input:
-      inset 0 1px 0 hsl(255 100% 100% / 0.02),
-      0 1px 2px hsl(0 0% 0% / 0.2);
+      inset 0 1px 0 hsl(0 0% 100% / 0.6),
+      0 1px 2px hsl(222 30% 12% / 0.04);
 
     --glow-primary:
-      0 0 0 1px hsl(var(--primary) / 0.18),
-      0 12px 40px -8px hsl(var(--primary) / 0.22);
+      0 0 0 1px hsl(196 100% 71% / 0.35),
+      0 14px 36px -10px hsl(199 95% 60% / 0.35);
 
     --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, "SF Pro Display", sans-serif;
     --font-mono: 'JetBrains Mono', ui-monospace, monospace;
@@ -83,7 +87,7 @@
 }
 
 @layer base {
-  * { @apply border-border; }
+  * { border-color: hsl(var(--border) / 0.08); }
   html, body, #root { @apply min-h-screen; }
   body {
     @apply bg-background text-foreground antialiased;
@@ -96,67 +100,109 @@
     text-rendering: optimizeLegibility;
     letter-spacing: -0.011em;
   }
-  ::selection { background: hsl(var(--primary) / 0.28); }
+  ::selection { background: hsl(var(--primary) / 0.35); color: hsl(var(--foreground)); }
 
-  h1, h2, h3 { letter-spacing: -0.025em; }
+  h1, h2, h3 { letter-spacing: -0.03em; }
 }
 
 @layer utilities {
   .font-mono { font-family: var(--font-mono); }
-  .font-display { font-family: var(--font-sans); letter-spacing: -0.03em; }
+  .font-display { font-family: var(--font-sans); letter-spacing: -0.04em; }
 
   .text-buy { color: hsl(var(--buy)); }
   .text-hold { color: hsl(var(--hold)); }
   .text-sell { color: hsl(var(--sell)); }
   .text-short { color: hsl(var(--short)); }
+  .text-primary-strong { color: hsl(var(--primary-hover)); }
 
   .bg-buy { background: var(--gradient-buy); }
   .bg-hold { background: var(--gradient-hold); }
   .bg-sell { background: var(--gradient-sell); }
   .bg-short { background: var(--gradient-short); }
 
-  /* Refined surfaces — lifted, warm, almost frosted */
+  /* Translucent glass surface */
   .surface {
-    background: linear-gradient(180deg, hsl(var(--card) / 0.6), hsl(var(--card) / 0.4));
+    background: hsl(0 0% 100% / 0.72);
     backdrop-filter: blur(20px) saturate(140%);
     -webkit-backdrop-filter: blur(20px) saturate(140%);
-    border: 1px solid hsl(var(--border) / 0.7);
+    border: 1px solid hsl(var(--border) / 0.08);
     box-shadow: var(--shadow-soft);
   }
 
   .surface-elevated {
-    background: linear-gradient(180deg, hsl(var(--card) / 0.85), hsl(var(--card) / 0.65));
-    backdrop-filter: blur(24px) saturate(160%);
-    -webkit-backdrop-filter: blur(24px) saturate(160%);
-    border: 1px solid hsl(var(--border));
+    background: hsl(0 0% 100%);
+    border: 1px solid hsl(var(--border) / 0.08);
     box-shadow: var(--shadow-elevated);
   }
 
+  .surface-floating {
+    background: hsl(0 0% 100% / 0.92);
+    backdrop-filter: blur(28px) saturate(160%);
+    -webkit-backdrop-filter: blur(28px) saturate(160%);
+    border: 1px solid hsl(var(--border) / 0.08);
+    box-shadow: var(--shadow-floating);
+  }
+
   .input-surface {
-    background: hsl(var(--background) / 0.4);
+    background: hsl(0 0% 100%);
     box-shadow: var(--shadow-input);
   }
 
   .glow-primary { box-shadow: var(--glow-primary); }
 
-  .hairline { border-color: hsl(var(--border) / 0.5); }
+  .hairline { border-color: hsl(var(--border) / 0.08); }
 
-  /* Premium scroll */
   html { scroll-behavior: smooth; }
 
-  /* Subtle text glow for headlines */
   .text-elegant {
     text-shadow: 0 1px 30px hsl(var(--foreground) / 0.04);
   }
-}
 
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  .lift-on-hover {
+    transition: transform 220ms var(--ease-out-quart), box-shadow 220ms var(--ease-out-quart);
+  }
+  .lift-on-hover:hover { transform: translateY(-1px); }
+
+  /* Reactive Signal Grid — fixed fullscreen, very subtle */
+  .signal-grid {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image:
+      linear-gradient(to right, hsl(196 80% 55% / 0.06) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(196 80% 55% / 0.06) 1px, transparent 1px);
+    background-size: 56px 56px;
+    -webkit-mask-image: radial-gradient(
+      circle 320px at var(--mx, 50%) var(--my, 50%),
+      hsl(0 0% 0% / 0.55), hsl(0 0% 0% / 0.08) 60%, transparent 100%
+    );
+            mask-image: radial-gradient(
+      circle 320px at var(--mx, 50%) var(--my, 50%),
+      hsl(0 0% 0% / 0.55), hsl(0 0% 0% / 0.08) 60%, transparent 100%
+    );
+    transition: opacity 600ms var(--ease-out-quart);
+  }
+  .signal-grid--focus {
+    -webkit-mask-image: radial-gradient(
+      circle 360px at 50% 42%,
+      hsl(0 0% 0% / 0.85), hsl(0 0% 0% / 0.15) 65%, transparent 100%
+    );
+            mask-image: radial-gradient(
+      circle 360px at 50% 42%,
+      hsl(0 0% 0% / 0.85), hsl(0 0% 0% / 0.15) 65%, transparent 100%
+    );
+  }
 }
 
 @keyframes breathe {
-  0%, 100% { opacity: 0.6; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.1); }
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.15); }
 }
 .animate-breathe { animation: breathe 2.4s var(--ease-out-quart) infinite; }
+
+@keyframes signal-pulse {
+  0%, 100% { opacity: 0; transform: scale(0.6); }
+  50% { opacity: 0.7; transform: scale(1); }
+}
+.animate-signal-pulse { animation: signal-pulse 2.6s var(--ease-out-quart) infinite; }

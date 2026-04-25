@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import type { Analysis, DecisionContext, Intent } from "@/lib/job-types";
 import { RatingPill, ratingColorClass } from "@/components/RatingPill";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { ChevronDown, ArrowRight } from "lucide-react";
+import { ChevronDown, ArrowRight, Sparkles } from "lucide-react";
+import { SignalGrid } from "@/components/SignalGrid";
 
 interface Props {
   company: string;
@@ -13,110 +13,60 @@ interface Props {
 }
 
 const SECTIONS = [
-  {
-    key: "bull" as const,
-    title: "Why to keep this job",
-    field: "bullCase" as const,
-    accent: "text-buy",
-    dotClass: "bg-buy",
-  },
-  {
-    key: "bear" as const,
-    title: "Why to be careful",
-    field: "bearCase" as const,
-    accent: "text-short",
-    dotClass: "bg-short",
-  },
-  {
-    key: "triggers" as const,
-    title: "What would change the rating",
-    field: "ratingChangeTriggers" as const,
-    accent: "text-hold",
-    dotClass: "bg-hold",
-  },
-];
+  { key: "bull", title: "Why to keep this job", field: "bullCase", accent: "text-buy", dotClass: "bg-buy" },
+  { key: "bear", title: "Why to be careful", field: "bearCase", accent: "text-short", dotClass: "bg-short" },
+  { key: "triggers", title: "What would change the rating", field: "ratingChangeTriggers", accent: "text-hold", dotClass: "bg-hold" },
+] as const;
 
 const INTENT_OPTIONS: { id: Intent; label: string }[] = [
   { id: "stay", label: "Stay and grow here" },
   { id: "options", label: "Keep options open" },
   { id: "leave", label: "Prepare to leave" },
-  { id: "other", label: "Something else" },
 ];
 
-const SUB_INTENT: Record<Exclude<Intent, "other">, { question: string; options: string[] }> = {
+const SUB_INTENT: Record<Intent, { question: string; options: string[]; placeholder: string }> = {
   stay: {
     question: "What matters most right now?",
-    options: [
-      "Get promoted faster",
-      "Increase compensation",
-      "Expand responsibility",
-      "Build stronger internal visibility",
-      "Other",
-    ],
+    options: ["Get promoted faster", "Increase compensation", "Expand responsibility"],
+    placeholder: "Or describe it in your own words…",
   },
   options: {
     question: "What kind of optionality do you want?",
-    options: [
-      "Similar role at a stronger company",
-      "Higher-growth startup",
-      "More stable company",
-      "Founder path later",
-      "Other",
-    ],
+    options: ["Stronger company, similar role", "Higher-growth startup", "More stable company"],
+    placeholder: "Or describe it in your own words…",
   },
   leave: {
     question: "What kind of move are you considering?",
-    options: [
-      "Join another company",
-      "Join a startup",
-      "Start my own company",
-      "Take time to reset",
-      "Other",
-    ],
+    options: ["Join another company", "Join a startup", "Start my own company"],
+    placeholder: "Or describe it in your own words…",
+  },
+  other: {
+    question: "What direction are you leaning?",
+    options: ["Take time to reset", "Switch industries", "Try something completely new"],
+    placeholder: "Or describe it in your own words…",
   },
 };
 
-// Third-question library — narrows the recommendation further
-const THIRD_QUESTION: Record<Intent, { question: string; options: string[] }> = {
+const THIRD_QUESTION: Record<Intent, { question: string; options: string[]; placeholder: string }> = {
   stay: {
     question: "What's your biggest constraint?",
-    options: [
-      "Limited time outside work",
-      "No internal sponsor yet",
-      "Comp ceiling at this level",
-      "Unclear next role",
-      "Other",
-    ],
+    options: ["No internal sponsor yet", "Comp ceiling at this level", "Unclear next role"],
+    placeholder: "Or tell $JOB what matters most…",
   },
   options: {
     question: "What timeline are you optimizing for?",
-    options: [
-      "Move within 3 months",
-      "Move within 6–12 months",
-      "Just exploring quietly",
-      "Wait for the right signal",
-      "Other",
-    ],
+    options: ["Move within 3 months", "Move within 6–12 months", "Just exploring quietly"],
+    placeholder: "Or tell $JOB what matters most…",
   },
   leave: {
     question: "What would make this move successful?",
-    options: [
-      "Significant comp jump",
-      "Faster path to leadership",
-      "Equity / ownership upside",
-      "Better learning environment",
-      "Other",
-    ],
+    options: ["Significant comp jump", "Faster path to leadership", "Equity / ownership upside"],
+    placeholder: "Or tell $JOB what matters most…",
   },
   other: {
-    question: "What would make this successful for you?",
-    options: [
-      "Clarity on next 6 months",
-      "Lower personal risk",
-      "Higher upside",
-      "Better day-to-day energy",
-      "Other",
-    ],
+    question: "What would make this successful?",
+    options: ["Clarity on next 6 months", "Lower personal risk", "Higher upside"],
+    placeholder: "Or tell $JOB what matters most…",
   },
 };
 
@@ -134,49 +84,47 @@ export function AnalysisDashboard({ company, role, analysis, onDecision }: Props
   }, []);
 
   return (
-    <div className="min-h-screen pb-32">
+    <div className="min-h-screen pb-32 relative">
+      <SignalGrid />
+
       {/* refined header */}
-      <div className="border-b hairline bg-background/60 backdrop-blur-xl sticky top-0 z-30">
+      <div className="relative z-20 border-b hairline bg-background/70 backdrop-blur-xl sticky top-0">
         <div className="container py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-primary/15 border border-primary/20 flex items-center justify-center font-mono text-[10px] font-semibold text-primary">
+            <div className="w-9 h-9 rounded-[12px] bg-primary/25 border border-primary/30 flex items-center justify-center font-mono text-[10.5px] font-semibold text-primary-strong">
               {analysis.ticker.slice(0, 3)}
             </div>
             <div>
-              <div className="text-[13px] font-medium tracking-tight text-foreground">
+              <div className="text-[13.5px] font-semibold tracking-tight text-foreground">
                 {company}
               </div>
-              <div className="text-[11px] text-muted-foreground">
-                {role}
-              </div>
+              <div className="text-[11.5px] text-muted-foreground">{role}</div>
             </div>
           </div>
           <RatingPill rating={analysis.rating} size="md" />
         </div>
       </div>
 
-      <div className="container py-20 max-w-2xl space-y-20">
+      <div className="relative z-10 container py-20 max-w-2xl space-y-24">
         {/* verdict line */}
         <section className="text-center space-y-5 animate-fade-in-up">
           <p
-            className={`font-display text-[34px] md:text-[44px] font-semibold tracking-[-0.03em] leading-[1.05] ${ratingColorClass(
+            className={`font-display text-[36px] md:text-[48px] font-[680] tracking-[-0.035em] leading-[1.05] ${ratingColorClass(
               analysis.rating,
             )}`}
           >
             {analysis.wouldBuy}.
           </p>
-          <p className="text-[16px] md:text-[17px] text-foreground/75 max-w-xl mx-auto leading-[1.55]">
+          <p className="text-[16px] md:text-[18px] text-foreground/80 max-w-xl mx-auto leading-[1.55]">
             {analysis.oneLineVerdict}
           </p>
         </section>
 
-        {/* investment thesis — auto-sequenced */}
         {showThesis && <ThesisSequence analysis={analysis} />}
 
-        {/* AI-native intent flow */}
         {showIntent && (
           <IntentFlow
-            onDecide={(d) => onDecision(d)}
+            onDecide={onDecision}
             options={INTENT_OPTIONS}
             subQuestions={SUB_INTENT}
             thirdQuestions={THIRD_QUESTION}
@@ -187,16 +135,14 @@ export function AnalysisDashboard({ company, role, analysis, onDecision }: Props
   );
 }
 
-/* -------------------- Thesis sequence (auto open/close) -------------------- */
+/* -------------------- Thesis sequence -------------------- */
 
 function ThesisSequence({ analysis }: { analysis: Analysis }) {
-  // 0 = none, 1..3 = which is currently active, 4 = sequence done
   const [activeIdx, setActiveIdx] = useState(0);
   const [revealedPerSection, setRevealedPerSection] = useState<Record<number, number>>({});
   const [manualOpen, setManualOpen] = useState<Record<number, boolean>>({});
   const sectionRefs = [useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null)];
 
-  // Drive auto sequence
   useEffect(() => {
     let cancelled = false;
     const run = async () => {
@@ -211,7 +157,6 @@ function ThesisSequence({ analysis }: { analysis: Analysis }) {
           if (cancelled) return;
           setRevealedPerSection((prev) => ({ ...prev, [i]: j + 1 }));
         }
-        // pause then close (de-emphasize)
         await new Promise((r) => setTimeout(r, 900));
       }
       if (!cancelled) setActiveIdx(SECTIONS.length + 1);
@@ -225,7 +170,7 @@ function ThesisSequence({ analysis }: { analysis: Analysis }) {
 
   return (
     <section className="space-y-3 animate-fade-in-up">
-      <div className="text-[10px] text-muted-foreground/70 text-center mb-6 tracking-[0.18em] uppercase">
+      <div className="text-[10px] text-muted-foreground text-center mb-6 tracking-[0.18em] uppercase">
         Investment thesis
       </div>
       {SECTIONS.map((s, i) => {
@@ -241,8 +186,8 @@ function ThesisSequence({ analysis }: { analysis: Analysis }) {
           <div
             key={s.key}
             ref={sectionRefs[i]}
-            className={`surface rounded-2xl overflow-hidden transition-all duration-500 ${
-              open ? "" : isDone || isSequenceDone ? "opacity-70" : "opacity-50"
+            className={`surface rounded-[24px] overflow-hidden transition-all duration-500 ${
+              open ? "" : isDone || isSequenceDone ? "opacity-80" : "opacity-55"
             }`}
           >
             <button
@@ -251,15 +196,15 @@ function ThesisSequence({ analysis }: { analysis: Analysis }) {
                 setManualOpen((p) => ({ ...p, [i]: !p[i] }));
               }}
               disabled={!isSequenceDone}
-              className={`w-full flex items-center justify-between gap-3 px-6 py-5 text-left transition-colors ${
-                isSequenceDone ? "hover:bg-card/40 cursor-pointer" : "cursor-default"
+              className={`w-full flex items-center justify-between gap-3 px-7 py-6 text-left transition-colors ${
+                isSequenceDone ? "hover:bg-background/40 cursor-pointer" : "cursor-default"
               }`}
             >
               <div className="flex items-center gap-3">
-                <span className={`w-1.5 h-1.5 rounded-full ${s.dotClass}`} />
+                <span className={`w-2 h-2 rounded-full ${s.dotClass}`} />
                 <span
-                  className={`text-[15px] font-medium tracking-tight ${
-                    open ? s.accent : "text-foreground/90"
+                  className={`text-[16px] font-semibold tracking-tight ${
+                    open ? s.accent : "text-foreground"
                   }`}
                 >
                   {s.title}
@@ -272,16 +217,16 @@ function ThesisSequence({ analysis }: { analysis: Analysis }) {
               />
             </button>
             {open && (
-              <div className="px-6 pb-6 space-y-3">
+              <div className="px-7 pb-7 space-y-3.5">
                 {items.slice(0, 3).map((it, j) => {
                   const visible = isAuto ? j < revealed : true;
                   if (!visible) return null;
                   return (
                     <p
                       key={j}
-                      className="text-[14.5px] text-foreground/85 leading-relaxed flex gap-3 animate-fade-in-soft"
+                      className="text-[15px] text-foreground/85 leading-[1.6] flex gap-3 animate-fade-in-soft"
                     >
-                      <span className={`shrink-0 mt-2 w-1 h-1 rounded-full ${s.dotClass}`} />
+                      <span className={`shrink-0 mt-2 w-1.5 h-1.5 rounded-full ${s.dotClass}`} />
                       <span className="flex-1">{it}</span>
                     </p>
                   );
@@ -295,7 +240,7 @@ function ThesisSequence({ analysis }: { analysis: Analysis }) {
   );
 }
 
-/* -------------------- Intent flow (3 questions) -------------------- */
+/* -------------------- Intent flow -------------------- */
 
 function IntentFlow({
   onDecide,
@@ -305,15 +250,13 @@ function IntentFlow({
 }: {
   onDecide: (d: DecisionContext) => void;
   options: { id: Intent; label: string }[];
-  subQuestions: Record<Exclude<Intent, "other">, { question: string; options: string[] }>;
-  thirdQuestions: Record<Intent, { question: string; options: string[] }>;
+  subQuestions: Record<Intent, { question: string; options: string[]; placeholder: string }>;
+  thirdQuestions: Record<Intent, { question: string; options: string[]; placeholder: string }>;
 }) {
   const [intent, setIntent] = useState<Intent | null>(null);
-  const [otherText, setOtherText] = useState("");
+  const [intentLabel, setIntentLabel] = useState<string>("");
   const [sub, setSub] = useState<string | null>(null);
-  const [subText, setSubText] = useState("");
   const [third, setThird] = useState<string | null>(null);
-  const [thirdText, setThirdText] = useState("");
 
   const q2Ref = useRef<HTMLDivElement>(null);
   const q3Ref = useRef<HTMLDivElement>(null);
@@ -325,40 +268,47 @@ function IntentFlow({
     if (sub) q3Ref.current?.scrollIntoView({ behavior: "smooth", block: "center" });
   }, [sub]);
 
-  // When all 3 answered → submit
   useEffect(() => {
     if (intent && sub && third) {
-      const composed = `${sub} → ${third}`;
       onDecide({
         intent,
-        subIntent: composed,
-        freeText: intent === "other" ? otherText : undefined,
+        subIntent: `${sub} → ${third}`,
+        freeText: intent === "other" ? intentLabel : undefined,
       });
     }
-  }, [intent, sub, third, otherText, onDecide]);
+  }, [intent, sub, third, intentLabel, onDecide]);
+
+  const reset2 = () => {
+    setSub(null);
+    setThird(null);
+  };
+  const reset3 = () => setThird(null);
 
   return (
-    <section className="space-y-12">
+    <section className="space-y-14">
       {/* Q1 */}
       <Question
         index={1}
         title="Given this rating, what are you considering?"
         locked={!!intent}
-        lockedAnswer={intent ? options.find((o) => o.id === intent)?.label ?? "" : ""}
+        lockedAnswer={intentLabel}
         onChange={() => {
           setIntent(null);
-          setSub(null);
-          setThird(null);
-          setOtherText("");
-          setSubText("");
-          setThirdText("");
+          setIntentLabel("");
+          reset2();
         }}
       >
-        <Options
+        <SuggestionsWithFreeText
           items={options.map((o) => o.label)}
+          placeholder="Or tell $JOB what you're considering…"
           onPick={(label) => {
             const found = options.find((o) => o.label === label);
-            if (found) setIntent(found.id);
+            setIntent(found ? found.id : "other");
+            setIntentLabel(label);
+          }}
+          onFreeText={(v) => {
+            setIntent("other");
+            setIntentLabel(v);
           }}
         />
       </Question>
@@ -366,47 +316,20 @@ function IntentFlow({
       {/* Q2 */}
       {intent && (
         <div ref={q2Ref}>
-          {intent === "other" ? (
-            <Question
-              index={2}
-              title="Tell $JOB what you're thinking…"
-              locked={!!sub}
-              lockedAnswer={sub ?? ""}
-              onChange={() => {
-                setSub(null);
-                setThird(null);
-                setSubText("");
-                setThirdText("");
-              }}
-            >
-              <FreeText
-                value={otherText}
-                onChange={setOtherText}
-                placeholder="e.g. take a sabbatical, switch industries, go solo…"
-                onSubmit={(v) => setSub(v)}
-              />
-            </Question>
-          ) : (
-            <Question
-              index={2}
-              title={subQuestions[intent].question}
-              locked={!!sub}
-              lockedAnswer={sub ?? ""}
-              onChange={() => {
-                setSub(null);
-                setThird(null);
-                setSubText("");
-                setThirdText("");
-              }}
-            >
-              <OptionsWithOther
-                items={subQuestions[intent].options}
-                otherValue={subText}
-                onOtherChange={setSubText}
-                onPick={(v) => setSub(v)}
-              />
-            </Question>
-          )}
+          <Question
+            index={2}
+            title={subQuestions[intent].question}
+            locked={!!sub}
+            lockedAnswer={sub ?? ""}
+            onChange={reset2}
+          >
+            <SuggestionsWithFreeText
+              items={subQuestions[intent].options}
+              placeholder={subQuestions[intent].placeholder}
+              onPick={(v) => setSub(v)}
+              onFreeText={(v) => setSub(v)}
+            />
+          </Question>
         </div>
       )}
 
@@ -418,16 +341,13 @@ function IntentFlow({
             title={thirdQuestions[intent].question}
             locked={!!third}
             lockedAnswer={third ?? ""}
-            onChange={() => {
-              setThird(null);
-              setThirdText("");
-            }}
+            onChange={reset3}
           >
-            <OptionsWithOther
+            <SuggestionsWithFreeText
               items={thirdQuestions[intent].options}
-              otherValue={thirdText}
-              onOtherChange={setThirdText}
+              placeholder={thirdQuestions[intent].placeholder}
               onPick={(v) => setThird(v)}
+              onFreeText={(v) => setThird(v)}
             />
           </Question>
         </div>
@@ -452,21 +372,21 @@ function Question({
   children: React.ReactNode;
 }) {
   return (
-    <div className="space-y-6 animate-fade-in-up max-w-md mx-auto">
-      <div className="text-center space-y-2.5">
-        <div className="text-[10px] text-muted-foreground/70 tracking-[0.18em] uppercase">
+    <div className="space-y-7 animate-fade-in-up max-w-xl mx-auto">
+      <div className="text-center space-y-3">
+        <div className="text-[10px] text-muted-foreground tracking-[0.18em] uppercase">
           Question {index} of 3
         </div>
-        <h3 className="font-display text-[22px] md:text-[26px] font-semibold tracking-[-0.025em] leading-[1.2]">
+        <h3 className="font-display text-[24px] md:text-[30px] font-[680] tracking-[-0.03em] leading-[1.18] text-foreground">
           {title}
         </h3>
       </div>
       {locked ? (
-        <div className="surface rounded-xl px-5 py-4 flex items-center justify-between gap-3">
-          <span className="text-[14.5px] text-foreground/90">{lockedAnswer}</span>
+        <div className="surface rounded-[18px] px-5 py-4 flex items-center justify-between gap-3 border border-primary/30 bg-primary-tint/60">
+          <span className="text-[14.5px] text-foreground font-medium">{lockedAnswer}</span>
           <button
             onClick={onChange}
-            className="text-[11px] uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
+            className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground hover:text-foreground transition-colors"
           >
             change
           </button>
@@ -478,115 +398,60 @@ function Question({
   );
 }
 
-function Options({ items, onPick }: { items: string[]; onPick: (v: string) => void }) {
-  return (
-    <div className="space-y-2">
-      {items.map((label, i) => (
-        <button
-          key={label}
-          onClick={() => onPick(label)}
-          className="w-full text-left px-5 py-4 rounded-xl border border-border/60 bg-card/30 hover:bg-card/60 hover:border-foreground/30 transition-all animate-fade-in-soft"
-          style={{ animationDelay: `${i * 60}ms` }}
-        >
-          <span className="text-[14.5px] text-foreground/90">{label}</span>
-        </button>
-      ))}
-    </div>
-  );
-}
-
-function OptionsWithOther({
+function SuggestionsWithFreeText({
   items,
-  otherValue,
-  onOtherChange,
+  placeholder,
   onPick,
+  onFreeText,
 }: {
   items: string[];
-  otherValue: string;
-  onOtherChange: (v: string) => void;
+  placeholder: string;
   onPick: (v: string) => void;
+  onFreeText: (v: string) => void;
 }) {
+  const [text, setText] = useState("");
+
   return (
-    <div className="space-y-2">
-      {items.map((label, i) => {
-        if (label === "Other") {
-          return (
-            <form
-              key={label}
-              onSubmit={(e) => {
-                e.preventDefault();
-                const v = otherValue.trim();
-                if (v) onPick(v);
-              }}
-              className="flex gap-2 animate-fade-in-soft"
-              style={{ animationDelay: `${i * 60}ms` }}
-            >
-              <Input
-                value={otherValue}
-                onChange={(e) => onOtherChange(e.target.value)}
-                placeholder="Other…"
-                className="h-12 bg-background/40 rounded-xl border-border/60"
-              />
-              <Button
-                type="submit"
-                disabled={!otherValue.trim()}
-                variant="outline"
-                className="h-12 w-12 p-0 rounded-xl border-border/60"
-              >
-                <ArrowRight className="w-4 h-4" />
-              </Button>
-            </form>
-          );
-        }
-        return (
+    <div className="space-y-5">
+      <div className="grid grid-cols-1 gap-2.5">
+        {items.map((label, i) => (
           <button
             key={label}
+            type="button"
             onClick={() => onPick(label)}
-            className="w-full text-left px-5 py-3.5 rounded-xl border border-border/60 bg-card/30 hover:bg-card/60 hover:border-foreground/30 transition-all animate-fade-in-soft"
-            style={{ animationDelay: `${i * 60}ms` }}
+            className="group w-full text-left px-5 py-4 rounded-[18px] surface hover:bg-primary-tint/60 hover:border-primary/30 lift-on-hover animate-fade-in-soft"
+            style={{ animationDelay: `${i * 80}ms` }}
           >
-            <span className="text-[14.5px] text-foreground/90">{label}</span>
+            <span className="text-[15px] font-medium text-foreground/95">{label}</span>
           </button>
-        );
-      })}
-    </div>
-  );
-}
+        ))}
+      </div>
 
-function FreeText({
-  value,
-  onChange,
-  placeholder,
-  onSubmit,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-  placeholder: string;
-  onSubmit: (v: string) => void;
-}) {
-  return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        const v = value.trim();
-        if (v) onSubmit(v);
-      }}
-      className="space-y-3"
-    >
-      <Input
-        autoFocus
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        className="h-12 bg-background/40 rounded-xl border-border/60"
-      />
-      <Button
-        type="submit"
-        disabled={!value.trim()}
-        className="w-full h-12 gap-2 rounded-xl bg-primary text-primary-foreground hover:opacity-95"
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          const v = text.trim();
+          if (v) onFreeText(v);
+        }}
+        className="surface-elevated rounded-[18px] flex items-center gap-2 p-2 pl-5 animate-fade-in-soft"
+        style={{ animationDelay: `${items.length * 80 + 80}ms` }}
       >
-        Continue <ArrowRight className="w-4 h-4" />
-      </Button>
-    </form>
+        <Sparkles className="w-4 h-4 text-primary-strong shrink-0" />
+        <input
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder={placeholder}
+          className="flex-1 h-11 bg-transparent text-[14.5px] text-foreground placeholder:text-muted-foreground/70 outline-none"
+        />
+        <Button
+          type="submit"
+          size="icon"
+          disabled={!text.trim()}
+          className="h-10 w-10 rounded-[14px] bg-primary text-primary-foreground hover:bg-primary-hover disabled:opacity-40"
+        >
+          <ArrowRight className="w-4 h-4" />
+        </Button>
+      </form>
+    </div>
   );
 }

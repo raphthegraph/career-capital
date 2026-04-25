@@ -7,6 +7,15 @@ export interface Dimension {
   signalCount: number;
 }
 
+export type InsightLevel = "strong" | "rising" | "neutral" | "limited" | "blocked" | "high" | "low" | "declining" | "weak";
+
+export interface QualitativeInsight {
+  label: string;          // e.g. "Promotion path"
+  value: string;          // e.g. "Blocked"
+  level: InsightLevel;    // semantic for color
+  detail: string;         // one short sentence
+}
+
 export interface Analysis {
   ticker: string;
   rating: Rating;
@@ -21,6 +30,8 @@ export interface Analysis {
     upsideOptionality: Dimension;
     exitLiquidity: Dimension;
   };
+  // New: human-readable verdict signals shown in reveal
+  qualitativeInsights?: QualitativeInsight[];
   bullCase: string[];
   bearCase: string[];
   ratingChangeTriggers: string[];
@@ -65,4 +76,9 @@ export interface ExitData {
   startupIdeas: { name: string; pitch: string; fit: string }[];
   careerPivots: { path: string; why: string; leverage: string }[];
   timeline: { month0: string; month3: string; month6: string; month12: string };
+}
+
+export interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
 }

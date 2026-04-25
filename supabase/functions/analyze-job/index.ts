@@ -84,6 +84,13 @@ function fallbackAnalysis(company: string, role: string) {
       upsideOptionality: { score: 58, explanation: "Promotion path exists but contested; equity upside modest.", signalCount: 3 },
       exitLiquidity: { score: 72, explanation: "Brand carries weight; resume converts well to peer companies.", signalCount: 4 },
     },
+    qualitativeInsights: [
+      { label: "Promotion path", value: "Contested", level: "neutral", detail: "Senior bench is crowded; visible wins required." },
+      { label: "Regulatory risk", value: "Moderate", level: "neutral", detail: "Sector-wide scrutiny but no acute exposure." },
+      { label: "Hiring momentum", value: "Slowing", level: "declining", detail: "Open roles down vs trailing six months." },
+      { label: "Learning upside", value: "Strong", level: "strong", detail: "Surface area still expanding inside your scope." },
+      { label: "Exit opportunities", value: "Strong", level: "strong", detail: "Brand converts well to peer companies." },
+    ],
     bullCase: [
       "Strong brand equity translates to fast external mobility.",
       "Role gives ownership over revenue-adjacent surface area.",
@@ -168,6 +175,20 @@ const ANALYZE_TOOL = {
           },
           required: ["careerDividend", "momentum", "volatility", "upsideOptionality", "exitLiquidity"],
         },
+        qualitativeInsights: {
+          type: "array",
+          description: "Exactly 5 human-readable verdict signals: Promotion path, Regulatory risk, Hiring momentum, Learning upside, Exit opportunities (in this order).",
+          items: {
+            type: "object",
+            properties: {
+              label: { type: "string" },
+              value: { type: "string", description: "1-2 word verdict, e.g. Strong, Blocked, Rising, Declining, High, Low, Limited, Contested." },
+              level: { type: "string", enum: ["strong", "rising", "neutral", "limited", "blocked", "high", "low", "declining", "weak"] },
+              detail: { type: "string", description: "One short sentence (<20 words)." },
+            },
+            required: ["label", "value", "level", "detail"],
+          },
+        },
         bullCase: { type: "array", items: { type: "string" } },
         bearCase: { type: "array", items: { type: "string" } },
         ratingChangeTriggers: { type: "array", items: { type: "string" } },
@@ -182,7 +203,7 @@ const ANALYZE_TOOL = {
           required: ["momentumSignals", "riskSignals", "hiringSignals", "companySignals"],
         },
       },
-      required: ["rating", "wouldBuy", "confidence", "oneLineVerdict", "careerAssetScore", "dimensions", "bullCase", "bearCase", "ratingChangeTriggers", "evidence"],
+      required: ["rating", "wouldBuy", "confidence", "oneLineVerdict", "careerAssetScore", "dimensions", "qualitativeInsights", "bullCase", "bearCase", "ratingChangeTriggers", "evidence"],
     },
   },
 };

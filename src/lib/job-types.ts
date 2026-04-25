@@ -7,13 +7,22 @@ export interface Dimension {
   signalCount: number;
 }
 
-export type InsightLevel = "strong" | "rising" | "neutral" | "limited" | "blocked" | "high" | "low" | "declining" | "weak";
+export type InsightLevel =
+  | "strong"
+  | "rising"
+  | "neutral"
+  | "limited"
+  | "blocked"
+  | "high"
+  | "low"
+  | "declining"
+  | "weak";
 
 export interface QualitativeInsight {
-  label: string;          // e.g. "Promotion path"
-  value: string;          // e.g. "Blocked"
-  level: InsightLevel;    // semantic for color
-  detail: string;         // one short sentence
+  label: string;
+  value: string;
+  level: InsightLevel;
+  detail: string;
 }
 
 export interface Analysis {
@@ -30,7 +39,6 @@ export interface Analysis {
     upsideOptionality: Dimension;
     exitLiquidity: Dimension;
   };
-  // New: human-readable verdict signals shown in reveal
   qualitativeInsights?: QualitativeInsight[];
   bullCase: string[];
   bearCase: string[];
@@ -45,37 +53,27 @@ export interface Analysis {
   _warning?: string;
 }
 
-export type Decision = "increase" | "reduce" | "exit";
+/* ---------- Decision / intent flow ---------- */
 
-export interface IncreaseData {
-  promotionStrategy: string[];
-  skillsToBuild: string[];
-  internalMoves: string[];
-  relationshipMap: string[];
-  plan30: string[];
-  plan60: string[];
-  plan90: string[];
-  increaseDividend: string;
-  reduceVolatility: string;
-  unlockUpside: string;
+export type Intent = "stay" | "options" | "leave" | "other";
+
+export interface DecisionContext {
+  intent: Intent;
+  /** label of the second-step sub-intent, or free text for "other" */
+  subIntent: string;
+  /** raw free-text if user picked "Something else" */
+  freeText?: string;
 }
 
-export interface ReduceData {
-  companies: {
-    name: string;
-    ticker: string;
-    thesis: string;
-    upside: string;
-    risk: string;
-    liquidity: string;
-    suggestedRole: string;
-  }[];
-}
+/** Legacy alias kept so we don't break older imports. */
+export type Decision = DecisionContext;
 
-export interface ExitData {
-  startupIdeas: { name: string; pitch: string; fit: string }[];
-  careerPivots: { path: string; why: string; leverage: string }[];
-  timeline: { month0: string; month3: string; month6: string; month12: string };
+export interface Recommendation {
+  recommendedMove: string;
+  why: string[];
+  next30Days: string[];
+  watchOuts: string[];
+  alternativePaths: { label: string; detail: string }[];
 }
 
 export interface ChatMessage {

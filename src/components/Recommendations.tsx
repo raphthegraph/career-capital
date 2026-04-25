@@ -39,7 +39,7 @@ export function Recommendations({
     (async () => {
       try {
         const { data: res, error: err } = await supabase.functions.invoke("recommend-action", {
-          body: { decision, company, role, analysis },
+          body: { decision, company, role, analysis, analysisId: analysis.analysisId },
         });
         if (cancelled) return;
         if (err) {
@@ -287,7 +287,7 @@ function FloatingChat({
     setOpen(true);
     try {
       const { data, error } = await supabase.functions.invoke("career-chat", {
-        body: { company, role, decision, analysis, recommendation, messages: next },
+        body: { company, role, decision, analysis, recommendation, messages: next, analysisId: analysis.analysisId },
       });
       if (error) throw error;
       setMessages([...next, { role: "assistant", content: data?.reply ?? "No response." }]);

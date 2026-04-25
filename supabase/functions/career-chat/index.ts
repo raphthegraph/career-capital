@@ -8,10 +8,16 @@ const corsHeaders = {
 
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
+interface DecisionContext {
+  intent: "stay" | "options" | "leave" | "other";
+  subIntent: string;
+  freeText?: string;
+}
+
 interface Body {
   company: string;
   role: string;
-  decision: "increase" | "reduce" | "exit";
+  decision: DecisionContext;
   analysis: any;
   recommendation?: any;
   messages: { role: "user" | "assistant"; content: string }[];
@@ -42,7 +48,7 @@ CONTEXT — current asset:
 - Role: ${role}
 - Verdict: ${analysis?.rating} (${analysis?.wouldBuy})
 - One-liner: ${analysis?.oneLineVerdict}
-- Decision the user picked: ${decision.toUpperCase()}
+- User intent: ${decision?.intent?.toUpperCase?.() ?? "N/A"} — focus: ${decision?.subIntent ?? ""}
 - Bull: ${(analysis?.bullCase ?? []).join(" | ")}
 - Bear: ${(analysis?.bearCase ?? []).join(" | ")}
 ${recommendation ? `- Generated plan summary: ${JSON.stringify(recommendation).slice(0, 1200)}` : ""}

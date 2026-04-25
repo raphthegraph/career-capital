@@ -135,30 +135,37 @@ export function AnalysisDashboard({ company, role, analysis, onDecision }: Props
 
   return (
     <div className="min-h-screen pb-32">
-      {/* minimal header */}
-      <div className="border-b border-border/50 bg-background/70 backdrop-blur-md sticky top-0 z-30">
+      {/* refined header */}
+      <div className="border-b hairline bg-background/60 backdrop-blur-xl sticky top-0 z-30">
         <div className="container py-4 flex items-center justify-between">
-          <div>
-            <div className="text-[11px] text-muted-foreground">
-              {company} · {role}
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-primary/15 border border-primary/20 flex items-center justify-center font-mono text-[10px] font-semibold text-primary">
+              {analysis.ticker.slice(0, 3)}
             </div>
-            <div className="font-mono text-sm font-medium text-foreground/90">{analysis.ticker}</div>
+            <div>
+              <div className="text-[13px] font-medium tracking-tight text-foreground">
+                {company}
+              </div>
+              <div className="text-[11px] text-muted-foreground">
+                {role}
+              </div>
+            </div>
           </div>
           <RatingPill rating={analysis.rating} size="md" />
         </div>
       </div>
 
-      <div className="container py-16 max-w-2xl space-y-20">
+      <div className="container py-20 max-w-2xl space-y-20">
         {/* verdict line */}
-        <section className="text-center space-y-4 animate-fade-in-up">
+        <section className="text-center space-y-5 animate-fade-in-up">
           <p
-            className={`font-display text-3xl md:text-4xl font-semibold tracking-tight ${ratingColorClass(
+            className={`font-display text-[34px] md:text-[44px] font-semibold tracking-[-0.03em] leading-[1.05] ${ratingColorClass(
               analysis.rating,
             )}`}
           >
             {analysis.wouldBuy}.
           </p>
-          <p className="text-[15px] md:text-base text-muted-foreground max-w-xl mx-auto leading-relaxed">
+          <p className="text-[16px] md:text-[17px] text-foreground/75 max-w-xl mx-auto leading-[1.55]">
             {analysis.oneLineVerdict}
           </p>
         </section>

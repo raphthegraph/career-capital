@@ -14,13 +14,274 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      analysis_embeddings: {
+        Row: {
+          analysis_id: string
+          content: string
+          content_type: string
+          created_at: string
+          embedding: string | null
+          id: string
+          metadata: Json | null
+        }
+        Insert: {
+          analysis_id: string
+          content: string
+          content_type: string
+          created_at?: string
+          embedding?: string | null
+          id?: string
+          metadata?: Json | null
+        }
+        Update: {
+          analysis_id?: string
+          content?: string
+          content_type?: string
+          created_at?: string
+          embedding?: string | null
+          id?: string
+          metadata?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analysis_embeddings_analysis_id_fkey"
+            columns: ["analysis_id"]
+            isOneToOne: false
+            referencedRelation: "job_analyses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_messages: {
+        Row: {
+          analysis_id: string
+          content: string
+          created_at: string
+          id: string
+          role: string
+        }
+        Insert: {
+          analysis_id: string
+          content: string
+          created_at?: string
+          id?: string
+          role: string
+        }
+        Update: {
+          analysis_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_analysis_id_fkey"
+            columns: ["analysis_id"]
+            isOneToOne: false
+            referencedRelation: "job_analyses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      decision_flows: {
+        Row: {
+          analysis_id: string
+          answer_1: string | null
+          answer_2: string | null
+          answer_3: string | null
+          created_at: string
+          id: string
+          question_1: string | null
+          question_2: string | null
+          question_3: string | null
+        }
+        Insert: {
+          analysis_id: string
+          answer_1?: string | null
+          answer_2?: string | null
+          answer_3?: string | null
+          created_at?: string
+          id?: string
+          question_1?: string | null
+          question_2?: string | null
+          question_3?: string | null
+        }
+        Update: {
+          analysis_id?: string
+          answer_1?: string | null
+          answer_2?: string | null
+          answer_3?: string | null
+          created_at?: string
+          id?: string
+          question_1?: string | null
+          question_2?: string | null
+          question_3?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "decision_flows_analysis_id_fkey"
+            columns: ["analysis_id"]
+            isOneToOne: false
+            referencedRelation: "job_analyses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      job_analyses: {
+        Row: {
+          analysis_json: Json
+          career_asset_score: number | null
+          company: string
+          confidence: number | null
+          created_at: string
+          id: string
+          normalized_company: string
+          normalized_role: string
+          one_line_verdict: string | null
+          rating: string | null
+          role: string
+          ticker: string | null
+          updated_at: string
+          would_buy: string | null
+        }
+        Insert: {
+          analysis_json: Json
+          career_asset_score?: number | null
+          company: string
+          confidence?: number | null
+          created_at?: string
+          id?: string
+          normalized_company: string
+          normalized_role: string
+          one_line_verdict?: string | null
+          rating?: string | null
+          role: string
+          ticker?: string | null
+          updated_at?: string
+          would_buy?: string | null
+        }
+        Update: {
+          analysis_json?: Json
+          career_asset_score?: number | null
+          company?: string
+          confidence?: number | null
+          created_at?: string
+          id?: string
+          normalized_company?: string
+          normalized_role?: string
+          one_line_verdict?: string | null
+          rating?: string | null
+          role?: string
+          ticker?: string | null
+          updated_at?: string
+          would_buy?: string | null
+        }
+        Relationships: []
+      }
+      recommendations: {
+        Row: {
+          analysis_id: string
+          created_at: string
+          decision_flow_id: string | null
+          id: string
+          recommendation_json: Json
+        }
+        Insert: {
+          analysis_id: string
+          created_at?: string
+          decision_flow_id?: string | null
+          id?: string
+          recommendation_json: Json
+        }
+        Update: {
+          analysis_id?: string
+          created_at?: string
+          decision_flow_id?: string | null
+          id?: string
+          recommendation_json?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recommendations_analysis_id_fkey"
+            columns: ["analysis_id"]
+            isOneToOne: false
+            referencedRelation: "job_analyses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recommendations_decision_flow_id_fkey"
+            columns: ["decision_flow_id"]
+            isOneToOne: false
+            referencedRelation: "decision_flows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      research_sources: {
+        Row: {
+          analysis_id: string
+          content_summary: string | null
+          created_at: string
+          id: string
+          raw_content: string | null
+          snippet: string | null
+          source_type: string | null
+          title: string | null
+          url: string | null
+        }
+        Insert: {
+          analysis_id: string
+          content_summary?: string | null
+          created_at?: string
+          id?: string
+          raw_content?: string | null
+          snippet?: string | null
+          source_type?: string | null
+          title?: string | null
+          url?: string | null
+        }
+        Update: {
+          analysis_id?: string
+          content_summary?: string | null
+          created_at?: string
+          id?: string
+          raw_content?: string | null
+          snippet?: string | null
+          source_type?: string | null
+          title?: string | null
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "research_sources_analysis_id_fkey"
+            columns: ["analysis_id"]
+            isOneToOne: false
+            referencedRelation: "job_analyses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      match_analysis_embeddings: {
+        Args: {
+          match_analysis_id: string
+          match_count?: number
+          query_embedding: string
+        }
+        Returns: {
+          analysis_id: string
+          content: string
+          content_type: string
+          id: string
+          metadata: Json
+          similarity: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

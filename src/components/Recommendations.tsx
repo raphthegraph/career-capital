@@ -72,7 +72,7 @@ export function Recommendations({
           >
             <ArrowLeft className="w-3.5 h-3.5" /> Back
           </Button>
-          <div className="text-[11px] text-muted-foreground truncate max-w-[60%] tracking-wide font-mono">
+          <div className="text-[11px] text-muted-foreground truncate max-w-[60%] tracking-[0.14em] font-mono uppercase">
             {analysis.ticker}
           </div>
           <Button
@@ -110,7 +110,7 @@ function Loading() {
   const [step, setStep] = useState(0);
   useEffect(() => {
     if (step >= LOAD_STEPS.length) return;
-    const t = setTimeout(() => setStep((s) => s + 1), 800);
+    const t = setTimeout(() => setStep((s) => s + 1), 850);
     return () => clearTimeout(t);
   }, [step]);
 
@@ -132,7 +132,7 @@ function Loading() {
             >
               <span
                 className={`w-1.5 h-1.5 rounded-full ${
-                  isCurrent ? "bg-primary-strong animate-breathe" : "bg-primary-strong/60"
+                  isCurrent ? "bg-primary animate-breathe" : "bg-primary/60"
                 }`}
               />
               {s}
@@ -145,74 +145,99 @@ function Loading() {
   );
 }
 
-const SECTION_DELAYS = [0, 600, 1300, 2100, 2900];
+// slower section reveal — let user read each block
+const SECTION_DELAYS = [0, 1100, 2400, 3700, 5000];
 
 function RecommendationView({ data }: { data: Recommendation }) {
   const [revealed, setRevealed] = useState(0);
+  const refs = [
+    useRef<HTMLDivElement>(null),
+    useRef<HTMLDivElement>(null),
+    useRef<HTMLDivElement>(null),
+    useRef<HTMLDivElement>(null),
+    useRef<HTMLDivElement>(null),
+  ];
 
   useEffect(() => {
     setRevealed(0);
     const timers = SECTION_DELAYS.map((d, i) =>
-      setTimeout(() => setRevealed((r) => Math.max(r, i + 1)), d + 100),
+      setTimeout(() => {
+        setRevealed((r) => Math.max(r, i + 1));
+        // gentle scroll to focus newly revealed section
+        setTimeout(() => {
+          refs[i].current?.scrollIntoView({ behavior: "smooth", block: "center" });
+        }, 200);
+      }, d + 100),
     );
     return () => timers.forEach(clearTimeout);
   }, [data]);
 
+  // a section is "focused" if it is the most recently revealed one
+  const focusIdx = revealed - 1;
+
   return (
     <section className="space-y-16">
-      {revealed >= 1 && (
-        <div className="text-center space-y-4 animate-fade-in-up">
-          <div className="text-[10px] text-muted-foreground tracking-[0.18em] uppercase">
-            Recommended move
+      <div ref={refs[0]} className={revealed >= 1 ? (focusIdx === 0 ? "dim-active" : "") : "hidden"}>
+        {revealed >= 1 && (
+          <div className="text-center space-y-4 animate-fade-in-up">
+            <div className="eyebrow">Recommended move</div>
+            <h2 className="font-display text-[32px] md:text-[44px] font-[680] leading-[1.08] tracking-[-0.04em] max-w-xl mx-auto text-foreground text-elegant">
+              {data.recommendedMove}
+            </h2>
           </div>
-          <h2 className="font-display text-[32px] md:text-[44px] font-[680] leading-[1.08] tracking-[-0.04em] max-w-xl mx-auto text-foreground text-elegant">
-            {data.recommendedMove}
-          </h2>
-        </div>
-      )}
+        )}
+      </div>
 
-      {revealed >= 2 && (
-        <Block title="Why this move" icon={Sparkles} accent="text-buy" dot="bg-buy">
-          {data.why.slice(0, 3).map((w, i) => (
-            <Bullet key={i} text={w} dot="bg-buy" />
-          ))}
-        </Block>
-      )}
-
-      {revealed >= 3 && (
-        <Block title="Next 30 days" icon={Calendar} accent="text-primary-strong" dot="bg-primary-strong">
-          {data.next30Days.slice(0, 3).map((w, i) => (
-            <Bullet key={i} text={w} dot="bg-primary-strong" />
-          ))}
-        </Block>
-      )}
-
-      {revealed >= 4 && (
-        <Block title="Watch-outs" icon={AlertTriangle} accent="text-short" dot="bg-short">
-          {data.watchOuts.slice(0, 2).map((w, i) => (
-            <Bullet key={i} text={w} dot="bg-short" />
-          ))}
-        </Block>
-      )}
-
-      {revealed >= 5 && (
-        <Block title="Alternative paths" icon={Compass} accent="text-hold" dot="bg-hold">
-          <div className="space-y-3">
-            {data.alternativePaths.slice(0, 3).map((p, i) => (
-              <div
-                key={i}
-                className="surface rounded-[18px] p-5 space-y-1.5 animate-fade-in-soft lift-on-hover"
-                style={{ animationDelay: `${i * 100}ms` }}
-              >
-                <div className="font-semibold text-[14.5px] text-foreground tracking-tight">
-                  {p.label}
-                </div>
-                <p className="text-[14px] text-muted-foreground leading-[1.55]">{p.detail}</p>
-              </div>
+      <div ref={refs[1]} className={revealed >= 2 ? (focusIdx === 1 ? "dim-active" : focusIdx > 1 ? "dim" : "") : "hidden"}>
+        {revealed >= 2 && (
+          <Block title="Why this move" icon={Sparkles} accent="text-buy" dot="bg-buy">
+            {data.why.slice(0, 3).map((w, i) => (
+              <Bullet key={i} text={w} dot="bg-buy" />
             ))}
-          </div>
-        </Block>
-      )}
+          </Block>
+        )}
+      </div>
+
+      <div ref={refs[2]} className={revealed >= 3 ? (focusIdx === 2 ? "dim-active" : focusIdx > 2 ? "dim" : "") : "hidden"}>
+        {revealed >= 3 && (
+          <Block title="Next 30 days" icon={Calendar} accent="text-primary-strong" dot="bg-primary">
+            {data.next30Days.slice(0, 3).map((w, i) => (
+              <Bullet key={i} text={w} dot="bg-primary" />
+            ))}
+          </Block>
+        )}
+      </div>
+
+      <div ref={refs[3]} className={revealed >= 4 ? (focusIdx === 3 ? "dim-active" : focusIdx > 3 ? "dim" : "") : "hidden"}>
+        {revealed >= 4 && (
+          <Block title="Watch-outs" icon={AlertTriangle} accent="text-short" dot="bg-short">
+            {data.watchOuts.slice(0, 2).map((w, i) => (
+              <Bullet key={i} text={w} dot="bg-short" />
+            ))}
+          </Block>
+        )}
+      </div>
+
+      <div ref={refs[4]} className={revealed >= 5 ? (focusIdx === 4 ? "dim-active" : "") : "hidden"}>
+        {revealed >= 5 && (
+          <Block title="Alternative paths" icon={Compass} accent="text-hold" dot="bg-hold">
+            <div className="space-y-3">
+              {data.alternativePaths.slice(0, 3).map((p, i) => (
+                <div
+                  key={i}
+                  className="surface rounded-[18px] p-5 space-y-1.5 animate-fade-in-soft lift-on-hover"
+                  style={{ animationDelay: `${i * 100}ms` }}
+                >
+                  <div className="font-semibold text-[14.5px] text-foreground tracking-tight">
+                    {p.label}
+                  </div>
+                  <p className="text-[14px] text-muted-foreground leading-[1.6]">{p.detail}</p>
+                </div>
+              ))}
+            </div>
+          </Block>
+        )}
+      </div>
     </section>
   );
 }
@@ -234,9 +259,7 @@ function Block({
     <div className="space-y-5 animate-fade-in-up">
       <div className="flex items-center gap-2.5">
         <Icon className={`w-3.5 h-3.5 ${accent}`} />
-        <span className="text-[10px] text-muted-foreground tracking-[0.18em] uppercase">
-          {title}
-        </span>
+        <span className="eyebrow">{title}</span>
       </div>
       <div className="space-y-3">{children}</div>
     </div>
@@ -245,7 +268,7 @@ function Block({
 
 function Bullet({ text, dot }: { text: string; dot: string }) {
   return (
-    <p className="text-[15.5px] text-foreground/85 leading-[1.6] flex gap-3">
+    <p className="text-[15.5px] text-foreground/85 leading-[1.65] flex gap-3">
       <span className={`shrink-0 mt-2.5 w-1.5 h-1.5 rounded-full ${dot}`} />
       <span className="flex-1">{text}</span>
     </p>
@@ -304,16 +327,15 @@ function FloatingChat({
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-40 pointer-events-none">
-      {/* soft fade behind composer */}
-      <div className="absolute bottom-0 left-0 right-0 h-44 bg-gradient-to-t from-background via-background/85 to-transparent pointer-events-none" />
+      <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-background via-background/85 to-transparent pointer-events-none" />
 
       <div className="relative px-6 pb-7 pt-4 pointer-events-auto flex justify-center">
-        <div className="w-full max-w-[820px] space-y-3">
+        <div className="w-full max-w-[760px] space-y-3">
           {open && messages.length > 0 && (
-            <div className="surface-floating rounded-[24px] overflow-hidden animate-fade-in-up">
+            <div className="surface-floating rounded-[22px] overflow-hidden animate-fade-in-up">
               <div className="flex items-center justify-between px-5 py-3.5 border-b hairline">
                 <div className="flex items-center gap-2">
-                  <Sparkles className="w-3.5 h-3.5 text-primary-strong" />
+                  <Sparkles className="w-3.5 h-3.5 text-primary" />
                   <span className="text-[12px] font-semibold tracking-tight text-foreground">
                     Chat with $JOB
                   </span>
@@ -334,9 +356,9 @@ function FloatingChat({
                     }`}
                   >
                     <div
-                      className={`max-w-[88%] rounded-[18px] px-4 py-3 text-[14px] leading-[1.55] whitespace-pre-wrap ${
+                      className={`max-w-[88%] rounded-[16px] px-4 py-3 text-[14px] leading-[1.6] whitespace-pre-wrap ${
                         m.role === "user"
-                          ? "bg-primary-tint text-foreground border border-primary/30"
+                          ? "bg-primary text-primary-foreground"
                           : "bg-secondary text-foreground/90 border border-border/[0.08]"
                       }`}
                     >
@@ -346,8 +368,8 @@ function FloatingChat({
                 ))}
                 {loading && (
                   <div className="flex justify-start">
-                    <div className="rounded-[18px] px-4 py-2.5 text-[13px] text-muted-foreground flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-primary-strong animate-breathe" />
+                    <div className="rounded-[16px] px-4 py-2.5 text-[13px] text-muted-foreground flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary animate-breathe" />
                       thinking
                     </div>
                   </div>
@@ -364,7 +386,7 @@ function FloatingChat({
             className="surface-floating rounded-full flex items-center gap-2 p-2 pl-6"
             onFocus={() => messages.length > 0 && setOpen(true)}
           >
-            <Sparkles className="w-4 h-4 text-primary-strong shrink-0" />
+            <Sparkles className="w-4 h-4 text-primary shrink-0" />
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}

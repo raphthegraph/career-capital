@@ -1,8 +1,8 @@
 import type { Analysis, Decision } from "@/lib/job-types";
 import { RatingPill, ratingColorClass } from "@/components/RatingPill";
 import { Button } from "@/components/ui/button";
-import { TrendingUp, TrendingDown, AlertTriangle, Zap, ArrowRightLeft, Target, Building2 } from "lucide-react";
-import { useMemo } from "react";
+import { TrendingUp, TrendingDown, Zap, ArrowRightLeft, Building2, ChevronDown, Plus } from "lucide-react";
+import { useMemo, useState } from "react";
 
 interface Props {
   company: string;
@@ -11,17 +11,9 @@ interface Props {
   onDecision: (d: Decision) => void;
 }
 
-const dims = [
-  { key: "careerDividend", label: "Career Dividend", desc: "Compensation, stability, learning", icon: TrendingUp },
-  { key: "momentum", label: "Momentum", desc: "Growth, news, hiring velocity", icon: Zap },
-  { key: "volatility", label: "Volatility", desc: "Layoffs, regulation, strategy shifts", icon: AlertTriangle },
-  { key: "upsideOptionality", label: "Upside Optionality", desc: "Promotion, equity, future roles", icon: Target },
-  { key: "exitLiquidity", label: "Exit Liquidity", desc: "Convertibility to better opportunities", icon: ArrowRightLeft },
-] as const;
-
 export function AnalysisDashboard({ company, role, analysis, onDecision }: Props) {
   return (
-    <div className="min-h-screen pb-32">
+    <div className="min-h-screen pb-24">
       {/* Header */}
       <div className="border-b border-border bg-card/40 backdrop-blur sticky top-0 z-30">
         <div className="container py-4 flex flex-wrap gap-4 items-center justify-between">
@@ -41,125 +33,105 @@ export function AnalysisDashboard({ company, role, analysis, onDecision }: Props
               <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Confidence</div>
               <div className="text-2xl font-bold">{analysis.confidence}%</div>
             </div>
-            <div className="hidden md:block">
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Position</div>
-              <div className="text-2xl font-bold">100%</div>
-            </div>
           </div>
         </div>
       </div>
 
-      <div className="container py-8 space-y-8">
+      <div className="container py-10 space-y-10">
         {analysis._warning && (
           <div className="card-terminal rounded p-3 font-mono text-xs text-hold border-hold/40">
             ⚠ {analysis._warning}
           </div>
         )}
 
-        {/* Asset Snapshot */}
-        <section className="grid lg:grid-cols-[1.4fr_1fr] gap-6">
-          <div className="card-terminal rounded-lg p-6 space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Price Action · 12M Synthetic</h2>
-              <span className="font-mono text-xs text-muted-foreground">{analysis.ticker}</span>
-            </div>
-            <PriceChart data={analysis.chartData} rating={analysis.rating} />
+        {/* Hero verdict line */}
+        <section className="text-center space-y-3 animate-fade-in-up">
+          <div className="font-mono text-xs uppercase tracking-[0.3em] text-muted-foreground">
+            Verdict
           </div>
-          <div className="card-terminal rounded-lg p-6 space-y-3">
-            <h2 className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Verdict</h2>
-            <p className={`font-display text-2xl font-bold ${ratingColorClass(analysis.rating)}`}>
-              {analysis.wouldBuy}.
-            </p>
-            <p className="text-foreground/90 italic">"{analysis.oneLineVerdict}"</p>
-            <div className="border-t border-border pt-3 grid grid-cols-2 gap-3 font-mono text-xs">
-              <div>
-                <div className="text-muted-foreground uppercase tracking-wider">Position</div>
-                <div className="text-base font-bold">100% allocated</div>
-              </div>
-              <div>
-                <div className="text-muted-foreground uppercase tracking-wider">Recommended</div>
-                <div className={`text-base font-bold ${ratingColorClass(analysis.rating)}`}>{analysis.rating}</div>
-              </div>
-            </div>
-          </div>
+          <p className={`font-display text-3xl md:text-5xl font-bold ${ratingColorClass(analysis.rating)}`}>
+            {analysis.wouldBuy}.
+          </p>
+          <p className="text-lg text-foreground/90 italic max-w-2xl mx-auto">"{analysis.oneLineVerdict}"</p>
         </section>
 
-        {/* Dimensions */}
-        <section>
-          <h2 className="font-mono text-xs uppercase tracking-widest text-muted-foreground mb-4">Career Asset Breakdown</h2>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
-            {dims.map(({ key, label, desc, icon: Icon }) => {
-              const d = analysis.dimensions[key];
-              return (
-                <div key={key} className="card-terminal rounded-lg p-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <Icon className="w-4 h-4 text-muted-foreground" />
-                    <span className="font-mono text-[10px] text-muted-foreground">{d.signalCount} signals</span>
-                  </div>
-                  <div>
-                    <div className="font-mono text-3xl font-bold">{d.score.toFixed(0)}</div>
-                    <ScoreBar score={d.score} />
-                  </div>
-                  <div>
-                    <div className="font-semibold text-sm">{label}</div>
-                    <div className="text-xs text-muted-foreground">{desc}</div>
-                  </div>
-                  <p className="text-xs text-foreground/80 leading-relaxed border-t border-border pt-3">
-                    {d.explanation}
-                  </p>
-                </div>
-              );
-            })}
+        {/* Mini chart */}
+        <section className="card-terminal rounded-lg p-6 animate-fade-in-up">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Price Action · 12M Synthetic</h2>
+            <span className="font-mono text-xs text-muted-foreground">{analysis.ticker}</span>
           </div>
+          <PriceChart data={analysis.chartData} rating={analysis.rating} />
         </section>
 
-        {/* Thesis */}
-        <section className="grid lg:grid-cols-3 gap-4">
-          <ThesisCard title="Bull Case" items={analysis.bullCase} icon={TrendingUp} color="text-buy" />
-          <ThesisCard title="Bear Case" items={analysis.bearCase} icon={TrendingDown} color="text-short" />
-          <ThesisCard title="Rating Triggers" items={analysis.ratingChangeTriggers} icon={Zap} color="text-hold" />
-        </section>
-
-        {/* Evidence */}
-        <section>
-          <h2 className="font-mono text-xs uppercase tracking-widest text-muted-foreground mb-4">Evidence Panel</h2>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <EvidenceCard title="Momentum" items={analysis.evidence.momentumSignals} accent="text-buy" />
-            <EvidenceCard title="Risk" items={analysis.evidence.riskSignals} accent="text-short" />
-            <EvidenceCard title="Hiring" items={analysis.evidence.hiringSignals} accent="text-hold" />
-            <EvidenceCard title="Company" items={analysis.evidence.companySignals} accent="text-terminal-cyan" />
+        {/* Three expandable narrative sections */}
+        <section className="space-y-3">
+          <div className="font-mono text-xs uppercase tracking-widest text-muted-foreground mb-2">
+            Full Analysis · expand to read
           </div>
+          <ExpandableSection
+            title="Why this job works"
+            icon={TrendingUp}
+            accent="text-buy"
+            border="border-buy/40"
+            items={analysis.bullCase}
+            evidence={analysis.evidence.momentumSignals}
+            evidenceLabel="Momentum signals"
+            defaultOpen
+          />
+          <ExpandableSection
+            title="Why this job breaks"
+            icon={TrendingDown}
+            accent="text-short"
+            border="border-short/40"
+            items={analysis.bearCase}
+            evidence={analysis.evidence.riskSignals}
+            evidenceLabel="Risk signals"
+          />
+          <ExpandableSection
+            title="What changes the rating"
+            icon={Zap}
+            accent="text-hold"
+            border="border-hold/40"
+            items={analysis.ratingChangeTriggers}
+            evidence={[...analysis.evidence.hiringSignals, ...analysis.evidence.companySignals]}
+            evidenceLabel="Watch signals"
+          />
         </section>
 
-        {/* Decision */}
-        <section className="pt-6">
-          <div className="text-center mb-6">
-            <div className="font-mono text-xs uppercase tracking-widest text-muted-foreground mb-2">Trade Ticket</div>
+        {/* Decision section */}
+        <section className="pt-4">
+          <div className="text-center mb-6 space-y-2">
+            <div className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Trade Ticket</div>
             <h2 className="font-display text-3xl md:text-4xl font-bold">
-              Given this asset rating, what would you do?
+              Given this rating, what would you do?
             </h2>
+            <p className="text-sm text-muted-foreground">Pick a stance. We'll generate a personalized playbook next.</p>
           </div>
           <div className="grid md:grid-cols-3 gap-4">
             <DecisionCard
-              title="Increase Position"
+              title="Stay & Double Down"
               tag="DOUBLE DOWN"
-              desc="I want to maximize upside in this role."
+              desc="Maximize upside in this role — promotion path, leverage, comp."
+              micro="Best if your asset score is strong and you see a clear path to 10x impact here."
               accent="bg-buy"
               onClick={() => onDecision("increase")}
               icon={TrendingUp}
             />
             <DecisionCard
-              title="Reduce Position"
+              title="Start Transitioning"
               tag="REBALANCE"
-              desc="I want to explore better opportunities."
+              desc="Quietly explore higher-yield career assets before you have to."
+              micro="Best when momentum is fading or alternatives clearly outperform your current role."
               accent="bg-hold"
               onClick={() => onDecision("reduce")}
               icon={ArrowRightLeft}
             />
             <DecisionCard
-              title="Exit Position"
+              title="Exit & Reallocate"
               tag="LIQUIDATE"
-              desc="I want to leave and reallocate my career capital."
+              desc="Liquidate this position. Redeploy your career capital."
+              micro="Best when risk dominates upside, or you're ready to start something of your own."
               accent="bg-short"
               onClick={() => onDecision("exit")}
               icon={Building2}
@@ -171,52 +143,92 @@ export function AnalysisDashboard({ company, role, analysis, onDecision }: Props
   );
 }
 
-function ScoreBar({ score }: { score: number }) {
-  const color = score >= 70 ? "bg-buy" : score >= 50 ? "bg-hold" : "bg-short";
+function ExpandableSection({
+  title,
+  icon: Icon,
+  accent,
+  border,
+  items,
+  evidence,
+  evidenceLabel,
+  defaultOpen = false,
+}: {
+  title: string;
+  icon: any;
+  accent: string;
+  border: string;
+  items: string[];
+  evidence: string[];
+  evidenceLabel: string;
+  defaultOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  const [revealed, setRevealed] = useState(defaultOpen ? items.length : 0);
+
+  const toggle = () => {
+    if (!open) {
+      setOpen(true);
+      // staggered reveal
+      setRevealed(0);
+      items.forEach((_, i) => {
+        setTimeout(() => setRevealed((r) => Math.max(r, i + 1)), 120 + i * 180);
+      });
+    } else {
+      setOpen(false);
+    }
+  };
+
   return (
-    <div className="h-1 bg-muted rounded mt-1 overflow-hidden">
-      <div className={`h-full ${color}`} style={{ width: `${Math.max(0, Math.min(100, score))}%` }} />
+    <div className={`card-terminal rounded-lg overflow-hidden border ${open ? border : "border-border"} transition-colors`}>
+      <button
+        onClick={toggle}
+        className="w-full flex items-center justify-between gap-4 p-5 text-left hover:bg-card/60 transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <Icon className={`w-5 h-5 ${accent}`} />
+          <h3 className="font-display text-xl md:text-2xl font-bold">{title}</h3>
+          <span className="font-mono text-xs text-muted-foreground">· {items.length} insights</span>
+        </div>
+        <div className={`shrink-0 w-8 h-8 rounded-full grid place-items-center border border-border ${open ? "rotate-180" : ""} transition-transform`}>
+          <ChevronDown className="w-4 h-4" />
+        </div>
+      </button>
+
+      {open && (
+        <div className="px-5 pb-6 space-y-5 border-t border-border/60">
+          <ul className="space-y-2.5 pt-4">
+            {items.map((it, i) =>
+              i < revealed ? (
+                <li
+                  key={i}
+                  className="flex gap-3 text-sm md:text-base text-foreground/90 animate-fade-in-up"
+                >
+                  <span className={`font-mono shrink-0 ${accent}`}>›</span>
+                  <span>{it}</span>
+                </li>
+              ) : null
+            )}
+          </ul>
+
+          {evidence.length > 0 && (
+            <div className="border-t border-border/60 pt-4">
+              <div className={`font-mono text-[10px] uppercase tracking-widest mb-2 ${accent}`}>
+                {evidenceLabel}
+              </div>
+              <ul className="grid sm:grid-cols-2 gap-x-4 gap-y-1">
+                {evidence.slice(0, 6).map((e, i) => (
+                  <li key={i} className="text-xs text-muted-foreground">· {e}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
 
-function ThesisCard({ title, items, icon: Icon, color }: { title: string; items: string[]; icon: any; color: string }) {
-  return (
-    <div className="card-terminal rounded-lg p-5 space-y-3">
-      <div className="flex items-center gap-2">
-        <Icon className={`w-4 h-4 ${color}`} />
-        <h3 className="font-mono text-xs uppercase tracking-widest text-muted-foreground">{title}</h3>
-      </div>
-      <ul className="space-y-2">
-        {items.map((it, i) => (
-          <li key={i} className="text-sm flex gap-2">
-            <span className={`font-mono ${color}`}>›</span>
-            <span className="text-foreground/90">{it}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-function EvidenceCard({ title, items, accent }: { title: string; items: string[]; accent: string }) {
-  return (
-    <div className="card-terminal rounded p-4 space-y-2">
-      <div className={`font-mono text-[10px] uppercase tracking-widest ${accent}`}>{title}</div>
-      <ul className="space-y-1.5">
-        {items.length === 0 ? (
-          <li className="text-xs text-muted-foreground italic">No signals.</li>
-        ) : (
-          items.map((it, i) => (
-            <li key={i} className="text-xs text-foreground/80 leading-relaxed">· {it}</li>
-          ))
-        )}
-      </ul>
-    </div>
-  );
-}
-
-function DecisionCard({ title, tag, desc, accent, onClick, icon: Icon }: any) {
+function DecisionCard({ title, tag, desc, micro, accent, onClick, icon: Icon }: any) {
   return (
     <button
       onClick={onClick}
@@ -228,9 +240,10 @@ function DecisionCard({ title, tag, desc, accent, onClick, icon: Icon }: any) {
         <span className={`font-mono text-[10px] px-2 py-0.5 rounded ${accent} text-background font-bold`}>{tag}</span>
       </div>
       <h3 className="font-display text-xl font-bold mb-2">{title}</h3>
-      <p className="text-sm text-muted-foreground">{desc}</p>
-      <div className="mt-4 font-mono text-xs text-primary opacity-0 group-hover:opacity-100 transition">
-        EXECUTE →
+      <p className="text-sm text-foreground/85 mb-3">{desc}</p>
+      <p className="text-xs text-muted-foreground italic">{micro}</p>
+      <div className="mt-4 font-mono text-xs text-primary opacity-0 group-hover:opacity-100 transition flex items-center gap-1">
+        EXECUTE <Plus className="w-3 h-3" />
       </div>
     </button>
   );
@@ -274,7 +287,6 @@ function PriceChart({ data, rating }: { data: { month: string; price: number }[]
             <stop offset="100%" stopColor={color} stopOpacity="0" />
           </linearGradient>
         </defs>
-        {/* grid lines */}
         {[0, 1, 2, 3].map((i) => (
           <line
             key={i}

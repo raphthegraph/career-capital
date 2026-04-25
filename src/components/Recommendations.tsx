@@ -15,22 +15,22 @@ interface Props {
 
 const TITLES: Record<Decision, { title: string; tagline: string; loading: string; tag: string; accent: string }> = {
   increase: {
-    title: "Increase Position",
+    title: "Stay & Double Down",
     tagline: "Repricing your upside…",
     loading: "Building your repricing playbook",
     tag: "DOUBLE DOWN",
     accent: "bg-buy",
   },
   reduce: {
-    title: "Reduce Position",
+    title: "Start Transitioning",
     tagline: "Scanning alternative career assets…",
     loading: "Sourcing higher-yield opportunities",
     tag: "REBALANCE",
     accent: "bg-hold",
   },
   exit: {
-    title: "Exit Position",
-    tagline: "Simulating full portfolio reallocation…",
+    title: "Exit & Reallocate",
+    tagline: "Simulating full career reallocation…",
     loading: "Modeling pivot scenarios and timeline",
     tag: "LIQUIDATE",
     accent: "bg-short",
@@ -241,13 +241,20 @@ function KV({ label, v, c }: { label: string; v: string; c: string }) {
 
 // --- EXIT ---
 function ExitView({ data, company }: { data: ExitData; company: string }) {
+  const [phase, setPhase] = useState(0); // 0: ideas, 1: +pivots, 2: +timeline
+  useEffect(() => {
+    const t1 = setTimeout(() => setPhase(1), 1100);
+    const t2 = setTimeout(() => setPhase(2), 2400);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, []);
+
   return (
-    <div className="space-y-8 animate-fade-in-up">
-      <section>
-        <div className="font-mono text-xs uppercase tracking-widest text-buy mb-3">Startup Ideas</div>
+    <div className="space-y-10">
+      <section className="animate-fade-in-up">
+        <div className="font-mono text-xs uppercase tracking-widest text-buy mb-3">Phase 1 · Startup Ideas</div>
         <div className="grid md:grid-cols-2 gap-4">
           {data.startupIdeas.map((s, i) => (
-            <div key={i} className="card-terminal rounded-lg p-5">
+            <div key={i} className="card-terminal rounded-lg p-5 animate-fade-in-up" style={{ animationDelay: `${i * 140}ms` }}>
               <div className="font-display text-xl font-bold mb-2">{s.name}</div>
               <p className="text-sm text-foreground/90 mb-3">{s.pitch}</p>
               <div className="font-mono text-xs text-muted-foreground border-t border-border pt-3">
@@ -258,41 +265,45 @@ function ExitView({ data, company }: { data: ExitData; company: string }) {
         </div>
       </section>
 
-      <section>
-        <div className="font-mono text-xs uppercase tracking-widest text-hold mb-3">Career Pivots</div>
-        <div className="grid md:grid-cols-3 gap-4">
-          {data.careerPivots.map((p, i) => (
-            <div key={i} className="card-terminal rounded-lg p-5">
-              <div className="font-semibold mb-2">{p.path}</div>
-              <p className="text-sm text-foreground/90 mb-3">{p.why}</p>
-              <div className="font-mono text-xs text-muted-foreground border-t border-border pt-3">
-                LEVERAGE · {p.leverage}
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section>
-        <div className="font-mono text-xs uppercase tracking-widest text-muted-foreground mb-3">If you exit this position…</div>
-        <div className="card-terminal rounded-lg p-6">
-          <div className="grid md:grid-cols-4 gap-6 relative">
-            <div className="absolute left-0 right-0 top-6 h-px bg-border hidden md:block" />
-            {[
-              { l: "Month 0", t: data.timeline.month0, c: "bg-primary" },
-              { l: "Month 3", t: data.timeline.month3, c: "bg-hold" },
-              { l: "Month 6", t: data.timeline.month6, c: "bg-terminal-cyan" },
-              { l: "Month 12", t: data.timeline.month12, c: "bg-buy" },
-            ].map((m, i) => (
-              <div key={i} className="relative animate-fade-in-up" style={{ animationDelay: `${i * 120}ms` }}>
-                <div className={`w-3 h-3 rounded-full ${m.c} mb-3 relative z-10`} />
-                <div className="font-mono text-xs uppercase tracking-widest text-muted-foreground mb-1">{m.l}</div>
-                <p className="text-sm">{m.t}</p>
+      {phase >= 1 && (
+        <section className="animate-fade-in-up">
+          <div className="font-mono text-xs uppercase tracking-widest text-hold mb-3">Phase 2 · Career Pivots</div>
+          <div className="grid md:grid-cols-3 gap-4">
+            {data.careerPivots.map((p, i) => (
+              <div key={i} className="card-terminal rounded-lg p-5 animate-fade-in-up" style={{ animationDelay: `${i * 140}ms` }}>
+                <div className="font-semibold mb-2">{p.path}</div>
+                <p className="text-sm text-foreground/90 mb-3">{p.why}</p>
+                <div className="font-mono text-xs text-muted-foreground border-t border-border pt-3">
+                  LEVERAGE · {p.leverage}
+                </div>
               </div>
             ))}
           </div>
-        </div>
-      </section>
+        </section>
+      )}
+
+      {phase >= 2 && (
+        <section className="animate-fade-in-up">
+          <div className="font-mono text-xs uppercase tracking-widest text-primary mb-3">Phase 3 · Reallocation Timeline</div>
+          <div className="card-terminal rounded-lg p-6">
+            <div className="grid md:grid-cols-4 gap-6 relative">
+              <div className="absolute left-0 right-0 top-6 h-px bg-border hidden md:block" />
+              {[
+                { l: "Month 0", t: data.timeline.month0, c: "bg-primary" },
+                { l: "Month 3", t: data.timeline.month3, c: "bg-hold" },
+                { l: "Month 6", t: data.timeline.month6, c: "bg-terminal-cyan" },
+                { l: "Month 12", t: data.timeline.month12, c: "bg-buy" },
+              ].map((m, i) => (
+                <div key={i} className="relative animate-fade-in-up" style={{ animationDelay: `${i * 180}ms` }}>
+                  <div className={`w-3 h-3 rounded-full ${m.c} mb-3 relative z-10`} />
+                  <div className="font-mono text-xs uppercase tracking-widest text-muted-foreground mb-1">{m.l}</div>
+                  <p className="text-sm">{m.t}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
     </div>
   );
 }

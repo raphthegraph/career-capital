@@ -27,6 +27,12 @@ export function Landing({ onSubmit }: Props) {
     onSubmit(company.trim(), role.trim());
   };
 
+  const pitchLines = [
+    "Your career is your biggest asset.",
+    "You invest most of your time into it.",
+    "But you've never priced it.",
+  ];
+
   return (
     <div className="min-h-screen flex flex-col">
       <TickerTape />
@@ -48,18 +54,30 @@ export function Landing({ onSubmit }: Props) {
             <span className="w-2 h-2 rounded-full bg-primary blink" />
             ASSET ANALYSIS · POWERED BY AI + REAL SIGNALS
           </div>
-          <h1 className="font-display text-5xl md:text-7xl font-bold leading-[1.05] tracking-tight">
-            Would you{" "}
-            <span className="bg-buy bg-clip-text text-primary">buy</span> your
-            <br />
-            own job?
-          </h1>
-          <p className="text-lg md:text-xl text-muted-foreground max-w-xl">
-            $JOB evaluates your employer like a career asset — using real-world signals and AI
-            reasoning. We price your role. Then we tell you whether to buy, hold, sell, or short it.
-          </p>
 
-          <form onSubmit={submit} className="card-terminal rounded-lg p-6 space-y-4 max-w-2xl">
+          <div className="space-y-2">
+            {pitchLines.map((line, i) => (
+              <p
+                key={line}
+                className="font-display text-2xl md:text-3xl font-semibold text-foreground/85 animate-fade-in-up"
+                style={{ animationDelay: `${i * 180}ms` }}
+              >
+                {line}
+              </p>
+            ))}
+          </div>
+
+          <h1
+            className="font-display text-4xl md:text-6xl font-bold leading-[1.05] tracking-tight animate-fade-in-up"
+            style={{ animationDelay: "640ms" }}
+          >
+            $JOB turns your job into an{" "}
+            <span className="bg-buy bg-clip-text text-primary">asset</span> —
+            <br />
+            and tells you what to do with it.
+          </h1>
+
+          <form onSubmit={submit} className="card-terminal rounded-lg p-6 space-y-4 max-w-2xl animate-fade-in-up" style={{ animationDelay: "820ms" }}>
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label className="font-mono text-xs uppercase tracking-wider text-muted-foreground">Company</Label>
@@ -81,7 +99,7 @@ export function Landing({ onSubmit }: Props) {
               </div>
             </div>
             <Button type="submit" size="lg" className="w-full h-14 text-base font-semibold gap-2 bg-buy text-background hover:opacity-90">
-              Analyze my job <ArrowRight className="w-5 h-5" />
+              Price my job <ArrowRight className="w-5 h-5" />
             </Button>
             <div className="flex flex-wrap gap-2 pt-2">
               <span className="text-xs text-muted-foreground font-mono pt-1">try:</span>
@@ -102,7 +120,7 @@ export function Landing({ onSubmit }: Props) {
           </form>
         </div>
 
-        <aside className="card-terminal rounded-lg p-6 space-y-4 animate-fade-in-up" style={{ animationDelay: "120ms" }}>
+        <aside className="card-terminal rounded-lg p-6 space-y-4 animate-fade-in-up" style={{ animationDelay: "300ms" }}>
           <div className="flex items-center justify-between font-mono text-xs text-muted-foreground">
             <span>SAMPLE TICKER</span>
             <span>N26-PM · LIVE</span>

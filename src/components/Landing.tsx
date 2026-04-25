@@ -50,7 +50,7 @@ export function Landing({ onSubmit }: Props) {
           </div>
           <h1 className="font-display text-5xl md:text-7xl font-bold leading-[1.05] tracking-tight">
             Would you{" "}
-            <span className="bg-buy bg-clip-text text-transparent">buy</span> your
+            <span className="bg-buy bg-clip-text text-primary">buy</span> your
             <br />
             own job?
           </h1>

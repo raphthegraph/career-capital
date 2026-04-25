@@ -74,40 +74,45 @@ export function VerdictReveal({ company, role, analysis, onContinue }: Props) {
   }, [phase, insightsRevealed, insights.length]);
 
   return (
-    <div className="min-h-screen flex flex-col items-center px-6 py-20">
-      <div className="max-w-xl w-full text-center space-y-12">
+    <div className="min-h-screen flex flex-col items-center px-6 py-24">
+      <div className="max-w-xl w-full text-center space-y-14">
         {/* 1 */}
         {phase >= 1 && (
-          <div className="animate-fade-in-up space-y-3">
-            <div className="text-xs text-muted-foreground">
+          <div className="animate-fade-in-up space-y-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full surface text-[11px] text-muted-foreground tracking-wide">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary" />
               {company} · {role}
             </div>
-            <h2 className="font-display text-3xl md:text-4xl font-semibold tracking-tight">
+            <h2 className="font-display text-[34px] md:text-[44px] font-semibold tracking-[-0.03em] leading-[1.05] text-elegant">
               Your job has been priced.
             </h2>
           </div>
         )}
 
-        {/* 2 */}
+        {/* 2 — refined ticker chip, less terminal */}
         {phase >= 2 && (
-          <div className="animate-fade-in space-y-1.5">
-            <div className="text-[11px] text-muted-foreground tracking-wide">Synthetic ticker</div>
-            <div className="font-mono text-3xl md:text-4xl font-medium tracking-wider text-foreground/95">
-              {analysis.ticker}
+          <div className="animate-fade-in flex justify-center">
+            <div className="surface rounded-2xl px-6 py-4 inline-flex flex-col items-center gap-1.5">
+              <div className="text-[10px] text-muted-foreground/70 uppercase tracking-[0.18em]">
+                Synthetic ticker
+              </div>
+              <div className="font-mono text-[22px] md:text-[26px] font-medium tracking-[0.12em] text-foreground/95">
+                {analysis.ticker}
+              </div>
             </div>
           </div>
         )}
 
         {/* 3 */}
         {phase >= 3 && (
-          <div className="flex justify-center pt-1 animate-scale-in">
+          <div className="flex justify-center pt-2 animate-scale-in">
             <RatingPill rating={analysis.rating} size="xl" />
           </div>
         )}
 
         {/* 4 */}
         {phase >= 4 && (
-          <h2 className="font-display text-xl md:text-2xl font-medium animate-fade-in-up text-muted-foreground tracking-tight">
+          <h2 className="font-display text-[20px] md:text-[24px] font-medium animate-fade-in-up text-muted-foreground tracking-tight">
             Would you buy this job?
           </h2>
         )}
@@ -115,7 +120,7 @@ export function VerdictReveal({ company, role, analysis, onContinue }: Props) {
         {/* 5 */}
         {phase >= 5 && (
           <p
-            className={`font-display text-5xl md:text-6xl font-semibold animate-scale-in tracking-tight ${ratingColorClass(
+            className={`font-display text-[64px] md:text-[80px] font-semibold animate-scale-in tracking-[-0.04em] leading-[0.95] ${ratingColorClass(
               analysis.rating,
             )}`}
           >
@@ -125,15 +130,15 @@ export function VerdictReveal({ company, role, analysis, onContinue }: Props) {
 
         {/* 6 */}
         {phase >= 6 && (
-          <p className="text-base md:text-lg text-foreground/75 max-w-lg mx-auto animate-fade-in-up leading-relaxed">
+          <p className="text-[16px] md:text-[18px] text-foreground/75 max-w-[460px] mx-auto animate-fade-in-up leading-[1.55]">
             {analysis.oneLineVerdict}
           </p>
         )}
 
         {/* 7 — concrete signals as elegant cards */}
         {phase >= 7 && (
-          <div className="space-y-3 max-w-lg mx-auto pt-6 text-left">
-            <div className="text-[11px] text-muted-foreground text-center mb-5 tracking-wide">
+          <div className="space-y-3 max-w-lg mx-auto pt-8 text-left">
+            <div className="text-[10px] text-muted-foreground/70 text-center mb-6 tracking-[0.18em] uppercase">
               Key signals
             </div>
             {insights.map((ins, i) => {
@@ -144,18 +149,20 @@ export function VerdictReveal({ company, role, analysis, onContinue }: Props) {
                 <div
                   key={ins.label}
                   ref={isLast ? lastSignalRef : null}
-                  className="surface rounded-2xl p-5 animate-fade-in-up"
+                  className="surface rounded-2xl p-5 md:p-6 animate-fade-in-up hover:bg-card/60 transition-colors"
                 >
-                  <div className="flex items-center justify-between gap-3 mb-2">
-                    <div className="flex items-center gap-2.5">
+                  <div className="flex items-center justify-between gap-3 mb-2.5">
+                    <div className="flex items-center gap-3">
                       <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${tone.dot}`} />
-                      <div className="text-[13px] font-medium text-foreground">
+                      <div className="text-[14px] font-medium text-foreground tracking-tight">
                         {ins.label}
                       </div>
                     </div>
-                    <span className={`text-[11px] ${tone.chip}`}>{tone.label}</span>
+                    <span className={`text-[10.5px] uppercase tracking-wider font-medium ${tone.chip}`}>
+                      {tone.label}
+                    </span>
                   </div>
-                  <p className="text-[14.5px] text-foreground/80 leading-relaxed pl-4">
+                  <p className="text-[14.5px] text-foreground/75 leading-[1.55] pl-[18px]">
                     {ins.detail}
                   </p>
                 </div>
@@ -166,11 +173,11 @@ export function VerdictReveal({ company, role, analysis, onContinue }: Props) {
 
         {/* 8 */}
         {phase >= 8 && insightsRevealed >= insights.length && (
-          <div ref={ctaRef} className="animate-fade-in-up pt-6">
+          <div ref={ctaRef} className="animate-fade-in-up pt-8">
             <Button
               onClick={onContinue}
               size="lg"
-              className="gap-2 h-12 px-7 rounded-xl bg-primary text-primary-foreground hover:opacity-95"
+              className="gap-2 h-12 px-7 rounded-xl bg-primary text-primary-foreground hover:opacity-95 glow-primary"
             >
               Continue <ArrowDown className="w-4 h-4" />
             </Button>

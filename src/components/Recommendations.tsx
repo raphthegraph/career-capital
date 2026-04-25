@@ -60,22 +60,22 @@ export function Recommendations({
   }, [decision, company, role]);
 
   return (
-    <div className="min-h-screen pb-40">
-      <div className="border-b border-border/50 bg-background/70 backdrop-blur-md sticky top-0 z-20">
+    <div className="min-h-screen pb-44">
+      <div className="border-b hairline bg-background/60 backdrop-blur-xl sticky top-0 z-20">
         <div className="container py-4 flex items-center justify-between">
-          <Button variant="ghost" onClick={onBack} className="gap-2 text-xs h-9">
+          <Button variant="ghost" onClick={onBack} className="gap-2 text-[12px] h-9 text-muted-foreground hover:text-foreground">
             <ArrowLeft className="w-3.5 h-3.5" /> Back
           </Button>
-          <div className="text-[11px] text-muted-foreground truncate max-w-[60%]">
-            {analysis.ticker} · {decision.subIntent}
+          <div className="text-[11px] text-muted-foreground truncate max-w-[60%] tracking-wide">
+            {analysis.ticker}
           </div>
-          <Button variant="ghost" onClick={onRestart} className="text-xs h-9">
+          <Button variant="ghost" onClick={onRestart} className="text-[12px] h-9 text-muted-foreground hover:text-foreground">
             New analysis
           </Button>
         </div>
       </div>
 
-      <div className="container py-16 max-w-2xl space-y-16">
+      <div className="container py-20 max-w-2xl space-y-16">
         {!data && !error && <Loading />}
         {error && (
           <div className="surface rounded-2xl p-6 text-short text-sm">{error}</div>
@@ -154,11 +154,13 @@ function RecommendationView({ data }: { data: Recommendation }) {
   }, [data]);
 
   return (
-    <section className="space-y-14">
+    <section className="space-y-16">
       {revealed >= 1 && (
         <div className="text-center space-y-4 animate-fade-in-up">
-          <div className="text-[11px] text-muted-foreground tracking-wide">Recommended move</div>
-          <h2 className="font-display text-2xl md:text-[32px] font-semibold leading-[1.15] tracking-tight max-w-xl mx-auto">
+          <div className="text-[10px] text-muted-foreground/70 tracking-[0.18em] uppercase">
+            Recommended move
+          </div>
+          <h2 className="font-display text-[28px] md:text-[38px] font-semibold leading-[1.1] tracking-[-0.03em] max-w-xl mx-auto text-elegant">
             {data.recommendedMove}
           </h2>
         </div>
@@ -190,11 +192,17 @@ function RecommendationView({ data }: { data: Recommendation }) {
 
       {revealed >= 5 && (
         <Block title="Alternative paths" icon={Compass} accent="text-hold" dot="bg-hold">
-          <div className="space-y-3.5">
+          <div className="space-y-4">
             {data.alternativePaths.slice(0, 3).map((p, i) => (
-              <div key={i} className="space-y-1.5 animate-fade-in-soft" style={{ animationDelay: `${i * 100}ms` }}>
-                <div className="font-medium text-[15px] text-foreground/95">{p.label}</div>
-                <p className="text-[14px] text-muted-foreground leading-relaxed">{p.detail}</p>
+              <div
+                key={i}
+                className="surface rounded-xl p-4 space-y-1.5 animate-fade-in-soft"
+                style={{ animationDelay: `${i * 100}ms` }}
+              >
+                <div className="font-medium text-[14.5px] text-foreground/95 tracking-tight">
+                  {p.label}
+                </div>
+                <p className="text-[13.5px] text-muted-foreground leading-[1.55]">{p.detail}</p>
               </div>
             ))}
           </div>
@@ -218,20 +226,22 @@ function Block({
   children: React.ReactNode;
 }) {
   return (
-    <div className="space-y-4 animate-fade-in-up">
+    <div className="space-y-5 animate-fade-in-up">
       <div className="flex items-center gap-2.5">
         <Icon className={`w-3.5 h-3.5 ${accent}`} />
-        <span className="text-[11px] text-muted-foreground tracking-wide">{title}</span>
+        <span className="text-[10px] text-muted-foreground/70 tracking-[0.18em] uppercase">
+          {title}
+        </span>
       </div>
-      <div className="space-y-2.5">{children}</div>
+      <div className="space-y-3">{children}</div>
     </div>
   );
 }
 
 function Bullet({ text, dot }: { text: string; dot: string }) {
   return (
-    <p className="text-[14.5px] text-foreground/90 leading-relaxed flex gap-3">
-      <span className={`shrink-0 mt-2 w-1 h-1 rounded-full ${dot}`} />
+    <p className="text-[15px] text-foreground/85 leading-[1.6] flex gap-3">
+      <span className={`shrink-0 mt-2.5 w-1 h-1 rounded-full ${dot}`} />
       <span className="flex-1">{text}</span>
     </p>
   );
@@ -289,23 +299,29 @@ function FloatingChat({
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-40 pointer-events-none">
-      <div className="container max-w-2xl pb-6 pt-4 pointer-events-auto">
+      {/* Soft fade gradient behind composer */}
+      <div className="absolute bottom-0 left-0 right-0 h-44 bg-gradient-to-t from-background via-background/85 to-transparent pointer-events-none" />
+
+      <div className="relative container max-w-2xl pb-7 pt-4 pointer-events-auto">
         {open && messages.length > 0 && (
           <div className="mb-3 surface-elevated rounded-2xl overflow-hidden animate-fade-in-up">
-            <div className="flex items-center justify-between px-5 py-3 border-b border-border/50">
-              <span className="text-[11px] text-muted-foreground tracking-wide">
-                Chat with $JOB
-              </span>
+            <div className="flex items-center justify-between px-5 py-3.5 border-b hairline">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-3.5 h-3.5 text-primary" />
+                <span className="text-[12px] font-medium tracking-tight text-foreground/90">
+                  Chat with $JOB
+                </span>
+              </div>
               <button
                 onClick={() => setOpen(false)}
-                className="text-[11px] text-muted-foreground hover:text-foreground"
+                className="text-[11px] uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
               >
                 hide
               </button>
             </div>
             <div
               ref={scrollRef}
-              className="max-h-[360px] overflow-y-auto p-4 space-y-3"
+              className="max-h-[380px] overflow-y-auto p-5 space-y-3"
             >
               {messages.map((m, i) => (
                 <div
@@ -315,10 +331,10 @@ function FloatingChat({
                   }`}
                 >
                   <div
-                    className={`max-w-[88%] rounded-2xl px-4 py-2.5 text-[14px] leading-relaxed whitespace-pre-wrap ${
+                    className={`max-w-[88%] rounded-2xl px-4 py-3 text-[14px] leading-[1.55] whitespace-pre-wrap ${
                       m.role === "user"
-                        ? "bg-primary/15 text-foreground"
-                        : "bg-background/60 text-foreground/90 border border-border/50"
+                        ? "bg-primary/15 text-foreground border border-primary/20"
+                        : "bg-background/40 text-foreground/90 border border-border/50"
                     }`}
                   >
                     {m.content}
@@ -327,8 +343,9 @@ function FloatingChat({
               ))}
               {loading && (
                 <div className="flex justify-start">
-                  <div className="rounded-2xl px-4 py-2.5 text-sm text-muted-foreground">
-                    thinking<span className="animate-pulse">…</span>
+                  <div className="rounded-2xl px-4 py-2.5 text-[13px] text-muted-foreground flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary animate-breathe" />
+                    thinking
                   </div>
                 </div>
               )}
@@ -342,21 +359,22 @@ function FloatingChat({
             e.preventDefault();
             send();
           }}
-          className="surface-elevated rounded-2xl flex items-center gap-2 p-2 pl-4"
+          className="surface-elevated rounded-2xl flex items-center gap-2 p-2 pl-5 glow-primary"
           onFocus={() => messages.length > 0 && setOpen(true)}
         >
+          <Sparkles className="w-4 h-4 text-primary/70 shrink-0" />
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask $JOB about your next move"
-            className="flex-1 h-11 bg-transparent text-[15px] text-foreground placeholder:text-muted-foreground/70 outline-none"
+            className="flex-1 h-12 bg-transparent text-[15px] text-foreground placeholder:text-muted-foreground/60 outline-none"
             disabled={loading}
           />
           <Button
             type="submit"
             size="icon"
             disabled={loading || !input.trim()}
-            className="h-10 w-10 rounded-xl bg-primary text-primary-foreground hover:opacity-95"
+            className="h-10 w-10 rounded-xl bg-primary text-primary-foreground hover:opacity-95 disabled:opacity-40"
           >
             <ArrowUp className="w-4 h-4" />
           </Button>

@@ -2,104 +2,148 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* $JOB — Bloomberg Terminal × Stripe × Linear. Dark, financial, cinematic. */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 220 30% 4%;
+    --foreground: 60 20% 96%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card: 220 25% 7%;
+    --card-foreground: 60 20% 96%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover: 220 25% 7%;
+    --popover-foreground: 60 20% 96%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 142 76% 56%;
+    --primary-foreground: 220 30% 4%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 220 20% 12%;
+    --secondary-foreground: 60 20% 96%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 220 20% 10%;
+    --muted-foreground: 220 10% 60%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 38 92% 60%;
+    --accent-foreground: 220 30% 4%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 60 20% 96%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 220 20% 14%;
+    --input: 220 20% 14%;
+    --ring: 142 76% 56%;
 
-    --radius: 0.5rem;
+    --radius: 0.375rem;
 
-    --sidebar-background: 0 0% 98%;
+    /* Asset rating semantic colors */
+    --buy: 142 76% 56%;
+    --hold: 38 92% 60%;
+    --sell: 16 90% 60%;
+    --short: 0 84% 60%;
 
-    --sidebar-foreground: 240 5.3% 26.1%;
+    --terminal-green: 142 76% 56%;
+    --terminal-amber: 38 92% 60%;
+    --terminal-red: 0 84% 60%;
+    --terminal-cyan: 180 70% 55%;
+    --terminal-grid: 220 20% 12%;
 
-    --sidebar-primary: 240 5.9% 10%;
+    /* Gradients */
+    --gradient-hero: radial-gradient(ellipse at top, hsl(142 76% 20% / 0.35), transparent 60%),
+                     radial-gradient(ellipse at bottom right, hsl(38 92% 30% / 0.25), transparent 60%),
+                     hsl(220 30% 4%);
+    --gradient-buy: linear-gradient(135deg, hsl(142 76% 56%), hsl(160 76% 50%));
+    --gradient-sell: linear-gradient(135deg, hsl(16 90% 60%), hsl(0 84% 60%));
+    --gradient-hold: linear-gradient(135deg, hsl(38 92% 60%), hsl(48 95% 55%));
+    --gradient-short: linear-gradient(135deg, hsl(340 80% 55%), hsl(0 84% 60%));
+    --gradient-card: linear-gradient(180deg, hsl(220 25% 8%), hsl(220 25% 5%));
 
-    --sidebar-primary-foreground: 0 0% 98%;
+    /* Shadows / glows */
+    --glow-primary: 0 0 40px hsl(142 76% 56% / 0.35);
+    --glow-accent: 0 0 40px hsl(38 92% 60% / 0.3);
+    --shadow-terminal: 0 20px 60px -20px hsl(0 0% 0% / 0.6), 0 0 0 1px hsl(220 20% 14%);
 
-    --sidebar-accent: 240 4.8% 95.9%;
+    --font-display: 'Space Grotesk', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --transition-smooth: cubic-bezier(0.16, 1, 0.3, 1);
   }
 }
 
 @layer base {
-  * {
-    @apply border-border;
+  * { @apply border-border; }
+  html, body, #root { @apply min-h-screen; }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-display);
+    background: var(--gradient-hero);
+    background-attachment: fixed;
+  }
+  ::selection { background: hsl(var(--primary) / 0.3); }
+}
+
+@layer utilities {
+  .font-mono { font-family: var(--font-mono); }
+  .font-display { font-family: var(--font-display); }
+
+  .terminal-grid {
+    background-image:
+      linear-gradient(hsl(var(--terminal-grid)) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--terminal-grid)) 1px, transparent 1px);
+    background-size: 40px 40px;
   }
 
-  body {
-    @apply bg-background text-foreground;
+  .glow-primary { box-shadow: var(--glow-primary); }
+  .glow-accent { box-shadow: var(--glow-accent); }
+
+  .text-buy { color: hsl(var(--buy)); }
+  .text-hold { color: hsl(var(--hold)); }
+  .text-sell { color: hsl(var(--sell)); }
+  .text-short { color: hsl(var(--short)); }
+
+  .bg-buy { background: var(--gradient-buy); }
+  .bg-hold { background: var(--gradient-hold); }
+  .bg-sell { background: var(--gradient-sell); }
+  .bg-short { background: var(--gradient-short); }
+
+  .ticker-tape {
+    animation: ticker 30s linear infinite;
   }
+
+  .scan-line::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, transparent, hsl(var(--primary) / 0.08), transparent);
+    animation: scan 2.5s linear infinite;
+    pointer-events: none;
+  }
+
+  .blink { animation: blink 1.2s steps(2) infinite; }
+
+  .card-terminal {
+    background: var(--gradient-card);
+    border: 1px solid hsl(var(--border));
+    box-shadow: var(--shadow-terminal);
+  }
+}
+
+@keyframes ticker {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes scan {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px hsl(var(--primary) / 0.3); }
+  50% { box-shadow: 0 0 40px hsl(var(--primary) / 0.6); }
 }

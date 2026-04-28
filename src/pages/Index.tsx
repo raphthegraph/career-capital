@@ -16,8 +16,8 @@ import {
 
 type Phase = "landing" | "analyzing" | "verdict" | "dashboard" | "decision";
 
-const MOTION_STORAGE_KEY = "$job-motion-enabled-v4";
-const MIN_ANALYSIS_VISIBLE_MS = 8600;
+const MOTION_STORAGE_KEY = "$job-motion-enabled-v5";
+const MIN_ANALYSIS_VISIBLE_MS = 12400;
 
 function loadMotionPreference() {
   if (typeof window === "undefined") return true;

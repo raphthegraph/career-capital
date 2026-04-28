@@ -130,11 +130,7 @@ function getStayStatement(company: string, role: string, analysis: Analysis) {
 
 function scrollNearestIfNeeded(element: HTMLElement | null) {
   if (!element) return;
-  const rect = element.getBoundingClientRect();
-  const viewportBottom = window.innerHeight - 96;
-  if (rect.bottom > viewportBottom || rect.top < 88) {
-    element.scrollIntoView({ behavior: "smooth", block: "nearest" });
-  }
+  element.scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
 export function AnalysisDashboard({ company, role, analysis, animationsEnabled, onDecision }: Props) {

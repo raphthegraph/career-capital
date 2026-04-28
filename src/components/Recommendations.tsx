@@ -28,7 +28,7 @@ const LOAD_STEPS = [
   "Building your 30-day plan",
   "Grounding the recommendation",
 ];
-const MIN_RECOMMENDATION_VISIBLE_MS = 6800;
+const MIN_RECOMMENDATION_VISIBLE_MS = 9200;
 
 export function Recommendations({
   company,
@@ -151,13 +151,15 @@ function Loading({
       return;
     }
     if (step >= LOAD_STEPS.length - 1) return;
-    const t = setTimeout(() => setStep((s) => Math.min(s + 1, LOAD_STEPS.length - 1)), 1300);
+    const t = setTimeout(() => setStep((s) => Math.min(s + 1, LOAD_STEPS.length - 1)), 1800);
     return () => clearTimeout(t);
   }, [step, animationsEnabled]);
 
   const isFinished = !animationsEnabled;
   const activeStep = Math.min(step, LOAD_STEPS.length - 1);
-  const progress = Math.round(((activeStep + 1) / LOAD_STEPS.length) * 100);
+  const progress = isFinished
+    ? 100
+    : Math.min(92, Math.round(((activeStep + 1) / LOAD_STEPS.length) * 100));
   const activeLabel = LOAD_STEPS[activeStep];
 
   return (
@@ -254,14 +256,16 @@ function Loading({
 
 // slower section reveal — let user read each block
 const SECTION_DELAYS = [0, 1400, 3000, 4800, 6600];
+const CHAT_THINKING_STEPS = [
+  "reading your question",
+  "checking the memo",
+  "grounding the answer",
+  "writing a concise reply",
+];
 
 function scrollNearestIfNeeded(element: HTMLElement | null) {
   if (!element) return;
-  const rect = element.getBoundingClientRect();
-  const viewportBottom = window.innerHeight - 120;
-  if (rect.bottom > viewportBottom || rect.top < 88) {
-    element.scrollIntoView({ behavior: "smooth", block: "nearest" });
-  }
+  element.scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
 function stripMarkdown(value: string) {
@@ -400,7 +404,7 @@ function RecommendationView({
         )}
       </div>
 
-      <div ref={refs.current[1]} className={revealed >= 2 ? (focusIdx === 1 ? "dim-active" : focusIdx > 1 ? "dim" : "") : "hidden"}>
+      <div ref={refs.current[1]} className={revealed >= 2 ? (focusIdx === 1 ? "dim-active" : "") : "hidden"}>
         {revealed >= 2 && (
           <Block title="Why this move" icon={Sparkles} accent="text-buy">
             <div className="grid gap-3 md:grid-cols-3">
@@ -412,7 +416,7 @@ function RecommendationView({
         )}
       </div>
 
-      <div ref={refs.current[2]} className={revealed >= 3 ? (focusIdx === 2 ? "dim-active" : focusIdx > 2 ? "dim" : "") : "hidden"}>
+      <div ref={refs.current[2]} className={revealed >= 3 ? (focusIdx === 2 ? "dim-active" : "") : "hidden"}>
         {revealed >= 3 && (
           <Block title="Next 30 days" icon={Calendar} accent="text-primary-strong">
             <div className="space-y-2.5">
@@ -424,7 +428,7 @@ function RecommendationView({
         )}
       </div>
 
-      <div ref={refs.current[3]} className={revealed >= 4 ? (focusIdx === 3 ? "dim-active" : focusIdx > 3 ? "dim" : "") : "hidden"}>
+      <div ref={refs.current[3]} className={revealed >= 4 ? (focusIdx === 3 ? "dim-active" : "") : "hidden"}>
         {revealed >= 4 && (
           <Block title="Watch-outs" icon={AlertTriangle} accent="text-short">
             <div className="grid gap-3 md:grid-cols-2">
@@ -443,7 +447,7 @@ function RecommendationView({
               {data.alternativePaths.slice(0, 3).map((p, i) => (
                 <div
                   key={i}
-                  className="space-y-2 rounded-[28px] border border-border/[0.045] bg-white/[0.62] p-4 shadow-soft backdrop-blur-2xl transition-all duration-500 hover:-translate-y-0.5 hover:bg-white/[0.72] hover:shadow-elevated animate-fade-in-soft"
+                  className="space-y-2 rounded-[28px] border border-border/[0.065] bg-white/[0.84] p-4 shadow-soft backdrop-blur-2xl transition-all duration-500 hover:-translate-y-0.5 hover:bg-white/[0.9] hover:shadow-elevated animate-fade-in-soft"
                   style={{ animationDelay: `${i * 100}ms` }}
                 >
                   <div className="flex items-center gap-2">
@@ -454,7 +458,7 @@ function RecommendationView({
                       {stripMarkdown(p.label)}
                     </div>
                   </div>
-                  <p className="text-[14px] text-muted-foreground leading-[1.6]">{stripMarkdown(p.detail)}</p>
+                  <p className="text-[14px] text-foreground/82 leading-[1.6]">{stripMarkdown(p.detail)}</p>
                 </div>
               ))}
             </div>
@@ -477,14 +481,14 @@ function SummaryCard({
   accent: string;
 }) {
   return (
-    <div className="rounded-[28px] border border-border/[0.045] bg-white/[0.62] p-4 shadow-soft backdrop-blur-2xl md:p-5">
+    <div className="rounded-[28px] border border-border/[0.06] bg-white/[0.82] p-4 shadow-soft backdrop-blur-2xl md:p-5">
       <div className="mb-4 flex items-center gap-2.5">
         <Icon className={`h-4 w-4 ${accent}`} />
         <span className="eyebrow">{title}</span>
       </div>
       <div className="space-y-2.5">
         {items.slice(0, 3).map((item) => (
-          <p key={item} className="flex gap-2.5 text-[14.5px] leading-[1.55] text-foreground/78">
+          <p key={item} className="flex gap-2.5 text-[14.5px] leading-[1.55] text-foreground/86">
             <CheckCircle2 className={`mt-0.5 h-4 w-4 shrink-0 ${accent}`} />
             <span>{item}</span>
           </p>
@@ -526,11 +530,11 @@ function MiniCard({
   accent: string;
 }) {
   return (
-    <div className="min-h-[150px] space-y-3 rounded-[28px] border border-border/[0.045] bg-white/[0.62] p-4 shadow-soft backdrop-blur-2xl transition-all duration-500 hover:-translate-y-0.5 hover:bg-white/[0.72] hover:shadow-elevated animate-fade-in-soft">
+    <div className="min-h-[150px] space-y-3 rounded-[28px] border border-border/[0.065] bg-white/[0.84] p-4 shadow-soft backdrop-blur-2xl transition-all duration-500 hover:-translate-y-0.5 hover:bg-white/[0.9] hover:shadow-elevated animate-fade-in-soft">
       <span className={`inline-flex h-7 w-7 items-center justify-center rounded-full bg-white/55 text-[12px] font-semibold ${accent}`}>
         {index}
       </span>
-      <p className="text-[14px] leading-[1.6] text-foreground/78">{stripMarkdown(text)}</p>
+      <p className="text-[14px] leading-[1.6] text-foreground/86">{stripMarkdown(text)}</p>
     </div>
   );
 }
@@ -547,7 +551,7 @@ function ActionRow({
   accent: string;
 }) {
   return (
-    <div className="rounded-[26px] border border-border/[0.045] bg-white/[0.62] p-4 shadow-soft backdrop-blur-2xl transition-all duration-500 hover:-translate-y-0.5 hover:bg-white/[0.72] hover:shadow-elevated">
+    <div className="rounded-[26px] border border-border/[0.065] bg-white/[0.84] p-4 shadow-soft backdrop-blur-2xl transition-all duration-500 hover:-translate-y-0.5 hover:bg-white/[0.9] hover:shadow-elevated">
       <div className="flex gap-3">
         <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-tint text-[12px] font-semibold text-primary-strong">
           {index}
@@ -559,7 +563,7 @@ function ActionRow({
               Action {index}
             </span>
           </div>
-          <p className="text-[15px] leading-[1.62] text-foreground/80">{stripMarkdown(text)}</p>
+          <p className="text-[15px] leading-[1.62] text-foreground/88">{stripMarkdown(text)}</p>
         </div>
       </div>
     </div>
@@ -638,11 +642,24 @@ function FloatingChat({
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
+  const [thinkingStep, setThinkingStep] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, loading]);
+
+  useEffect(() => {
+    if (!loading || !animationsEnabled) {
+      setThinkingStep(0);
+      return;
+    }
+    const t = setInterval(
+      () => setThinkingStep((current) => (current + 1) % CHAT_THINKING_STEPS.length),
+      820,
+    );
+    return () => clearInterval(t);
+  }, [loading, animationsEnabled]);
 
   const streamAssistantReply = async (baseMessages: ChatMessage[], reply: string) => {
     if (!animationsEnabled) {
@@ -655,14 +672,14 @@ function FloatingChat({
 
     let cursor = 0;
     while (cursor < reply.length) {
-      cursor = Math.min(reply.length, cursor + 3 + Math.floor(Math.random() * 5));
+      cursor = Math.min(reply.length, cursor + 2 + Math.floor(Math.random() * 4));
       const visibleReply = reply.slice(0, cursor);
       setMessages((current) =>
         current.map((message, index) =>
           index === assistantIndex ? { ...message, content: visibleReply } : message,
         ),
       );
-      await new Promise((resolve) => setTimeout(resolve, 18));
+      await new Promise((resolve) => setTimeout(resolve, 28));
     }
   };
 
@@ -736,11 +753,17 @@ function FloatingChat({
                     </div>
                   </div>
                 ))}
-                {loading && (
+                {loading && messages[messages.length - 1]?.role !== "assistant" && (
                   <div className="flex justify-start">
-                    <div className="rounded-[24px] px-4 py-2.5 text-[13px] text-muted-foreground flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-primary animate-breathe" />
-                      thinking
+                    <div className="rounded-[24px] border border-border/[0.05] bg-white/58 px-4 py-3 text-[13px] text-muted-foreground shadow-soft backdrop-blur-xl">
+                      <div className="flex items-center gap-2">
+                        <span className="flex items-center gap-1">
+                          <span className="h-1.5 w-1.5 rounded-full bg-primary animate-breathe" />
+                          <span className="h-1.5 w-1.5 rounded-full bg-primary/55 animate-breathe [animation-delay:160ms]" />
+                          <span className="h-1.5 w-1.5 rounded-full bg-primary/30 animate-breathe [animation-delay:320ms]" />
+                        </span>
+                        <span>{CHAT_THINKING_STEPS[thinkingStep]}</span>
+                      </div>
                     </div>
                   </div>
                 )}

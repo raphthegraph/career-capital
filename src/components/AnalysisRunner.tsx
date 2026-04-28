@@ -63,13 +63,13 @@ export function AnalysisRunner({ company, role, done, animationsEnabled, onCompl
     if (step >= FLAT.length) return;
     const isLast = step === FLAT.length - 1;
     if (isLast && !done) return;
-    const t = setTimeout(() => setStep((s) => s + 1), 900);
+    const t = setTimeout(() => setStep((s) => s + 1), 1320);
     return () => clearTimeout(t);
   }, [step, done, animationsEnabled]);
 
   useEffect(() => {
     if (step >= FLAT.length) {
-      const t = setTimeout(onComplete, animationsEnabled ? 280 : 0);
+      const t = setTimeout(onComplete, animationsEnabled ? 620 : 0);
       return () => clearTimeout(t);
     }
   }, [step, onComplete, animationsEnabled]);
@@ -77,7 +77,7 @@ export function AnalysisRunner({ company, role, done, animationsEnabled, onCompl
   const activePhase = step >= FLAT.length ? PHASES.length - 1 : FLAT[step].phaseIdx;
   const visibleStep = Math.min(step + 1, FLAT.length);
   const rawProgress = Math.round((visibleStep / FLAT.length) * 100);
-  const progress = done ? rawProgress : Math.min(rawProgress, 92);
+  const progress = done ? rawProgress : Math.min(rawProgress, 88);
   const activeLabel = step >= FLAT.length ? "Sourced read ready" : FLAT[step].label;
 
   return (

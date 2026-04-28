@@ -27,6 +27,8 @@ export interface ResearchPacket {
 
 const TAVILY_API_KEY = Deno.env.get("TAVILY_API_KEY");
 const TAVILY_BASE_URL = "https://api.tavily.com";
+const TAVILY_SEARCH_TIMEOUT_MS = Number(Deno.env.get("TAVILY_SEARCH_TIMEOUT_MS") ?? "12000");
+const TAVILY_EXTRACT_TIMEOUT_MS = Number(Deno.env.get("TAVILY_EXTRACT_TIMEOUT_MS") ?? "18000");
 
 type SearchTopic = "general" | "news" | "finance";
 
@@ -34,6 +36,24 @@ interface SearchPlan {
   query: string;
   topic: SearchTopic;
   maxResults?: number;
+}
+
+async function fetchWithTimeout(
+  url: string,
+  init: RequestInit,
+  timeoutMs: number,
+) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    return await fetch(url, {
+      ...init,
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 function isTrustedSource(url: string) {
@@ -233,7 +253,7 @@ async function tavilySearch(plan: SearchPlan) {
   if (!TAVILY_API_KEY) return [];
 
   try {
-    const response = await fetch(`${TAVILY_BASE_URL}/search`, {
+    const response = await fetchWithTimeout(`${TAVILY_BASE_URL}/search`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${TAVILY_API_KEY}`,
@@ -248,7 +268,7 @@ async function tavilySearch(plan: SearchPlan) {
         include_usage: false,
         max_results: plan.maxResults ?? 3,
       }),
-    });
+    }, TAVILY_SEARCH_TIMEOUT_MS);
 
     if (!response.ok) {
       console.error("Tavily search error", response.status, plan.query);
@@ -267,7 +287,7 @@ async function tavilyExtract(urls: string[], query: string) {
   if (!TAVILY_API_KEY || urls.length === 0) return {};
 
   try {
-    const response = await fetch(`${TAVILY_BASE_URL}/extract`, {
+    const response = await fetchWithTimeout(`${TAVILY_BASE_URL}/extract`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${TAVILY_API_KEY}`,
@@ -280,7 +300,7 @@ async function tavilyExtract(urls: string[], query: string) {
         format: "text",
         chunks_per_source: 4,
       }),
-    });
+    }, TAVILY_EXTRACT_TIMEOUT_MS);
 
     if (!response.ok) {
       console.error("Tavily extract error", response.status);

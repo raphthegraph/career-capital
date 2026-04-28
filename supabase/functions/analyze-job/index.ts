@@ -9,7 +9,15 @@ import {
   type AnalysisSource,
   type CareerAnalysis,
 } from "../_shared/career.ts";
-import { corsHeaders, jsonResponse } from "../_shared/http.ts";
+import {
+  enforceRateLimit,
+  handleCorsPreflight,
+  jsonResponse,
+  readJsonBody,
+  rejectDisallowedOrigin,
+  requirePost,
+  validateTextField,
+} from "../_shared/http.ts";
 import { createEmbeddings, generateStructuredOutput } from "../_shared/openai.ts";
 import { analysisSchema } from "../_shared/schemas.ts";
 import {
@@ -461,22 +469,45 @@ async function saveAnalysis(args: {
 }
 
 Deno.serve(async (request) => {
-  if (request.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  const preflight = handleCorsPreflight(request);
+  if (preflight) return preflight;
+
+  const originError = rejectDisallowedOrigin(request);
+  if (originError) return originError;
+
+  const methodError = requirePost(request);
+  if (methodError) return methodError;
+
+  const rateLimitError = await enforceRateLimit(supabase, request, {
+    endpoint: "analyze-job",
+    maxRequests: 5,
+    windowSeconds: 60 * 60,
+  });
+  if (rateLimitError) return rateLimitError;
 
   let company = "Unknown";
   let role = "Role";
 
   try {
-    const body = (await request.json()) as AnalyzeBody;
-    company = String(body.company ?? "").trim();
-    role = String(body.role ?? "").trim();
+    const parsed = await readJsonBody<AnalyzeBody>(request, { maxBytes: 4096 });
+    if (parsed.error) return parsed.error;
 
-    if (!company || !role) {
+    const companyInput = validateTextField(parsed.data?.company, "company", {
+      maxLength: 80,
+      required: true,
+    });
+    const roleInput = validateTextField(parsed.data?.role, "role", {
+      maxLength: 80,
+      required: true,
+    });
+    company = companyInput.value;
+    role = roleInput.value;
+
+    if (companyInput.error || roleInput.error) {
       return jsonResponse(
-        { error: "company and role are required" },
+        { error: companyInput.error ?? roleInput.error },
         { status: 400 },
+        request,
       );
     }
 
@@ -491,7 +522,7 @@ Deno.serve(async (request) => {
         ...cached.analysis,
         analysisId: cached.id,
         _cached: true,
-      });
+      }, {}, request);
     }
 
     const sources = await runTavilyResearch(company, role);
@@ -549,7 +580,7 @@ Deno.serve(async (request) => {
       ...(warnings.length > 0 ? { _warning: warnings.join(" ") } : {}),
     };
 
-    return jsonResponse(responseBody);
+    return jsonResponse(responseBody, {}, request);
   } catch (error) {
     console.error("analyze-job fatal", error);
     const fallback =
@@ -559,7 +590,6 @@ Deno.serve(async (request) => {
       ...fallback,
       researchQuality: "fallback",
       _warning: "Unexpected server error. Returning fallback analysis so the demo can continue.",
-      error: error instanceof Error ? error.message : "unknown",
-    });
+    }, {}, request);
   }
 });

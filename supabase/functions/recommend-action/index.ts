@@ -10,7 +10,15 @@ import {
   type CareerAnalysis,
   type DecisionContext,
 } from "../_shared/career.ts";
-import { corsHeaders, jsonResponse } from "../_shared/http.ts";
+import {
+  enforceRateLimit,
+  handleCorsPreflight,
+  jsonResponse,
+  readJsonBody,
+  rejectDisallowedOrigin,
+  requirePost,
+  validateTextField,
+} from "../_shared/http.ts";
 import { createEmbeddings, generateStructuredOutput } from "../_shared/openai.ts";
 import { recommendationSchema } from "../_shared/schemas.ts";
 
@@ -240,26 +248,51 @@ async function persistDecisionAndRecommendation(args: {
 }
 
 Deno.serve(async (request) => {
-  if (request.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  const preflight = handleCorsPreflight(request);
+  if (preflight) return preflight;
+
+  const originError = rejectDisallowedOrigin(request);
+  if (originError) return originError;
+
+  const methodError = requirePost(request);
+  if (methodError) return methodError;
+
+  const rateLimitError = await enforceRateLimit(supabase, request, {
+    endpoint: "recommend-action",
+    maxRequests: 10,
+    windowSeconds: 60 * 60,
+  });
+  if (rateLimitError) return rateLimitError;
 
   try {
-    const body = (await request.json()) as {
+    const parsed = await readJsonBody<{
       decision?: DecisionContext;
       questionAnswers?: Array<{ question?: string; answer?: string } | string>;
       company?: string;
       role?: string;
       analysis?: CareerAnalysis;
       analysisId?: string;
-    };
+    }>(request, { maxBytes: 65536 });
+    if (parsed.error) return parsed.error;
+
+    const body = parsed.data ?? {};
 
     const decision = normalizeDecisionInput({
       decision: body.decision,
       questionAnswers: body.questionAnswers,
     });
-    let company = String(body.company ?? "").trim();
-    let role = String(body.role ?? "").trim();
+    const companyInput = validateTextField(body.company, "company", { maxLength: 80 });
+    const roleInput = validateTextField(body.role, "role", { maxLength: 80 });
+    if (companyInput.error || roleInput.error) {
+      return jsonResponse(
+        { error: companyInput.error ?? roleInput.error },
+        { status: 400 },
+        request,
+      );
+    }
+
+    let company = companyInput.value;
+    let role = roleInput.value;
     let analysis = body.analysis;
     const resolvedAnalysisId = body.analysisId ?? null;
 
@@ -315,16 +348,16 @@ Deno.serve(async (request) => {
       data,
       recommendationId,
       ...(aiResult.data ? {} : { _warning: "Recommendation fallback used." }),
-    });
+    }, {}, request);
   } catch (error) {
     console.error("recommend-action fatal", error);
     return jsonResponse({
-      error: error instanceof Error ? error.message : "unknown",
+      error: "Unexpected server error.",
       data: buildFallbackRecommendation("Your company", "your role", {
         intent: "options",
         subIntent: "Keep options open",
       }),
       _warning: "Unexpected server error. Returning fallback recommendation.",
-    });
+    }, {}, request);
   }
 });

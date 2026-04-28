@@ -249,9 +249,36 @@ SUPABASE_SERVICE_ROLE_KEY=
 OPENAI_API_KEY=
 OPENAI_MODEL=gpt-5.4-mini
 TAVILY_API_KEY=
+ALLOWED_ORIGINS=http://localhost:4173,http://127.0.0.1:4173,https://your-vercel-app.vercel.app
+OPENAI_TIMEOUT_MS=45000
+EMBEDDING_TIMEOUT_MS=15000
+TAVILY_SEARCH_TIMEOUT_MS=12000
+TAVILY_EXTRACT_TIMEOUT_MS=18000
 ```
 
 Do not expose `OPENAI_API_KEY`, `TAVILY_API_KEY`, or `SUPABASE_SERVICE_ROLE_KEY` in the frontend. They should only be configured as Supabase function secrets.
+
+## Vercel Deployment
+
+The frontend can be deployed as a static Vite app on Vercel.
+
+Vercel settings:
+
+```bash
+Install command: npm ci
+Build command: npm run build
+Output directory: dist
+```
+
+Vercel environment variables:
+
+```bash
+VITE_SUPABASE_URL=
+VITE_SUPABASE_PUBLISHABLE_KEY=
+VITE_SUPABASE_PROJECT_ID=
+```
+
+Keep the demo protected in Vercel while the app has no user accounts. Store all private AI and Supabase service keys in Supabase function secrets, not in Vercel.
 
 ## Local Development
 
@@ -280,9 +307,8 @@ Run checks:
 npm run test
 npm run lint
 npm run build
+npm audit --audit-level=moderate
 ```
-
-Current lint output includes warnings from generated shadcn/ui files about fast refresh exports. They are non-blocking and pre-existing.
 
 ## Supabase Setup
 
@@ -306,7 +332,12 @@ supabase secrets set \
   SUPABASE_SERVICE_ROLE_KEY=your-service-role-key \
   OPENAI_API_KEY=your-openai-key \
   OPENAI_MODEL=gpt-5.4-mini \
-  TAVILY_API_KEY=your-tavily-key
+  TAVILY_API_KEY=your-tavily-key \
+  ALLOWED_ORIGINS=http://localhost:4173,https://your-vercel-app.vercel.app \
+  OPENAI_TIMEOUT_MS=45000 \
+  EMBEDDING_TIMEOUT_MS=15000 \
+  TAVILY_SEARCH_TIMEOUT_MS=12000 \
+  TAVILY_EXTRACT_TIMEOUT_MS=18000
 ```
 
 Deploy functions:
@@ -322,7 +353,15 @@ Minimum database requirements:
 - migrations applied
 - `pgvector` enabled by the initial schema
 - lock-down migration applied
+- edge rate-limit migration applied
 - Edge Function secrets configured
+
+Post-deploy smoke test:
+
+- Run `N26 / Product Manager`.
+- Run `Trade Republic / Product Manager`.
+- Ask chat: `Why did you recommend this?`
+- Confirm disallowed origins and excessive requests return JSON errors.
 
 ## Fallback Behavior
 

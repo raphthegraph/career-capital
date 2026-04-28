@@ -11,7 +11,15 @@ import {
   type DecisionContext,
   type Recommendation,
 } from "../_shared/career.ts";
-import { corsHeaders, jsonResponse } from "../_shared/http.ts";
+import {
+  enforceRateLimit,
+  handleCorsPreflight,
+  jsonResponse,
+  readJsonBody,
+  rejectDisallowedOrigin,
+  requirePost,
+  validateTextField,
+} from "../_shared/http.ts";
 import { createEmbeddings, generateTextReply } from "../_shared/openai.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -249,20 +257,53 @@ ${retrievedBlock ? `- Retrieved context:\n${retrievedBlock}` : ""}`;
 }
 
 Deno.serve(async (request) => {
-  if (request.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  const preflight = handleCorsPreflight(request);
+  if (preflight) return preflight;
+
+  const originError = rejectDisallowedOrigin(request);
+  if (originError) return originError;
+
+  const methodError = requirePost(request);
+  if (methodError) return methodError;
+
+  const rateLimitError = await enforceRateLimit(supabase, request, {
+    endpoint: "career-chat",
+    maxRequests: 30,
+    windowSeconds: 60 * 60,
+  });
+  if (rateLimitError) return rateLimitError;
 
   try {
-    const body = (await request.json()) as Body;
+    const parsed = await readJsonBody<Body>(request, { maxBytes: 65536 });
+    if (parsed.error) return parsed.error;
+
+    const body = parsed.data ?? {};
+    if (body.company) {
+      const companyInput = validateTextField(body.company, "company", { maxLength: 80 });
+      if (companyInput.error) return jsonResponse({ error: companyInput.error }, { status: 400 }, request);
+      body.company = companyInput.value;
+    }
+    if (body.role) {
+      const roleInput = validateTextField(body.role, "role", { maxLength: 80 });
+      if (roleInput.error) return jsonResponse({ error: roleInput.error }, { status: 400 }, request);
+      body.role = roleInput.value;
+    }
+
     const messages = normalizeChatMessagesInput({
       message: body.message,
-      messages: body.messages,
-    });
+      messages: body.messages?.slice(-12),
+    }).slice(-12);
     const userMessage = messages[messages.length - 1]?.content?.trim() ?? "";
 
     if (!userMessage) {
-      return jsonResponse({ reply: "Ask a question about your next move." });
+      return jsonResponse({ reply: "Ask a question about your next move." }, {}, request);
+    }
+    if (userMessage.length > 1000 || messages.some((message) => message.content.length > 1000)) {
+      return jsonResponse(
+        { error: "Chat messages must be 1,000 characters or less." },
+        { status: 400 },
+        request,
+      );
     }
 
     let company = body.company;
@@ -327,13 +368,13 @@ Deno.serve(async (request) => {
     return jsonResponse({
       reply,
       ...(aiResult.data ? {} : { _warning: "Chat fallback used." }),
-    });
+    }, {}, request);
   } catch (error) {
     console.error("career-chat fatal", error);
     return jsonResponse({
       reply:
         "Your asset still needs a clean next-step thesis. Start with one visible win and one market conversation this week.",
       _warning: "Unexpected server error. Returning fallback chat guidance.",
-    });
+    }, {}, request);
   }
 });

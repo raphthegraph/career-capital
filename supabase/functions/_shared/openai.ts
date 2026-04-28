@@ -2,6 +2,8 @@ const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 const OPENAI_MODEL = Deno.env.get("OPENAI_MODEL") ?? "gpt-5.4-mini";
 const CHAT_COMPLETIONS_URL = "https://api.openai.com/v1/chat/completions";
 const EMBEDDINGS_URL = "https://api.openai.com/v1/embeddings";
+const OPENAI_TIMEOUT_MS = Number(Deno.env.get("OPENAI_TIMEOUT_MS") ?? "45000");
+const EMBEDDING_TIMEOUT_MS = Number(Deno.env.get("EMBEDDING_TIMEOUT_MS") ?? "15000");
 
 export interface OpenAiFailure {
   status?: number;
@@ -33,6 +35,24 @@ function extractMessageContent(content: unknown): string {
     .trim();
 }
 
+async function fetchWithTimeout(
+  url: string,
+  init: RequestInit,
+  timeoutMs: number,
+) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    return await fetch(url, {
+      ...init,
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 async function postChatCompletion(body: Record<string, unknown>) {
   if (!OPENAI_API_KEY) {
     return {
@@ -44,7 +64,7 @@ async function postChatCompletion(body: Record<string, unknown>) {
   }
 
   try {
-    const response = await fetch(CHAT_COMPLETIONS_URL, {
+    const response = await fetchWithTimeout(CHAT_COMPLETIONS_URL, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${OPENAI_API_KEY}`,
@@ -54,7 +74,7 @@ async function postChatCompletion(body: Record<string, unknown>) {
         model: OPENAI_MODEL,
         ...body,
       }),
-    });
+    }, OPENAI_TIMEOUT_MS);
 
     if (!response.ok) {
       const text = await response.text();
@@ -168,7 +188,7 @@ export async function createEmbeddings(inputs: string[]) {
   if (!OPENAI_API_KEY || inputs.length === 0) return null;
 
   try {
-    const response = await fetch(EMBEDDINGS_URL, {
+    const response = await fetchWithTimeout(EMBEDDINGS_URL, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${OPENAI_API_KEY}`,
@@ -178,7 +198,7 @@ export async function createEmbeddings(inputs: string[]) {
         model: "text-embedding-3-small",
         input: inputs,
       }),
-    });
+    }, EMBEDDING_TIMEOUT_MS);
 
     if (!response.ok) {
       console.error(

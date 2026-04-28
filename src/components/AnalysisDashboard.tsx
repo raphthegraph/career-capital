@@ -162,10 +162,10 @@ export function AnalysisDashboard({ company, role, analysis, animationsEnabled, 
     setShowThesis(false);
     setShowIntent(false);
 
-    const t1 = setTimeout(() => setShowIntro(true), 120);
-    const t2 = setTimeout(() => setShowMetrics(true), 760);
-    const t3 = setTimeout(() => setShowBars(true), 1180);
-    const t4 = setTimeout(() => setShowThesis(true), 1900);
+    const t1 = setTimeout(() => setShowIntro(true), 180);
+    const t2 = setTimeout(() => setShowMetrics(true), 1150);
+    const t3 = setTimeout(() => setShowBars(true), 1750);
+    const t4 = setTimeout(() => setShowThesis(true), 2850);
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
@@ -266,7 +266,7 @@ function DimensionBars({
       return;
     }
     setFilled(false);
-    const t = setTimeout(() => setFilled(true), 120);
+    const t = setTimeout(() => setFilled(true), 280);
     return () => clearTimeout(t);
   }, [animationsEnabled]);
 
@@ -335,26 +335,25 @@ function ThesisSequence({
         setActiveIdx(i + 1);
         // open and keep open
         setOpenMap((p) => ({ ...p, [i]: true }));
-        // give the section a beat to expand before scrolling
-        await new Promise((r) => setTimeout(r, 220));
+        // Give the section a beat to expand before scrolling so the flow feels intentional.
+        await new Promise((r) => setTimeout(r, 420));
         scrollNearestIfNeeded(sectionRefs.current[i].current);
 
         const items = thesis[SECTIONS[i].field] ?? [];
         const total = Math.min(3, items?.length ?? 0);
         for (let j = 0; j < total; j++) {
-          await new Promise((r) => setTimeout(r, 620));
+          await new Promise((r) => setTimeout(r, 840));
           if (cancelled) return;
           setRevealedPerSection((prev) => ({ ...prev, [i]: j + 1 }));
         }
-        // Short dwell so the user can read without the flow feeling stuck.
-        await new Promise((r) => setTimeout(r, 420));
+        await new Promise((r) => setTimeout(r, 900));
       }
       if (!cancelled) {
         setActiveIdx(SECTIONS.length + 1);
-        setTimeout(onComplete, 260);
+        setTimeout(onComplete, 520);
       }
     };
-    const start = setTimeout(run, 220);
+    const start = setTimeout(run, 360);
     return () => {
       cancelled = true;
       clearTimeout(start);

@@ -28,7 +28,7 @@ const LOAD_STEPS = [
   "Building your 30-day plan",
   "Grounding the recommendation",
 ];
-const MIN_RECOMMENDATION_VISIBLE_MS = 5200;
+const MIN_RECOMMENDATION_VISIBLE_MS = 6800;
 
 export function Recommendations({
   company,
@@ -151,7 +151,7 @@ function Loading({
       return;
     }
     if (step >= LOAD_STEPS.length - 1) return;
-    const t = setTimeout(() => setStep((s) => Math.min(s + 1, LOAD_STEPS.length - 1)), 920);
+    const t = setTimeout(() => setStep((s) => Math.min(s + 1, LOAD_STEPS.length - 1)), 1300);
     return () => clearTimeout(t);
   }, [step, animationsEnabled]);
 
@@ -253,7 +253,7 @@ function Loading({
 }
 
 // slower section reveal — let user read each block
-const SECTION_DELAYS = [0, 760, 1580, 2400, 3220];
+const SECTION_DELAYS = [0, 1400, 3000, 4800, 6600];
 
 function scrollNearestIfNeeded(element: HTMLElement | null) {
   if (!element) return;
@@ -443,7 +443,7 @@ function RecommendationView({
               {data.alternativePaths.slice(0, 3).map((p, i) => (
                 <div
                   key={i}
-                  className="air-card lift-on-hover space-y-2 p-4 animate-fade-in-soft"
+                  className="space-y-2 rounded-[28px] border border-border/[0.045] bg-white/[0.62] p-4 shadow-soft backdrop-blur-2xl transition-all duration-500 hover:-translate-y-0.5 hover:bg-white/[0.72] hover:shadow-elevated animate-fade-in-soft"
                   style={{ animationDelay: `${i * 100}ms` }}
                 >
                   <div className="flex items-center gap-2">
@@ -477,7 +477,7 @@ function SummaryCard({
   accent: string;
 }) {
   return (
-    <div className="air-card p-4 md:p-5">
+    <div className="rounded-[28px] border border-border/[0.045] bg-white/[0.62] p-4 shadow-soft backdrop-blur-2xl md:p-5">
       <div className="mb-4 flex items-center gap-2.5">
         <Icon className={`h-4 w-4 ${accent}`} />
         <span className="eyebrow">{title}</span>
@@ -526,7 +526,7 @@ function MiniCard({
   accent: string;
 }) {
   return (
-    <div className="air-card lift-on-hover min-h-[150px] space-y-3 p-4 animate-fade-in-soft">
+    <div className="min-h-[150px] space-y-3 rounded-[28px] border border-border/[0.045] bg-white/[0.62] p-4 shadow-soft backdrop-blur-2xl transition-all duration-500 hover:-translate-y-0.5 hover:bg-white/[0.72] hover:shadow-elevated animate-fade-in-soft">
       <span className={`inline-flex h-7 w-7 items-center justify-center rounded-full bg-white/55 text-[12px] font-semibold ${accent}`}>
         {index}
       </span>
@@ -547,7 +547,7 @@ function ActionRow({
   accent: string;
 }) {
   return (
-    <div className="rounded-[26px] border border-border/[0.035] bg-white/38 p-4 shadow-soft backdrop-blur-2xl">
+    <div className="rounded-[26px] border border-border/[0.045] bg-white/[0.62] p-4 shadow-soft backdrop-blur-2xl transition-all duration-500 hover:-translate-y-0.5 hover:bg-white/[0.72] hover:shadow-elevated">
       <div className="flex gap-3">
         <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-tint text-[12px] font-semibold text-primary-strong">
           {index}

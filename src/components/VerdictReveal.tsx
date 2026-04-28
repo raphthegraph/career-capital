@@ -17,7 +17,7 @@ interface Props {
 }
 
 // 0 idle → 1 title → 2 subtitle → 3 ticker → 4 question → 5 answer → 6 metrics → 7 signals → 8 cta
-const TIMINGS = [180, 520, 560, 500, 500, 560, 380, 260];
+const TIMINGS = [260, 760, 760, 620, 640, 720, 700, 520];
 
 const LEVEL_TONE: Record<string, { dot: string; chip: string; label: string }> = {
   strong: { dot: "bg-buy", chip: "text-buy", label: "Positive" },
@@ -48,7 +48,17 @@ function scrollNearestIfNeeded(element: HTMLElement | null) {
   }
 }
 
+function getVerdictSubtitle(company: string, role: string, verdict: string) {
+  const normalized = verdict.toLowerCase();
+  if (normalized.includes(company.toLowerCase()) || normalized.includes(role.toLowerCase())) {
+    return verdict;
+  }
+  return `As a ${role} at ${company}, ${verdict.replace(/^[A-Z]/, (letter) => letter.toLowerCase())}`;
+}
+
 export function VerdictReveal({
+  company,
+  role,
   analysis,
   animationsEnabled,
   onReadyChange,
@@ -56,6 +66,7 @@ export function VerdictReveal({
 }: Props) {
   const [phase, setPhase] = useState(0);
   const [insightsRevealed, setInsightsRevealed] = useState(0);
+  const signalsRef = useRef<HTMLElement>(null);
   const lastSignalRef = useRef<HTMLDivElement>(null);
   const ctaRef = useRef<HTMLDivElement>(null);
 
@@ -86,15 +97,18 @@ export function VerdictReveal({
     }
     if (phase < 7) return;
     if (insightsRevealed >= insights.length) return;
-    const t = setTimeout(() => setInsightsRevealed((m) => m + 1), 620);
+    const t = setTimeout(() => setInsightsRevealed((m) => m + 1), 780);
     return () => clearTimeout(t);
   }, [phase, insightsRevealed, insights.length, animationsEnabled]);
 
   useEffect(() => {
     if (!animationsEnabled) return;
-    if (insightsRevealed === 0) return;
-    scrollNearestIfNeeded(lastSignalRef.current);
-  }, [insightsRevealed, animationsEnabled]);
+    if (phase < 7) return;
+    const t = setTimeout(() => {
+      signalsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 360);
+    return () => clearTimeout(t);
+  }, [phase, animationsEnabled]);
 
   useEffect(() => {
     if (!animationsEnabled) return;
@@ -112,6 +126,7 @@ export function VerdictReveal({
         ? "Limited evidence"
         : "Fallback mode";
   const emptySourceLabel = analysis.researchQuality === "live" ? "AI inference" : "Limited evidence";
+  const subtitle = getVerdictSubtitle(company, role, analysis.oneLineVerdict);
 
   useEffect(() => {
     onReadyChange?.(ctaReady);
@@ -131,7 +146,7 @@ export function VerdictReveal({
             )}
             {phase >= 2 && (
               <p className="mx-auto max-w-[620px] animate-fade-in-up text-[16px] leading-[1.65] text-foreground/80 md:text-[18px]">
-                {analysis.oneLineVerdict}
+                {subtitle}
               </p>
             )}
             {phase >= 2 && (
@@ -188,7 +203,7 @@ export function VerdictReveal({
         </section>
 
         {phase >= 7 && (
-          <section className="space-y-4 pt-2 text-left">
+          <section ref={signalsRef} className="scroll-mt-24 space-y-4 pt-2 text-left">
             <div className="eyebrow">Key signals</div>
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {insights.map((ins, i) => {

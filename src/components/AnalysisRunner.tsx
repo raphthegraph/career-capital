@@ -63,7 +63,7 @@ export function AnalysisRunner({ company, role, done, animationsEnabled, onCompl
     if (step >= FLAT.length) return;
     const isLast = step === FLAT.length - 1;
     if (isLast && !done) return;
-    const t = setTimeout(() => setStep((s) => s + 1), 720);
+    const t = setTimeout(() => setStep((s) => s + 1), 900);
     return () => clearTimeout(t);
   }, [step, done, animationsEnabled]);
 
@@ -76,7 +76,8 @@ export function AnalysisRunner({ company, role, done, animationsEnabled, onCompl
 
   const activePhase = step >= FLAT.length ? PHASES.length - 1 : FLAT[step].phaseIdx;
   const visibleStep = Math.min(step + 1, FLAT.length);
-  const progress = Math.round((visibleStep / FLAT.length) * 100);
+  const rawProgress = Math.round((visibleStep / FLAT.length) * 100);
+  const progress = done ? rawProgress : Math.min(rawProgress, 92);
   const activeLabel = step >= FLAT.length ? "Sourced read ready" : FLAT[step].label;
 
   return (
@@ -174,24 +175,29 @@ export function AnalysisRunner({ company, role, done, animationsEnabled, onCompl
                   </span>
                 </div>
 
-                {(isActive || isComplete) && (
-                  <ul className="pl-[46px] space-y-2">
+                <ul className="pl-[46px] space-y-2">
                     {phase.steps.map((s, si) => {
                       const globalIdx = phaseStart + si;
-                      if (globalIdx > step) return null;
                       const isCurrent = globalIdx === step && step < FLAT.length;
+                      const isStepComplete = globalIdx < step || step >= FLAT.length;
                       return (
                         <li
                           key={s}
                           className={`flex items-center gap-2 text-[13.5px] leading-relaxed transition-colors animate-fade-in-soft ${
-                            isCurrent ? "text-foreground/90" : "text-muted-foreground"
+                            isCurrent
+                              ? "text-foreground/90"
+                              : isStepComplete
+                                ? "text-muted-foreground"
+                                : "text-muted-foreground/45"
                           }`}
                         >
                           <span
                             className={`rounded-full ${
                               isCurrent
                                 ? "h-2 w-2 bg-primary shadow-[0_0_0_6px_hsl(var(--primary)/0.08)] animate-breathe"
-                                : "h-1.5 w-1.5 bg-primary/35"
+                                : isStepComplete
+                                  ? "h-1.5 w-1.5 bg-primary/35"
+                                  : "h-1.5 w-1.5 bg-primary/12"
                             }`}
                           />
                           {s}
@@ -202,7 +208,6 @@ export function AnalysisRunner({ company, role, done, animationsEnabled, onCompl
                       );
                     })}
                   </ul>
-                )}
               </div>
             );
           })}

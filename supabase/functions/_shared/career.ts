@@ -1,4 +1,4 @@
-import type { ResearchSource } from "./tavily.ts";
+import type { ResearchPacket, ResearchSource, SourceBackedClaim, SourceQuality } from "./tavily.ts";
 
 export type Rating = "BUY" | "HOLD" | "SELL" | "SHORT";
 export type WouldBuy = "Yes" | "No" | "Conditional";
@@ -34,6 +34,8 @@ export interface JobKeySignal {
   evidence: string;
   sentiment: SignalSentiment;
   sourceUrls: string[];
+  roleImpact?: string;
+  confidenceReason?: string;
 }
 
 export interface InvestmentThesis {
@@ -77,6 +79,8 @@ export interface CareerAnalysis {
   };
   sources: AnalysisSource[];
   chartData: { month: string; price: number }[];
+  researchQuality?: SourceQuality;
+  evidenceMap?: Record<string, SourceBackedClaim[]>;
   _warning?: string;
   analysisId?: string;
   _cached?: boolean;
@@ -99,6 +103,8 @@ export interface Recommendation {
   next30Days: string[];
   watchOuts: string[];
   alternativePaths: { label: string; detail: string }[];
+  personalizationBasis?: string[];
+  sourceUrls?: string[];
 }
 
 interface AnalysisProfile {
@@ -143,6 +149,14 @@ function toStringValue(value: unknown, fallback: string) {
 
 function toOptionalString(value: unknown) {
   return typeof value === "string" && value.trim() ? value.trim() : "";
+}
+
+function takeUrls(value: unknown, fallback: string[] = []) {
+  const urls = Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === "string" && /^https?:\/\//i.test(item)).slice(0, 5)
+    : [];
+
+  return urls.length ? urls : fallback.slice(0, 5);
 }
 
 function hashString(input: string) {
@@ -364,6 +378,54 @@ export function normalizeChatMessagesInput(args: {
   return [{ role: "user", content: singleMessage }];
 }
 
+const INTENT_BRIEF: Record<DecisionContext["intent"], string> = {
+  stay: "The user is leaning toward staying, but wants the current seat to compound faster.",
+  options: "The user wants optionality and needs a stronger market read before committing.",
+  leave: "The user is preparing to leave and needs a deliberate exit thesis rather than a reactive jump.",
+  other: "The user has a custom path in mind and needs the recommendation to respect that nuance.",
+};
+
+export function decisionFocus(decision?: DecisionContext | null) {
+  if (!decision) return "No follow-up decision context yet.";
+
+  const focus = [decision.subIntent, decision.freeText]
+    .map((item) => item?.trim())
+    .filter(Boolean)
+    .join(" | ");
+
+  return [
+    INTENT_BRIEF[decision.intent],
+    focus ? `Personal focus: ${focus}.` : "",
+  ].filter(Boolean).join(" ");
+}
+
+export function buildPersonalizationBrief(args: {
+  company: string;
+  role: string;
+  analysis?: Partial<CareerAnalysis> | null;
+  decision?: DecisionContext | null;
+}) {
+  const topSignals = args.analysis?.keySignals
+    ?.slice(0, 3)
+    .map((signal) => `${signal.label}: ${signal.impact}`)
+    .join(" | ");
+
+  const thesisKeep = args.analysis?.investmentThesis?.keep?.slice(0, 2).join(" | ");
+  const thesisCaution = args.analysis?.investmentThesis?.caution?.slice(0, 2).join(" | ");
+
+  return [
+    `User is evaluating whether to stay in ${args.role} at ${args.company}.`,
+    args.analysis?.rating
+      ? `Current asset read: ${args.analysis.rating} / would buy ${args.analysis.wouldBuy ?? "Conditional"} / score ${args.analysis.careerAssetScore ?? "unknown"} / confidence ${args.analysis.confidence ?? "unknown"}.`
+      : "",
+    args.analysis?.oneLineVerdict ? `Verdict: ${args.analysis.oneLineVerdict}` : "",
+    `Decision context: ${decisionFocus(args.decision)}`,
+    topSignals ? `Most personal career-impact signals: ${topSignals}` : "",
+    thesisKeep ? `Reasons to keep compounding: ${thesisKeep}` : "",
+    thesisCaution ? `Reasons to be careful: ${thesisCaution}` : "",
+  ].filter(Boolean).join("\n");
+}
+
 export function buildChartData(score: number, seedInput: string) {
   const random = seededRandom(hashString(seedInput));
   const start = 42 + random() * 18;
@@ -428,6 +490,8 @@ function toKeySignals(value: unknown, fallback: JobKeySignal[]) {
         evidence?: unknown;
         sentiment?: unknown;
         sourceUrls?: unknown;
+        roleImpact?: unknown;
+        confidenceReason?: unknown;
       };
 
       const sentiment =
@@ -447,12 +511,43 @@ function toKeySignals(value: unknown, fallback: JobKeySignal[]) {
         sourceUrls: Array.isArray(next.sourceUrls)
           ? next.sourceUrls.filter((item): item is string => typeof item === "string").slice(0, 3)
           : [],
+        roleImpact: toOptionalString(next.roleImpact),
+        confidenceReason: toOptionalString(next.confidenceReason),
       } satisfies JobKeySignal;
     })
     .filter((signal): signal is JobKeySignal => Boolean(signal?.label && signal?.impact && signal?.evidence))
     .slice(0, 5);
 
   return cleaned.length >= 3 ? cleaned : fallback.slice(0, 5);
+}
+
+function toEvidenceMap(value: unknown): Record<string, SourceBackedClaim[]> | undefined {
+  if (!value || typeof value !== "object") return undefined;
+
+  const output: Record<string, SourceBackedClaim[]> = {};
+  for (const [bucket, rawClaims] of Object.entries(value as Record<string, unknown>)) {
+    if (!Array.isArray(rawClaims)) continue;
+    const claims = rawClaims
+      .map((claim) => {
+        if (!claim || typeof claim !== "object") return null;
+        const next = claim as Record<string, unknown>;
+        const sourceUrl = toOptionalString(next.sourceUrl);
+        const claimText = toOptionalString(next.claim);
+        if (!sourceUrl || !claimText) return null;
+        return {
+          bucket,
+          claim: claimText,
+          sourceTitle: toStringValue(next.sourceTitle, sourceUrl),
+          sourceUrl,
+          sourceType: toStringValue(next.sourceType, "other"),
+        } satisfies SourceBackedClaim;
+      })
+      .filter((claim): claim is SourceBackedClaim => Boolean(claim))
+      .slice(0, 3);
+    if (claims.length) output[bucket] = claims;
+  }
+
+  return Object.keys(output).length ? output : undefined;
 }
 
 function toQualitativeInsights(
@@ -1133,19 +1228,31 @@ export function normalizeAnalysisPayload(args: {
   role: string;
   raw: unknown;
   sources?: AnalysisSource[];
+  researchPacket?: ResearchPacket;
 }) {
   const fallback = getDemoFallbackAnalysis(args.company, args.role) ??
     createGenericFallbackAnalysis(args.company, args.role);
   const input = args.raw && typeof args.raw === "object" ? (args.raw as Record<string, unknown>) : {};
   const sources = sourceSummaries(args.sources ?? []);
   const mergedSources = toSourceList(input.sources, sources.length ? sources : fallback.sources);
+  const packetUrls = args.researchPacket
+    ? Object.values(args.researchPacket.evidenceBuckets).flat().map((claim) => claim.sourceUrl)
+    : [];
   const keySignals = toKeySignals(input.keySignals, fallback.keySignals).map((signal, index) => ({
     ...signal,
     sourceUrls: signal.sourceUrls.length
       ? signal.sourceUrls.slice(0, 3)
+      : packetUrls[index]
+        ? [packetUrls[index]]
       : mergedSources[index]?.url
         ? [mergedSources[index].url]
         : [],
+    roleImpact: signal.roleImpact ||
+      `${signal.impact} For a ${args.role}, this mostly affects scope, learning density, promotion leverage, or exit optionality.`,
+    confidenceReason: signal.confidenceReason ||
+      (signal.sourceUrls.length || packetUrls[index] || mergedSources[index]?.url
+        ? "Grounded in the linked public source and interpreted for the role."
+        : "Limited direct source coverage; treat this as an inference."),
   }));
   const investmentThesis = toInvestmentThesis(
     input.investmentThesis,
@@ -1159,6 +1266,13 @@ export function normalizeAnalysisPayload(args: {
     fallback.qualitativeInsights,
     keySignals,
   );
+
+  const rawResearchQuality = input.researchQuality;
+  const researchQuality: SourceQuality =
+    rawResearchQuality === "live" || rawResearchQuality === "limited" || rawResearchQuality === "fallback"
+      ? rawResearchQuality
+      : args.researchPacket?.sourceQuality ?? (mergedSources.length >= 2 ? "limited" : "fallback");
+  const evidenceMap = toEvidenceMap(input.evidenceMap) ?? args.researchPacket?.evidenceBuckets;
 
   return {
     ticker: toStringValue(input.ticker, fallback.ticker),
@@ -1198,6 +1312,8 @@ export function normalizeAnalysisPayload(args: {
     ratingChangeTriggers: takeStrings(input.ratingChangeTriggers, 3, investmentThesis.triggers),
     evidence: toEvidence(input.evidence, fallback.evidence),
     sources: mergedSources,
+    researchQuality,
+    ...(evidenceMap ? { evidenceMap } : {}),
     chartData: Array.isArray(input.chartData)
       ? input.chartData
           .map((point) => {
@@ -1232,43 +1348,50 @@ export function buildFallbackRecommendation(
   role: string,
   decision: DecisionContext,
 ): Recommendation {
+  const focus = decision.freeText || decision.subIntent || "your next career step";
   const moveByIntent: Record<DecisionContext["intent"], string> = {
-    stay: `Stay for one more cycle at ${company}, but force a scope-expansion conversation now.`,
-    options: `Stay in ${role} at ${company}, but quietly build external optionality over the next 90 days.`,
-    leave: `Treat your current ${role} seat as a bridge asset and plan a deliberate exit within 90 days.`,
-    other: `Use the next 30 days to turn "${decision.freeText ?? decision.subIntent}" into a real career option.`,
+    stay: `Stay at ${company} for one more cycle, but make "${focus}" the explicit scope-expansion agenda.`,
+    options: `Keep your ${role} seat at ${company}, while quietly testing whether "${focus}" is better priced elsewhere.`,
+    leave: `Treat ${role} at ${company} as a bridge asset and build a deliberate exit around "${focus}" within 90 days.`,
+    other: `Use the next 30 days to turn "${focus}" into a concrete career option with evidence behind it.`,
   };
 
   return {
     recommendedMove: moveByIntent[decision.intent],
     why: [
-      "Your next move should compound optionality, not just relieve discomfort.",
-      "Visible shipped work raises your bargaining power before any transition.",
-      "A clear narrative beats a reactive jump from a mixed-conviction seat.",
+      `Your stated focus is "${focus}", so the next move should test that thesis rather than stay generic.`,
+      `The ${role} seat is most valuable if it creates visible proof you can use inside or outside ${company}.`,
+      "A clear narrative beats a reactive jump: you want leverage before you make the move irreversible.",
     ],
     next30Days: [
-      "Write down three measurable wins from the last six months.",
-      `Stress-test "${decision.subIntent}" with two people who know your market.`,
-      "Identify one move that improves leverage whether you stay or leave.",
+      `Write a one-page asset memo: why ${company}, why this ${role}, why "${focus}", and what would make you stay.`,
+      `Ask your manager or strongest internal sponsor what scope would prove progress toward "${focus}" this quarter.`,
+      "Run two quiet external market conversations so you know whether your current seat is underpriced or still worth compounding.",
     ],
     watchOuts: [
-      "Do not confuse urgency with strategy.",
-      "Do not make a move you cannot explain in one tight sentence.",
+      `Do not accept vague encouragement if it does not create measurable movement toward "${focus}".`,
+      "Do not make a move you cannot explain in one tight sentence to a future hiring manager.",
     ],
     alternativePaths: [
       {
         label: "Double down internally",
-        detail: `Use your current ${role} seat at ${company} to win one higher-visibility mandate.`,
+        detail: `Use your current ${role} seat at ${company} to win one mandate that directly supports "${focus}".`,
       },
       {
         label: "Quietly test the market",
-        detail: "Build external signal before you decide, so you negotiate from strength instead of anxiety.",
+        detail: `Compare your current path against three roles that price "${focus}" more clearly.`,
       },
       {
         label: "Re-scope the job",
-        detail: "If the company is still decent but the seat is weak, change the seat before changing employers.",
+        detail: `If ${company} is still a good platform but the seat is weak, redesign the seat before changing employers.`,
       },
     ],
+    personalizationBasis: [
+      `User intent: ${decision.intent}`,
+      `User focus: ${focus}`,
+      `Current role: ${role} at ${company}`,
+    ],
+    sourceUrls: [],
   };
 }
 
@@ -1299,6 +1422,12 @@ export function normalizeRecommendationPayload(
     watchOuts: takeStrings(input.watchOuts, 2, fallback.watchOuts),
     alternativePaths:
       alternativePaths.length >= 2 ? alternativePaths : fallback.alternativePaths,
+    personalizationBasis: takeStrings(
+      input.personalizationBasis,
+      4,
+      fallback.personalizationBasis ?? [],
+    ),
+    sourceUrls: takeUrls(input.sourceUrls, fallback.sourceUrls ?? []),
   };
 }
 

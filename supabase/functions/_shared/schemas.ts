@@ -111,6 +111,8 @@ export const analysisSchema = {
           detail: { type: "string" },
           impact: { type: "string" },
           evidence: { type: "string" },
+          roleImpact: { type: "string" },
+          confidenceReason: { type: "string" },
           sentiment: {
             type: "string",
             enum: ["positive", "negative", "neutral", "mixed"],
@@ -125,6 +127,8 @@ export const analysisSchema = {
           "detail",
           "impact",
           "evidence",
+          "roleImpact",
+          "confidenceReason",
           "sentiment",
           "sourceUrls",
         ],
@@ -279,6 +283,18 @@ export const recommendationSchema = {
         required: ["label", "detail"],
       },
     },
+    personalizationBasis: {
+      type: "array",
+      minItems: 2,
+      maxItems: 4,
+      items: { type: "string" },
+    },
+    sourceUrls: {
+      type: "array",
+      minItems: 0,
+      maxItems: 6,
+      items: { type: "string" },
+    },
   },
   required: [
     "recommendedMove",
@@ -286,5 +302,7 @@ export const recommendationSchema = {
     "next30Days",
     "watchOuts",
     "alternativePaths",
+    "personalizationBasis",
+    "sourceUrls",
   ],
 } as const;

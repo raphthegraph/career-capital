@@ -2,9 +2,18 @@ import type {
   Analysis,
   InsightLevel,
   InvestmentThesis,
-  QualitativeInsight,
   SignalSentiment,
 } from "@/lib/job-types";
+
+export interface RevealSignal {
+  label: string;
+  value: string;
+  level: InsightLevel;
+  detail: string;
+  sourceUrls: string[];
+  roleImpact?: string;
+  confidenceReason?: string;
+}
 
 function sentimentToLevel(sentiment: SignalSentiment): InsightLevel {
   switch (sentiment) {
@@ -32,17 +41,22 @@ function sentimentToValue(sentiment: SignalSentiment) {
   }
 }
 
-export function getRevealSignals(analysis: Analysis): QualitativeInsight[] {
+export function getRevealSignals(analysis: Analysis): RevealSignal[] {
   if (analysis.keySignals && analysis.keySignals.length >= 3) {
     return analysis.keySignals.slice(0, 5).map((signal) => ({
       label: signal.label,
       value: sentimentToValue(signal.sentiment),
       level: sentimentToLevel(signal.sentiment),
-      detail: `${signal.impact} Public evidence: ${signal.evidence}`,
+      detail: signal.roleImpact || `${signal.impact} Public evidence: ${signal.evidence}`,
+      sourceUrls: signal.sourceUrls ?? [],
+      confidenceReason: signal.confidenceReason,
     }));
   }
 
-  return analysis.qualitativeInsights ?? [];
+  return (analysis.qualitativeInsights ?? []).map((insight) => ({
+    ...insight,
+    sourceUrls: [],
+  }));
 }
 
 export function getInvestmentThesis(analysis: Analysis): InvestmentThesis {

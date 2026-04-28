@@ -12,6 +12,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { SignalGrid } from "@/components/SignalGrid";
+import { SourceChips } from "@/components/SourceChips";
 
 interface Props {
   company: string;
@@ -92,7 +93,14 @@ export function Recommendations({
           {error && (
             <div className="air-card p-6 text-short text-sm">{error}</div>
           )}
-          {data && <RecommendationView data={data} animationsEnabled={animationsEnabled} />}
+          {data && (
+            <RecommendationView
+              data={data}
+              analysis={analysis}
+              decision={decision}
+              animationsEnabled={animationsEnabled}
+            />
+          )}
         </main>
       </div>
 
@@ -163,9 +171,13 @@ function scrollNearestIfNeeded(element: HTMLElement | null) {
 
 function RecommendationView({
   data,
+  analysis,
+  decision,
   animationsEnabled,
 }: {
   data: Recommendation;
+  analysis: Analysis;
+  decision: DecisionContext;
   animationsEnabled: boolean;
 }) {
   const [revealed, setRevealed] = useState(0);
@@ -198,15 +210,34 @@ function RecommendationView({
 
   // a section is "focused" if it is the most recently revealed one
   const focusIdx = revealed - 1;
+  const researchSummary = analysis.keySignals?.slice(0, 2).map((signal) => signal.roleImpact || signal.impact) ?? [];
+  const recommendationSources = data.sourceUrls?.length
+    ? data.sourceUrls
+    : analysis.keySignals?.flatMap((signal) => signal.sourceUrls ?? []).slice(0, 4) ?? [];
 
   return (
     <section className="mx-auto max-w-[820px] space-y-10">
       <div ref={refs.current[0]} className={revealed >= 1 ? (focusIdx === 0 ? "dim-active" : "") : "hidden"}>
         {revealed >= 1 && (
-          <div className="space-y-4 animate-fade-in-up py-2 text-center">
+          <div className="space-y-6 animate-fade-in-up py-2 text-center">
             <h2 className="font-display text-[40px] md:text-[56px] font-[760] leading-[1.06] text-foreground text-elegant">
               {data.recommendedMove}
             </h2>
+            <div className="mx-auto grid max-w-[760px] gap-3 text-left md:grid-cols-2">
+              <div className="rounded-[28px] border border-border/[0.035] bg-white/38 p-4 shadow-soft backdrop-blur-2xl">
+                <div className="eyebrow">Because you said</div>
+                <p className="mt-2 text-[14.5px] leading-relaxed text-foreground/78">
+                  {decision.intent} · {decision.subIntent}
+                  {decision.freeText ? ` · ${decision.freeText}` : ""}
+                </p>
+              </div>
+              <div className="rounded-[28px] border border-border/[0.035] bg-white/38 p-4 shadow-soft backdrop-blur-2xl">
+                <div className="eyebrow">Because research shows</div>
+                <p className="mt-2 text-[14.5px] leading-relaxed text-foreground/78">
+                  {researchSummary[0] ?? analysis.oneLineVerdict}
+                </p>
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -217,6 +248,7 @@ function RecommendationView({
             {data.why.slice(0, 3).map((w, i) => (
               <Bullet key={i} text={w} icon={CheckCircle2} accent="text-buy" />
             ))}
+            <SourceChips urls={recommendationSources} sources={analysis.sources ?? []} />
           </Block>
         )}
       </div>
@@ -382,7 +414,7 @@ function FloatingChat({
       <div className="relative px-6 pb-7 pt-4 pointer-events-auto flex justify-center">
         <div className="w-full max-w-[760px] space-y-3">
           {open && messages.length > 0 && (
-            <div className="surface-floating rounded-[34px] overflow-hidden animate-fade-in-up">
+            <div className="air-card overflow-hidden rounded-[30px] animate-fade-in-up">
               <div className="flex items-center justify-between px-5 py-3.5 border-b hairline">
                 <div className="flex items-center gap-2">
                   <Sparkles className={`w-3.5 h-3.5 text-primary ${loading ? "animate-breathe" : ""}`} />
@@ -397,7 +429,7 @@ function FloatingChat({
                   hide
                 </button>
               </div>
-              <div ref={scrollRef} className="max-h-[380px] overflow-y-auto p-5 space-y-3">
+              <div ref={scrollRef} className="max-h-[min(440px,52vh)] overflow-y-auto p-5 space-y-3">
                 {messages.map((m, i) => (
                   <div
                     key={i}
@@ -409,7 +441,7 @@ function FloatingChat({
                       className={`max-w-[88%] rounded-[24px] px-4 py-3 text-[14px] leading-[1.6] whitespace-pre-wrap ${
                         m.role === "user"
                           ? "bg-primary text-primary-foreground"
-                          : "bg-secondary text-foreground/90 border border-border/[0.08]"
+                          : "bg-white/60 text-foreground/90 border border-border/[0.06]"
                       }`}
                     >
                       {m.content}

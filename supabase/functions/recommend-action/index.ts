@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 import {
+  buildPersonalizationBrief,
   buildFallbackRecommendation,
   normalizeAnalysisPayload,
   normalizeDecisionInput,
@@ -84,23 +85,42 @@ async function generateRecommendation(args: {
   analysis: CareerAnalysis;
   decision: DecisionContext;
 }) {
+  const sourceUrls = Array.from(new Set([
+    ...args.analysis.keySignals.flatMap((signal) => signal.sourceUrls ?? []),
+    ...(args.analysis.sources ?? []).map((source) => source.url),
+  ])).slice(0, 6);
   const keySignals = args.analysis.keySignals
     .map(
       (signal) =>
-        `- ${signal.label}: ${signal.impact} Evidence: ${signal.evidence}`,
+        `- ${signal.label}: ${signal.roleImpact ?? signal.impact} Evidence: ${signal.evidence} Sources: ${(signal.sourceUrls ?? []).join(", ") || "inference"}`,
     )
     .join("\n");
+  const evidenceMap = args.analysis.evidenceMap
+    ? Object.entries(args.analysis.evidenceMap)
+        .map(([bucket, claims]) => `${bucket}: ${claims.map((claim) => `${claim.claim} (${claim.sourceUrl})`).join(" | ")}`)
+        .join("\n")
+    : "No structured evidence map available.";
   const thesis = args.analysis.investmentThesis;
+  const personalizationBrief = buildPersonalizationBrief({
+    company: args.company,
+    role: args.role,
+    analysis: args.analysis,
+    decision: args.decision,
+  });
 
   const systemPrompt = `You are $JOB, a sharp career-strategy advisor.
 Return valid JSON matching the schema exactly.
 
 Rules:
 - Ground the recommendation in the job analysis and the user's stated intent.
+- Make it feel written for this exact person, not a generic person in the same company.
+- The recommendedMove must mention the user's concrete focus or constraint from the decision context.
 - Be opinionated and practical, not generic or therapeutic.
-- Tie each "why" bullet to a concrete signal from the analysis.
-- next30Days must contain actions this person can actually do in the next month.
-- watchOuts should be situational, not generic career advice.`;
+- Tie each "why" bullet to both a concrete signal from the analysis and the user's selected direction.
+- next30Days must contain actions this person can actually do in the next month from their current ${args.role} seat.
+- watchOuts should be situational, not generic career advice.
+- personalizationBasis must list the concrete user answers and research signals that changed the recommendation.
+- sourceUrls must include the URLs that most directly support the recommendation.`;
 
   const userPrompt = `Create a recommendation for this person.
 
@@ -110,6 +130,9 @@ Rating: ${args.analysis.rating}
 Would buy: ${args.analysis.wouldBuy}
 Confidence: ${args.analysis.confidence}
 Verdict: ${args.analysis.oneLineVerdict}
+
+Personalization brief:
+${personalizationBrief}
 
 Key signals:
 ${keySignals}
@@ -125,9 +148,24 @@ Risk: ${args.analysis.evidence.riskSignals.join(" | ")}
 Hiring: ${args.analysis.evidence.hiringSignals.join(" | ")}
 Company: ${args.analysis.evidence.companySignals.join(" | ")}
 
+Structured evidence map:
+${evidenceMap}
+
+Available source URLs:
+${sourceUrls.map((url) => `- ${url}`).join("\n") || "- none"}
+
 User intent: ${args.decision.intent}
 User focus: ${args.decision.subIntent}
-${args.decision.freeText ? `User free text: ${args.decision.freeText}` : ""}`;
+${args.decision.freeText ? `User free text: ${args.decision.freeText}` : ""}
+
+Output guidance:
+- recommendedMove: one decisive sentence, tailored to the user's focus.
+- why: three bullets; each should combine a public signal, what it means for this person, and why it supports the move.
+- next30Days: three concrete actions with wording the user could actually execute this month.
+- watchOuts: two traps specific to this company/role/decision context.
+- alternativePaths: name three credible paths, not generic variants.
+- personalizationBasis: 2-4 short strings explaining what user answer or source-backed signal drove the move.
+- sourceUrls: 0-6 URLs from Available source URLs.`;
 
   return generateStructuredOutput<Record<string, unknown>>({
     schemaName: "career_recommendation",
@@ -235,7 +273,14 @@ Deno.serve(async (request) => {
       sources: analysis?.sources ?? [],
     });
 
-    const fallback = buildFallbackRecommendation(company, role, decision);
+    const sourceUrls = Array.from(new Set([
+      ...normalizedAnalysis.keySignals.flatMap((signal) => signal.sourceUrls ?? []),
+      ...normalizedAnalysis.sources.map((source) => source.url),
+    ])).slice(0, 6);
+    const fallback = {
+      ...buildFallbackRecommendation(company, role, decision),
+      sourceUrls,
+    };
     const aiResult = await generateRecommendation({
       company,
       role,

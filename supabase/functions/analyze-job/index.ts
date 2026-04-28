@@ -13,8 +13,11 @@ import { corsHeaders, jsonResponse } from "../_shared/http.ts";
 import { createEmbeddings, generateStructuredOutput } from "../_shared/openai.ts";
 import { analysisSchema } from "../_shared/schemas.ts";
 import {
+  buildResearchPacket,
+  compressResearchPacket,
   compressEvidence,
   runTavilyResearch,
+  type ResearchPacket,
   type ResearchSource,
 } from "../_shared/tavily.ts";
 
@@ -84,6 +87,14 @@ async function getCachedAnalysis(normalizedCompany: string, normalizedRole: stri
       sources,
     });
 
+    const hasSourceGrounding =
+      normalized.sources.length >= 2 ||
+      normalized.keySignals.some((signal) => signal.sourceUrls.length > 0);
+
+    if (normalized.researchQuality === "fallback" || !hasSourceGrounding) {
+      return null;
+    }
+
     return { id: data.id, analysis: normalized };
   } catch (error) {
     console.error("analysis cache lookup exception", error);
@@ -94,10 +105,12 @@ async function getCachedAnalysis(normalizedCompany: string, normalizedRole: stri
 async function generateJobAnalysis(
   company: string,
   role: string,
-  sources: ResearchSource[],
+  packet: ResearchPacket,
 ) {
+  const sources = packet.sources;
   const compactSources = researchSourcesToAnalysisSources(sources);
   const evidenceBlock = compressEvidence(sources);
+  const researchPacketBlock = compressResearchPacket(packet);
   const sourceIndex = compactSources
     .map(
       (source, index) =>
@@ -110,24 +123,37 @@ Return valid JSON matching the schema exactly.
 
 Rules:
 - Evaluate the role, not just the company.
-- Connect public evidence to concrete career consequences for THIS role.
-- Key signals must be job-specific and actionable, not generic market commentary.
+- Write for the person currently sitting in this role; use "you" where it makes the career consequence sharper.
+- Connect public evidence to concrete career consequences for THIS role: promotion path, scope, learning density, compensation leverage, burnout risk, and exit optionality.
+- Key signals must be job-specific and actionable, not generic market commentary. Bad: "Volatility is high." Good: "Leadership churn makes your next promotion sponsor less predictable."
 - Distinguish observable public evidence from your inference.
 - Use only the sources provided below. If evidence is thin, lower confidence instead of making things up.
-- Keep oneLineVerdict sharp and specific.
+- Keep oneLineVerdict sharp, personal, and specific to ${role} at ${company}.
+- Dimension explanations must say what the score means for this person's day-to-day career asset value, not just company health.
 - The five qualitativeInsights must cover promotion path, regulatory risk, hiring momentum, learning upside, and exit opportunities.
-- investmentThesis.keep, investmentThesis.caution, and investmentThesis.triggers should each have exactly three concise points.`;
+- Every keySignal must include sourceUrls from the source index when evidence exists.
+- Every keySignal.roleImpact must explain what the evidence changes for this person's scope, promotion path, learning, compensation leverage, sustainability, or exit optionality.
+- Every keySignal.confidenceReason must explain why the evidence is strong/weak.
+- investmentThesis.keep, investmentThesis.caution, and investmentThesis.triggers should each have exactly three concise points.
+- Avoid generic advice like "network more" or "keep learning" unless tied to a concrete signal from the source index.`;
 
   const userPrompt = `Evaluate this role as a career asset.
 
 Company: ${company}
 Role: ${role}
 
+Personalization target:
+Evaluate this as if the user is deciding whether to keep investing their next career year in this exact seat.
+Every keySignal.impact should answer: "So what does this mean for you as a ${role}?"
+
 PUBLIC SOURCE INDEX:
 ${sourceIndex || "No live research was available."}
 
 COMPRESSED PUBLIC EVIDENCE:
 ${evidenceBlock || "No live research was available. Work from priors, keep confidence low, and avoid invented facts."}
+
+STRUCTURED RESEARCH PACKET:
+${researchPacketBlock}
 
 Return:
 - rating: BUY / HOLD / SELL / SHORT
@@ -149,6 +175,77 @@ Return:
     systemPrompt,
     userPrompt,
   });
+}
+
+function firstPacketClaim(packet: ResearchPacket, index: number) {
+  return Object.values(packet.evidenceBuckets).flat()[index] ?? null;
+}
+
+function bucketLabel(bucket: string) {
+  const labels: Record<string, string> = {
+    companyMomentum: "Company momentum signal",
+    roleLeverage: "Role leverage signal",
+    hiringSignal: "Hiring and team signal",
+    promotionPath: "Promotion path signal",
+    marketRisk: "Risk signal",
+    exitOptionality: "Exit optionality signal",
+  };
+  return labels[bucket] ?? "Source-backed signal";
+}
+
+function isGenericSignal(signal: { label: string; evidence: string }) {
+  return /mixed public momentum|scope matters more than logo|portable outcome signal|public signals look useful|career value is often driven/i.test(
+    `${signal.label} ${signal.evidence}`,
+  );
+}
+
+function applySourceGrounding(args: {
+  analysis: CareerAnalysis;
+  packet: ResearchPacket;
+  role: string;
+  aiSucceeded: boolean;
+}): CareerAnalysis {
+  const sourceUrls = args.packet.sources.map((source) => source.url);
+  const keySignals = args.analysis.keySignals.map((signal, index) => {
+    const claim = firstPacketClaim(args.packet, index);
+    const urls = signal.sourceUrls.length
+      ? signal.sourceUrls
+      : claim?.sourceUrl
+        ? [claim.sourceUrl]
+        : sourceUrls[index]
+          ? [sourceUrls[index]]
+          : [];
+    const generic = isGenericSignal(signal);
+
+    return {
+      ...signal,
+      label: generic && claim ? bucketLabel(claim.bucket) : signal.label,
+      detail: generic && claim ? claim.claim.slice(0, 180) : signal.detail,
+      evidence: signal.evidence || claim?.claim || "Limited direct source coverage.",
+      sourceUrls: urls.slice(0, 3),
+      roleImpact: signal.roleImpact ||
+        `${signal.impact} For a ${args.role}, this affects whether the seat compounds through scope, learning, promotion leverage, or exit signal.`,
+      confidenceReason: signal.confidenceReason ||
+        (urls.length
+          ? "Supported by linked public evidence and interpreted for this role."
+          : "No direct source was available; treat this as an AI inference."),
+    };
+  });
+
+  const cappedConfidence =
+    args.packet.sourceQuality === "fallback"
+      ? Math.min(args.analysis.confidence, 55)
+      : args.packet.sourceQuality === "limited"
+        ? Math.min(args.analysis.confidence, 68)
+        : args.analysis.confidence;
+
+  return {
+    ...args.analysis,
+    keySignals,
+    confidence: args.aiSucceeded ? cappedConfidence : Math.min(cappedConfidence, 58),
+    researchQuality: args.aiSucceeded ? args.packet.sourceQuality : "fallback",
+    evidenceMap: args.packet.evidenceBuckets,
+  };
 }
 
 async function saveAnalysis(args: {
@@ -279,21 +376,33 @@ Deno.serve(async (request) => {
     }
 
     const sources = await runTavilyResearch(company, role);
+    const researchPacket = buildResearchPacket(sources, company, role);
     const analysisSources = researchSourcesToAnalysisSources(sources);
-    const aiResult = await generateJobAnalysis(company, role, sources);
+    const aiResult = await generateJobAnalysis(company, role, researchPacket);
 
     const fallback =
       getDemoFallbackAnalysis(company, role) ?? createGenericFallbackAnalysis(company, role);
-    const analysis = normalizeAnalysisPayload({
+    const normalizedAnalysis = normalizeAnalysisPayload({
       company,
       role,
       raw: aiResult.data ?? fallback,
       sources: analysisSources,
+      researchPacket,
+    });
+    const analysis = applySourceGrounding({
+      analysis: normalizedAnalysis,
+      packet: researchPacket,
+      role,
+      aiSucceeded: Boolean(aiResult.data),
     });
 
     const warnings: string[] = [];
-    if (sources.length === 0) {
-      warnings.push("Live Tavily research was unavailable, so the analysis used limited public context.");
+    if (researchPacket.sourceQuality !== "live") {
+      warnings.push(
+        researchPacket.sourceQuality === "fallback"
+          ? "Live Tavily research was unavailable, so this is clearly marked as fallback analysis."
+          : "Live Tavily research found limited source coverage, so confidence is capped and some claims are marked as inference.",
+      );
     }
     if (!aiResult.data) {
       warnings.push(
@@ -329,6 +438,7 @@ Deno.serve(async (request) => {
 
     return jsonResponse({
       ...fallback,
+      researchQuality: "fallback",
       _warning: "Unexpected server error. Returning fallback analysis so the demo can continue.",
       error: error instanceof Error ? error.message : "unknown",
     });

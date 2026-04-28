@@ -38,6 +38,34 @@ const INTENT_OPTIONS: { id: Intent; label: string }[] = [
   { id: "leave", label: "Prepare to leave" },
 ];
 
+function getPrimaryQuestion(analysis: Analysis) {
+  if (analysis.rating === "BUY") {
+    return "This looks attractive. What upside are you optimizing for?";
+  }
+  if (analysis.rating === "SELL" || analysis.rating === "SHORT") {
+    return "This looks risky. What move are you considering?";
+  }
+  return "This is conditional. What would make the next cycle worth it?";
+}
+
+function getIntentOptions(analysis: Analysis): { id: Intent; label: string }[] {
+  if (analysis.rating === "BUY") {
+    return [
+      { id: "stay", label: "Push for promotion" },
+      { id: "options", label: "Maximize exit value" },
+      { id: "leave", label: "Compare bigger upside" },
+    ];
+  }
+  if (analysis.rating === "SELL" || analysis.rating === "SHORT") {
+    return [
+      { id: "leave", label: "Plan a clean exit" },
+      { id: "options", label: "Reduce risk first" },
+      { id: "stay", label: "Renegotiate scope" },
+    ];
+  }
+  return INTENT_OPTIONS;
+}
+
 const SUB_INTENT: Record<Intent, { question: string; options: string[]; placeholder: string }> = {
   stay: {
     question: "What matters most right now?",
@@ -187,7 +215,8 @@ export function AnalysisDashboard({ company, role, analysis, animationsEnabled, 
           {showIntent && (
             <IntentFlow
               onDecide={onDecision}
-              options={INTENT_OPTIONS}
+              primaryQuestion={getPrimaryQuestion(analysis)}
+              options={getIntentOptions(analysis)}
               subQuestions={SUB_INTENT}
               thirdQuestions={THIRD_QUESTION}
               animationsEnabled={animationsEnabled}
@@ -412,12 +441,14 @@ function ThesisSequence({
 
 function IntentFlow({
   onDecide,
+  primaryQuestion,
   options,
   subQuestions,
   thirdQuestions,
   animationsEnabled,
 }: {
   onDecide: (d: DecisionContext) => void;
+  primaryQuestion: string;
   options: { id: Intent; label: string }[];
   subQuestions: Record<Intent, { question: string; options: string[]; placeholder: string }>;
   thirdQuestions: Record<Intent, { question: string; options: string[]; placeholder: string }>;
@@ -460,7 +491,7 @@ function IntentFlow({
     <section className="space-y-6">
       <Question
         index={1}
-        title="Given this rating, what are you considering?"
+        title={primaryQuestion}
         icon={Target}
         locked={!!intent}
         lockedAnswer={intentLabel}

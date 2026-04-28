@@ -34,6 +34,8 @@ export interface JobKeySignal {
   evidence: string;
   sentiment: SignalSentiment;
   sourceUrls: string[];
+  roleImpact?: string;
+  confidenceReason?: string;
 }
 
 export interface InvestmentThesis {
@@ -46,6 +48,16 @@ export interface AnalysisSource {
   title: string;
   url: string;
   snippet: string;
+  sourceType: string;
+}
+
+export type ResearchQuality = "live" | "limited" | "fallback";
+
+export interface SourceBackedClaim {
+  bucket: string;
+  claim: string;
+  sourceTitle: string;
+  sourceUrl: string;
   sourceType: string;
 }
 
@@ -77,6 +89,8 @@ export interface Analysis {
   };
   sources?: AnalysisSource[];
   chartData: { month: string; price: number }[];
+  researchQuality?: ResearchQuality;
+  evidenceMap?: Record<string, SourceBackedClaim[]>;
   _warning?: string;
   analysisId?: string;
   _cached?: boolean;
@@ -103,6 +117,8 @@ export interface Recommendation {
   next30Days: string[];
   watchOuts: string[];
   alternativePaths: { label: string; detail: string }[];
+  personalizationBasis?: string[];
+  sourceUrls?: string[];
 }
 
 export interface ChatMessage {

@@ -13,18 +13,18 @@ const PHASES: Phase[] = [
     key: "collect",
     title: "Collecting signals",
     steps: [
-      "Searching company news",
-      "Reading hiring signals",
-      "Checking risk indicators",
+      "Searching source-backed company signals",
+      "Reading hiring and team evidence",
+      "Checking risk and market indicators",
     ],
   },
   {
     key: "interpret",
     title: "Interpreting career asset",
     steps: [
-      "Estimating learning yield",
-      "Evaluating promotion upside",
-      "Measuring volatility",
+      "Mapping evidence to your role",
+      "Evaluating promotion and scope upside",
+      "Separating sources from AI inference",
     ],
   },
   {
@@ -32,8 +32,8 @@ const PHASES: Phase[] = [
     title: "Forming recommendation",
     steps: [
       "Comparing stay vs leave scenarios",
-      "Preparing asset rating",
-      "Generating next-step questions",
+      "Preparing sourced asset rating",
+      "Generating personalized follow-up questions",
     ],
   },
 ];
@@ -63,7 +63,7 @@ export function AnalysisRunner({ company, role, done, animationsEnabled, onCompl
     if (step >= FLAT.length) return;
     const isLast = step === FLAT.length - 1;
     if (isLast && !done) return;
-    const t = setTimeout(() => setStep((s) => s + 1), 500);
+    const t = setTimeout(() => setStep((s) => s + 1), 650);
     return () => clearTimeout(t);
   }, [step, done, animationsEnabled]);
 

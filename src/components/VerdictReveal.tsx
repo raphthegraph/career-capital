@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import type { Analysis, QualitativeInsight } from "@/lib/job-types";
+import type { Analysis } from "@/lib/job-types";
 import { ArrowDown } from "lucide-react";
 import { SignalGrid } from "@/components/SignalGrid";
-import { getRevealSignals } from "@/lib/analysis-helpers";
+import { getRevealSignals, type RevealSignal } from "@/lib/analysis-helpers";
 import { ratingColorClass } from "@/lib/rating";
+import { SourceChips } from "@/components/SourceChips";
 
 interface Props {
   company: string;
@@ -30,12 +31,12 @@ const LEVEL_TONE: Record<string, { dot: string; chip: string; label: string }> =
   limited: { dot: "bg-hold", chip: "text-hold", label: "Neutral" },
 };
 
-const FALLBACK_INSIGHTS: QualitativeInsight[] = [
-  { label: "Promotion path", value: "Unclear", level: "neutral", detail: "No visible expansion in leadership roles for this seat." },
-  { label: "Regulatory risk", value: "Elevated", level: "high", detail: "Sector pressure could slow product velocity." },
-  { label: "Hiring momentum", value: "Slowing", level: "declining", detail: "Open roles down meaningfully vs trailing six months." },
-  { label: "Learning upside", value: "Strong", level: "strong", detail: "Surface area still expanding inside your scope." },
-  { label: "Exit opportunities", value: "Strong", level: "strong", detail: "Brand converts well to peer companies." },
+const FALLBACK_INSIGHTS: RevealSignal[] = [
+  { label: "Promotion path", value: "Unclear", level: "neutral", detail: "No visible expansion in leadership roles for this seat.", sourceUrls: [] },
+  { label: "Regulatory risk", value: "Elevated", level: "high", detail: "Sector pressure could slow product velocity.", sourceUrls: [] },
+  { label: "Hiring momentum", value: "Slowing", level: "declining", detail: "Open roles down meaningfully vs trailing six months.", sourceUrls: [] },
+  { label: "Learning upside", value: "Strong", level: "strong", detail: "Surface area still expanding inside your scope.", sourceUrls: [] },
+  { label: "Exit opportunities", value: "Strong", level: "strong", detail: "Brand converts well to peer companies.", sourceUrls: [] },
 ];
 
 export function VerdictReveal({
@@ -49,7 +50,7 @@ export function VerdictReveal({
   const lastSignalRef = useRef<HTMLDivElement>(null);
   const ctaRef = useRef<HTMLDivElement>(null);
 
-  const insights = useMemo<QualitativeInsight[]>(
+  const insights = useMemo<RevealSignal[]>(
     () => {
       const resolved = getRevealSignals(analysis);
       return resolved.length >= 3 ? resolved.slice(0, 5) : FALLBACK_INSIGHTS;
@@ -95,6 +96,12 @@ export function VerdictReveal({
 
   const gridFocus = phase >= 3 && phase < 7;
   const ctaReady = phase >= 8 && insightsRevealed >= insights.length;
+  const qualityLabel =
+    analysis.researchQuality === "live"
+      ? "Live research"
+      : analysis.researchQuality === "limited"
+        ? "Limited evidence"
+        : "Fallback mode";
 
   useEffect(() => {
     onReadyChange?.(ctaReady);
@@ -116,6 +123,11 @@ export function VerdictReveal({
               <p className="mx-auto max-w-[620px] animate-fade-in-up text-[16px] leading-[1.65] text-foreground/80 md:text-[18px]">
                 {analysis.oneLineVerdict}
               </p>
+            )}
+            {phase >= 2 && (
+              <div className="mx-auto inline-flex animate-fade-in-up rounded-full border border-border/[0.035] bg-white/40 px-3 py-1.5 text-[11px] font-semibold text-muted-foreground shadow-soft backdrop-blur-xl">
+                {qualityLabel}
+              </div>
             )}
           </div>
 
@@ -193,6 +205,14 @@ export function VerdictReveal({
                     <p className="text-[14.5px] leading-[1.6] text-foreground/75">
                     {ins.detail}
                   </p>
+                  {ins.confidenceReason && (
+                    <p className="mt-3 text-[12.5px] leading-relaxed text-muted-foreground">
+                      {ins.confidenceReason}
+                    </p>
+                  )}
+                  <div className="mt-4">
+                    <SourceChips urls={ins.sourceUrls} sources={analysis.sources ?? []} compact />
+                  </div>
                 </div>
               );
             })}

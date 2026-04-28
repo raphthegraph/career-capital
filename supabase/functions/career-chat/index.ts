@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 import {
+  buildPersonalizationBrief,
   buildFallbackChatReply,
   normalizeChatMessagesInput,
   normalizeAnalysisPayload,
@@ -64,6 +65,7 @@ async function retrieveChatContext(analysisId: string, userMessage: string) {
     role?: string;
     analysis?: CareerAnalysis;
     recommendation?: Recommendation;
+    decision?: DecisionContext;
     retrieved: { contentType: string; content: string }[];
     recentMessages: { role: "user" | "assistant"; content: string }[];
   } = {
@@ -105,6 +107,30 @@ async function retrieveChatContext(analysisId: string, userMessage: string) {
     }
     if (recommendationRow?.recommendation_json) {
       context.recommendation = recommendationRow.recommendation_json as Recommendation;
+    }
+
+    const { data: decisionRow, error: decisionError } = await supabase
+      .from("decision_flows")
+      .select("answer_1, answer_2, answer_3")
+      .eq("analysis_id", analysisId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (decisionError) {
+      console.error("career-chat decision lookup error", decisionError);
+    }
+    if (decisionRow) {
+      const answer1 = String(decisionRow.answer_1 ?? "");
+      const intent =
+        answer1 === "stay" || answer1 === "options" || answer1 === "leave" || answer1 === "other"
+          ? answer1
+          : "options";
+      context.decision = {
+        intent,
+        subIntent: [decisionRow.answer_2, decisionRow.answer_3].filter(Boolean).join(" -> ") || "Keep options open",
+        ...(decisionRow.answer_3 ? { freeText: String(decisionRow.answer_3) } : {}),
+      };
     }
 
     const [queryVector] = (await createEmbeddings([userMessage])) ?? [];
@@ -169,6 +195,21 @@ async function generateChatAnswer(args: {
   const keySignals = analysis?.keySignals
     ?.map((signal) => `${signal.label}: ${signal.impact}`)
     .join(" | ");
+  const personalizationBrief = buildPersonalizationBrief({
+    company: args.company ?? "Unknown",
+    role: args.role ?? "Unknown",
+    analysis,
+    decision: args.decision,
+  });
+  const sourceBlock = [
+    ...(analysis?.keySignals ?? []).flatMap((signal) => signal.sourceUrls ?? []),
+    ...(analysis?.sources ?? []).map((source) => source.url),
+    ...(recommendation?.sourceUrls ?? []),
+  ]
+    .filter((url, index, array) => url && array.indexOf(url) === index)
+    .slice(0, 8)
+    .map((url) => `- ${url}`)
+    .join("\n");
 
   const systemPrompt = `You are $JOB, a direct career-asset advisor.
 Keep replies concise, specific, and grounded in the user's job as an asset.
@@ -176,6 +217,11 @@ Use second person.
 Distinguish public evidence from inference.
 Do not restate the full analysis unless needed.
 Push toward action, tradeoffs, and timing.
+Make every answer feel personal to their company, role, stated intent, and latest question.
+Start with the direct answer in one sentence, then give at most three practical bullets.
+If you need more information, ask only one sharp follow-up question at the end.
+Avoid generic career-coach language.
+When you rely on a source-backed claim, mention the evidence in plain language and include the most relevant URL in parentheses.
 
 Current context:
 - Company: ${args.company ?? "Unknown"}
@@ -185,6 +231,11 @@ Current context:
 - Key signals: ${keySignals ?? "Not available"}
 - User intent: ${args.decision?.intent ?? "unknown"} / ${args.decision?.subIntent ?? ""}
 ${recommendation ? `- Recommendation: ${recommendation.recommendedMove}` : ""}
+${recommendation?.personalizationBasis?.length ? `- Recommendation basis: ${recommendation.personalizationBasis.join(" | ")}` : ""}
+Personalization brief:
+${personalizationBrief}
+Source URLs available:
+${sourceBlock || "- none"}
 ${retrievedBlock ? `- Retrieved context:\n${retrievedBlock}` : ""}`;
 
   return generateTextReply({
@@ -214,6 +265,7 @@ Deno.serve(async (request) => {
     let role = body.role;
     let analysis = body.analysis;
     let recommendation = body.recommendation;
+    let decision = body.decision;
     let recentMessages: { role: "user" | "assistant"; content: string }[] = [];
     let retrieved: { contentType: string; content: string }[] = [];
 
@@ -223,6 +275,7 @@ Deno.serve(async (request) => {
       role = context.role ?? role;
       analysis = context.analysis ?? analysis;
       recommendation = context.recommendation ?? recommendation;
+      decision = decision ?? context.decision;
       recentMessages = context.recentMessages;
       retrieved = context.retrieved;
 
@@ -239,7 +292,7 @@ Deno.serve(async (request) => {
     const aiResult = await generateChatAnswer({
       company,
       role,
-      decision: body.decision,
+      decision,
       analysis,
       recommendation,
       retrieved,

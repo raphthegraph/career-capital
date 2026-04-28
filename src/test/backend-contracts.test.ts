@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  buildFallbackRecommendation,
+  buildPersonalizationBrief,
   normalizeChatMessagesInput,
   normalizeDecisionInput,
 } from "../../supabase/functions/_shared/career";
@@ -66,5 +68,49 @@ describe("normalizeChatMessagesInput", () => {
       { role: "assistant", content: "First answer" },
       { role: "user", content: "Follow-up" },
     ]);
+  });
+});
+
+describe("personalization helpers", () => {
+  it("turns the decision context into a prompt-ready personalization brief", () => {
+    const brief = buildPersonalizationBrief({
+      company: "N26",
+      role: "Product Manager",
+      analysis: {
+        rating: "HOLD",
+        wouldBuy: "Conditional",
+        confidence: 72,
+        careerAssetScore: 66,
+        oneLineVerdict: "Decent compounding seat, but promotion path is less predictable.",
+        keySignals: [
+          {
+            label: "Regulatory pressure",
+            detail: "Regulation shapes product velocity.",
+            impact: "Your launches may require more stakeholder alignment before they become promotion evidence.",
+            evidence: "Public reporting highlights compliance pressure.",
+            sentiment: "mixed",
+            sourceUrls: [],
+          },
+        ],
+      },
+      decision: {
+        intent: "stay",
+        subIntent: "Get promoted faster -> No internal sponsor yet",
+      },
+    });
+
+    expect(brief).toContain("Product Manager at N26");
+    expect(brief).toContain("Get promoted faster");
+    expect(brief).toContain("Regulatory pressure");
+  });
+
+  it("makes fallback recommendations reflect the user's stated focus", () => {
+    const recommendation = buildFallbackRecommendation("Tesla", "Mechanical Engineer", {
+      intent: "options",
+      subIntent: "Higher-growth startup -> Move within 6 months",
+    });
+
+    expect(recommendation.recommendedMove).toContain("Higher-growth startup");
+    expect(recommendation.next30Days.join(" ")).toContain("Higher-growth startup");
   });
 });

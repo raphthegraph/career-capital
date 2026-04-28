@@ -4,6 +4,7 @@ interface SourceChipsProps {
   urls?: string[];
   sources?: AnalysisSource[];
   compact?: boolean;
+  emptyLabel?: string;
 }
 
 function hostLabel(url: string) {
@@ -26,13 +27,18 @@ function sourceLabel(source: AnalysisSource | undefined, url: string) {
   return source.title?.slice(0, 34) || hostLabel(url);
 }
 
-export function SourceChips({ urls = [], sources = [], compact = false }: SourceChipsProps) {
+export function SourceChips({
+  urls = [],
+  sources = [],
+  compact = false,
+  emptyLabel = "AI inference",
+}: SourceChipsProps) {
   const uniqueUrls = urls.filter(Boolean).filter((url, index, array) => array.indexOf(url) === index).slice(0, 4);
 
   if (uniqueUrls.length === 0) {
     return (
       <div className="inline-flex rounded-full border border-border/[0.035] bg-white/35 px-3 py-1 text-[11px] font-semibold text-muted-foreground backdrop-blur-xl">
-        AI inference
+        {emptyLabel}
       </div>
     );
   }

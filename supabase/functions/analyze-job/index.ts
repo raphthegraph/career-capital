@@ -19,6 +19,7 @@ import {
   runTavilyResearch,
   type ResearchPacket,
   type ResearchSource,
+  type SourceBackedClaim,
 } from "../_shared/tavily.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -181,6 +182,107 @@ function firstPacketClaim(packet: ResearchPacket, index: number) {
   return Object.values(packet.evidenceBuckets).flat()[index] ?? null;
 }
 
+function canonicalSourceUrl(url: string) {
+  try {
+    const parsed = new URL(url);
+    parsed.hash = "";
+    return parsed.toString().replace(/\/$/, "");
+  } catch {
+    return url.trim().replace(/\/$/, "");
+  }
+}
+
+function sourceIndex(packet: ResearchPacket) {
+  const index = new Map<string, string>();
+  for (const source of packet.sources) {
+    index.set(canonicalSourceUrl(source.url), source.url);
+  }
+  return index;
+}
+
+function sourceUrlKey(url: string) {
+  return canonicalSourceUrl(url).toLowerCase();
+}
+
+function filterAllowedSourceUrls(urls: string[], packet: ResearchPacket) {
+  const allowed = sourceIndex(packet);
+  const seen = new Set<string>();
+  const filtered: string[] = [];
+
+  for (const url of urls) {
+    const allowedUrl = allowed.get(canonicalSourceUrl(url));
+    if (!allowedUrl) continue;
+
+    const key = sourceUrlKey(allowedUrl);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    filtered.push(allowedUrl);
+  }
+
+  return filtered;
+}
+
+function signalBucketHints(signal: { label: string; detail: string; impact: string; evidence: string }) {
+  const text = `${signal.label} ${signal.detail} ${signal.impact} ${signal.evidence}`.toLowerCase();
+  const hints: string[] = [];
+
+  if (/risk|regulat|lawsuit|layoff|controvers|pressure|volatile|slowdown/.test(text)) {
+    hints.push("marketRisk");
+  }
+  if (/hiring|team|headcount|careers|job|growth/.test(text)) {
+    hints.push("hiringSignal");
+  }
+  if (/promotion|scope|sponsor|ownership|manager|leadership|stakeholder/.test(text)) {
+    hints.push("promotionPath", "roleLeverage");
+  }
+  if (/exit|optional|market|recruiter|portable|brand|liquidity/.test(text)) {
+    hints.push("exitOptionality");
+  }
+  if (/fund|portfolio|investment|launch|momentum|customer|product|growth/.test(text)) {
+    hints.push("companyMomentum");
+  }
+
+  return hints.length ? hints : ["companyMomentum"];
+}
+
+function claimScore(
+  signal: { label: string; detail: string; impact: string; evidence: string },
+  claim: SourceBackedClaim,
+  usedUrls: Set<string>,
+) {
+  const signalText = `${signal.label} ${signal.detail} ${signal.impact} ${signal.evidence}`.toLowerCase();
+  const claimText = `${claim.bucket} ${claim.claim} ${claim.sourceTitle} ${claim.sourceType}`.toLowerCase();
+  const hints = signalBucketHints(signal);
+  let score = hints.includes(claim.bucket) ? 8 : 0;
+
+  for (const token of signalText.split(/\W+/).filter((token) => token.length > 4).slice(0, 18)) {
+    if (claimText.includes(token)) score += 1;
+  }
+  if (usedUrls.has(sourceUrlKey(claim.sourceUrl))) score -= 4;
+  if (claim.sourceType === "careers" || claim.sourceType === "fund" || claim.sourceType === "risk") score += 1;
+
+  return score;
+}
+
+function selectSourceClaim(args: {
+  packet: ResearchPacket;
+  signal: { label: string; detail: string; impact: string; evidence: string };
+  index: number;
+  usedUrls: Set<string>;
+}) {
+  const claims = Object.values(args.packet.evidenceBuckets).flat();
+  if (claims.length === 0) return null;
+
+  const ranked = claims
+    .map((claim) => ({
+      claim,
+      score: claimScore(args.signal, claim, args.usedUrls),
+    }))
+    .sort((left, right) => right.score - left.score);
+
+  return ranked[0]?.claim ?? firstPacketClaim(args.packet, args.index);
+}
+
 function bucketLabel(bucket: string) {
   const labels: Record<string, string> = {
     companyMomentum: "Company momentum signal",
@@ -206,16 +308,26 @@ function applySourceGrounding(args: {
   aiSucceeded: boolean;
 }): CareerAnalysis {
   const sourceUrls = args.packet.sources.map((source) => source.url);
+  const usedUrls = new Set<string>();
   const keySignals = args.analysis.keySignals.map((signal, index) => {
-    const claim = firstPacketClaim(args.packet, index);
-    const urls = signal.sourceUrls.length
-      ? signal.sourceUrls
-      : claim?.sourceUrl
-        ? [claim.sourceUrl]
-        : sourceUrls[index]
-          ? [sourceUrls[index]]
-          : [];
+    const allowedSignalUrls = filterAllowedSourceUrls(signal.sourceUrls, args.packet);
+    const claim = selectSourceClaim({
+      packet: args.packet,
+      signal,
+      index,
+      usedUrls,
+    });
+    const claimUrl = claim?.sourceUrl ? [claim.sourceUrl] : [];
+    const fallbackUrl = sourceUrls[index] ? [sourceUrls[index]] : [];
+    const urls = allowedSignalUrls.length
+      ? allowedSignalUrls
+      : claimUrl.length
+        ? claimUrl
+        : fallbackUrl;
     const generic = isGenericSignal(signal);
+    for (const url of urls) {
+      usedUrls.add(sourceUrlKey(url));
+    }
 
     return {
       ...signal,
@@ -231,6 +343,7 @@ function applySourceGrounding(args: {
           : "No direct source was available; treat this as an AI inference."),
     };
   });
+  const sourceBackedSignals = keySignals.filter((signal) => signal.sourceUrls.length > 0).length;
 
   const cappedConfidence =
     args.packet.sourceQuality === "fallback"
@@ -238,11 +351,17 @@ function applySourceGrounding(args: {
       : args.packet.sourceQuality === "limited"
         ? Math.min(args.analysis.confidence, 68)
         : args.analysis.confidence;
+  const sourceGroundedConfidence =
+    sourceBackedSignals === 0
+      ? Math.min(cappedConfidence, 55)
+      : sourceBackedSignals < 2
+        ? Math.min(cappedConfidence, 65)
+        : cappedConfidence;
 
   return {
     ...args.analysis,
     keySignals,
-    confidence: args.aiSucceeded ? cappedConfidence : Math.min(cappedConfidence, 58),
+    confidence: args.aiSucceeded ? sourceGroundedConfidence : Math.min(sourceGroundedConfidence, 58),
     researchQuality: args.aiSucceeded ? args.packet.sourceQuality : "fallback",
     evidenceMap: args.packet.evidenceBuckets,
   };

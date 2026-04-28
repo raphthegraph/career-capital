@@ -102,6 +102,7 @@ export function VerdictReveal({
       : analysis.researchQuality === "limited"
         ? "Limited evidence"
         : "Fallback mode";
+  const emptySourceLabel = analysis.researchQuality === "live" ? "AI inference" : "Limited evidence";
 
   useEffect(() => {
     onReadyChange?.(ctaReady);
@@ -211,7 +212,12 @@ export function VerdictReveal({
                     </p>
                   )}
                   <div className="mt-4">
-                    <SourceChips urls={ins.sourceUrls} sources={analysis.sources ?? []} compact />
+                    <SourceChips
+                      urls={ins.sourceUrls}
+                      sources={analysis.sources ?? []}
+                      compact
+                      emptyLabel={emptySourceLabel}
+                    />
                   </div>
                 </div>
               );

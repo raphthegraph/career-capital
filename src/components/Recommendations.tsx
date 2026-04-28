@@ -214,6 +214,7 @@ function RecommendationView({
   const recommendationSources = data.sourceUrls?.length
     ? data.sourceUrls
     : analysis.keySignals?.flatMap((signal) => signal.sourceUrls ?? []).slice(0, 4) ?? [];
+  const personalizationBasis = data.personalizationBasis?.filter(Boolean).slice(0, 4) ?? [];
 
   return (
     <section className="mx-auto max-w-[820px] space-y-10">
@@ -238,6 +239,21 @@ function RecommendationView({
                 </p>
               </div>
             </div>
+            {personalizationBasis.length > 0 && (
+              <div className="mx-auto flex max-w-[760px] flex-wrap justify-center gap-2">
+                {personalizationBasis.map((basis) => (
+                  <span
+                    key={basis}
+                    className="rounded-full border border-primary/10 bg-white/42 px-3 py-1.5 text-[11.5px] font-semibold text-primary-strong shadow-soft backdrop-blur-xl"
+                  >
+                    {basis}
+                  </span>
+                ))}
+              </div>
+            )}
+            <div className="flex justify-center">
+              <SourceChips urls={recommendationSources} sources={analysis.sources ?? []} />
+            </div>
           </div>
         )}
       </div>
@@ -248,7 +264,6 @@ function RecommendationView({
             {data.why.slice(0, 3).map((w, i) => (
               <Bullet key={i} text={w} icon={CheckCircle2} accent="text-buy" />
             ))}
-            <SourceChips urls={recommendationSources} sources={analysis.sources ?? []} />
           </Block>
         )}
       </div>

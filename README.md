@@ -1,107 +1,134 @@
 # $JOB
 
-$JOB treats a person’s current job like their biggest career asset.
+$JOB prices a job like a career asset.
 
-The user enters a company and role. The app researches public company signals, evaluates the job as a career asset, produces a BUY / HOLD / SELL / SHORT-style rating, explains the reasoning, asks three AI-native follow-up questions, generates a next-move recommendation, and supports contextual follow-up chat.
+The user enters a company and role. The app researches public signals, turns them into a BUY / HOLD / SELL / SHORT style career rating, explains the most important evidence, asks three follow-up questions, creates a next-move recommendation, and keeps a contextual chat open at the end.
 
-This repository started as a Lovable hackathon MVP. The goal of this version is not a rewrite. It is a stabilization pass: keep the existing journey, tighten the backend contracts, harden fallbacks, improve output quality, and make the project understandable to judges and future contributors.
+This repo started as a Lovable hackathon MVP. The current version keeps that original product flow, but hardens the backend, improves source-grounded output, adds safer fallbacks, and cleans up the frontend enough for a reliable demo.
 
 ## Demo Flow
 
-1. Landing page: enter a company and role, or try one of the demo companies.
-2. Analysis runner: simulated pricing/loading sequence while the backend researches and evaluates the role.
-3. Verdict reveal: ticker, rating, one-line verdict, and job-specific key signals.
-4. Investment thesis: reasons to keep the job, reasons to be careful, and rating-change triggers.
-5. Three-question decision flow: capture the user’s current intent.
-6. Recommendation page: recommended move, why, next 30 days, watch-outs, and alternatives.
-7. Floating AI chat: follow-up career questions grounded in the same analysis and recommendation.
+1. Landing page: enter a company and role, or select a demo example.
+2. Analysis loading: the app walks through source search, evidence extraction, role mapping, and pricing.
+3. Verdict reveal: shows a synthetic ticker, BUY / HOLD / SELL / SHORT signal, confidence, score, and key signals.
+4. Investment thesis: explains why to keep the job, why to be careful, and what would change the rating.
+5. Three-question decision flow: captures what the user is actually considering.
+6. Recommendation page: turns the analysis and answers into a short decision memo.
+7. Floating chat: answers follow-up questions using the analysis, sources, answers, recommendation, and stored context.
 
 ## Tech Stack
 
-- Lovable: original scaffold for the React frontend, Supabase wiring, and initial edge-function structure
-- React + TypeScript + Vite: frontend application
-- Tailwind + shadcn/ui: UI primitives and styling
-- Supabase:
-  - Edge Functions for server-side AI + research orchestration
-  - Postgres for analyses, sources, question-flow answers, recommendations, and chat history
-  - pgvector for retrieval-backed chat context
-- OpenAI:
-  - structured analysis generation
-  - structured recommendation generation
-  - chat responses
-  - embeddings for retrieval
-- Tavily:
-  - discovery search
-  - targeted extract on top high-signal URLs
-- GitHub: source control and collaboration workflow
+- Lovable for the original MVP scaffold
+- React, TypeScript, and Vite for the frontend
+- Tailwind CSS and shadcn/ui for the interface
+- Supabase Edge Functions for server-side orchestration
+- Supabase Postgres for persistence and caching
+- pgvector for retrieval-backed chat context
+- OpenAI for structured analysis, recommendations, chat, and embeddings
+- Tavily for public web research
+- GitHub for source control
 
-## Architecture Overview
+## Project Structure
 
-### Frontend
+```text
+src/
+  components/                 Main product screens and shared UI
+  integrations/supabase/       Browser Supabase client
+  lib/                         Shared frontend types and helpers
+  pages/Index.tsx              Single-page flow controller
+  test/                        Vitest coverage for helpers and contracts
 
-- [src/pages/Index.tsx](/Users/raphaelhildbrand/Documents/Codex/2026-04-25-i-want-to-work-with-you/career-capital/src/pages/Index.tsx)
-  - controls the single-page app flow
-  - phases: `landing -> analyzing -> verdict -> dashboard -> decision`
-- Key components:
-  - [Landing.tsx](/Users/raphaelhildbrand/Documents/Codex/2026-04-25-i-want-to-work-with-you/career-capital/src/components/Landing.tsx)
-  - [AnalysisRunner.tsx](/Users/raphaelhildbrand/Documents/Codex/2026-04-25-i-want-to-work-with-you/career-capital/src/components/AnalysisRunner.tsx)
-  - [VerdictReveal.tsx](/Users/raphaelhildbrand/Documents/Codex/2026-04-25-i-want-to-work-with-you/career-capital/src/components/VerdictReveal.tsx)
-  - [AnalysisDashboard.tsx](/Users/raphaelhildbrand/Documents/Codex/2026-04-25-i-want-to-work-with-you/career-capital/src/components/AnalysisDashboard.tsx)
-  - [Recommendations.tsx](/Users/raphaelhildbrand/Documents/Codex/2026-04-25-i-want-to-work-with-you/career-capital/src/components/Recommendations.tsx)
+supabase/
+  functions/
+    analyze-job/               Career asset analysis endpoint
+    recommend-action/          Next-move recommendation endpoint
+    career-chat/               Contextual chat endpoint
+    _shared/                   Shared Deno helpers, schemas, OpenAI, Tavily
+  migrations/                  Database schema and policy lock-down
+```
 
-### Backend
+The main frontend flow is controlled in [`src/pages/Index.tsx`](src/pages/Index.tsx). The core product screens are:
 
-- Supabase Edge Functions:
-  - [analyze-job](/Users/raphaelhildbrand/Documents/Codex/2026-04-25-i-want-to-work-with-you/career-capital/supabase/functions/analyze-job/index.ts)
-  - [recommend-action](/Users/raphaelhildbrand/Documents/Codex/2026-04-25-i-want-to-work-with-you/career-capital/supabase/functions/recommend-action/index.ts)
-  - [career-chat](/Users/raphaelhildbrand/Documents/Codex/2026-04-25-i-want-to-work-with-you/career-capital/supabase/functions/career-chat/index.ts)
-- Shared backend helpers:
-  - [career.ts](/Users/raphaelhildbrand/Documents/Codex/2026-04-25-i-want-to-work-with-you/career-capital/supabase/functions/_shared/career.ts)
-  - [tavily.ts](/Users/raphaelhildbrand/Documents/Codex/2026-04-25-i-want-to-work-with-you/career-capital/supabase/functions/_shared/tavily.ts)
-  - [openai.ts](/Users/raphaelhildbrand/Documents/Codex/2026-04-25-i-want-to-work-with-you/career-capital/supabase/functions/_shared/openai.ts)
-  - [schemas.ts](/Users/raphaelhildbrand/Documents/Codex/2026-04-25-i-want-to-work-with-you/career-capital/supabase/functions/_shared/schemas.ts)
+- [`src/components/Landing.tsx`](src/components/Landing.tsx)
+- [`src/components/AnalysisRunner.tsx`](src/components/AnalysisRunner.tsx)
+- [`src/components/VerdictReveal.tsx`](src/components/VerdictReveal.tsx)
+- [`src/components/AnalysisDashboard.tsx`](src/components/AnalysisDashboard.tsx)
+- [`src/components/Recommendations.tsx`](src/components/Recommendations.tsx)
 
-### Database
+## Architecture
 
-- [job_analyses](/Users/raphaelhildbrand/Documents/Codex/2026-04-25-i-want-to-work-with-you/career-capital/supabase/migrations/20260425205143_aff1dfb5-f175-405c-8106-21b0a21f5cf3.sql): canonical analysis payloads + cache entries
-- `research_sources`: Tavily evidence per analysis
-- `analysis_embeddings`: embeddings for verdicts, key signals, thesis, and recommendation retrieval
-- `decision_flows`: 3-question decision flow answers
-- `recommendations`: generated next-move recommendations
-- `chat_messages`: persistent chat history
-- `match_analysis_embeddings(...)`: vector similarity function scoped to one analysis
+The browser never calls OpenAI or Tavily directly. It talks to Supabase Edge Functions with the public Supabase anon key. All provider secrets stay in Supabase function secrets.
 
-The follow-up migration [20260425220500_lock_down_public_tables.sql](/Users/raphaelhildbrand/Documents/Codex/2026-04-25-i-want-to-work-with-you/career-capital/supabase/migrations/20260425220500_lock_down_public_tables.sql) removes broad public read/insert policies so table access stays server-side through Edge Functions.
+High-level request path:
 
-## Data Flow
+```text
+React app
+  -> Supabase Edge Function
+    -> Tavily research
+    -> OpenAI generation
+    -> Supabase persistence, cache, embeddings
+  -> normalized JSON response
+  -> staged frontend reveal
+```
 
-1. The frontend sends `company` and `role` to `analyze-job`.
-2. `analyze-job`:
-   - normalizes the company + role pair
-   - checks the 24-hour analysis cache
-   - runs Tavily Search across overview, news, hiring, risk, and momentum queries
-   - runs Tavily Extract only on the top 5 highest-signal URLs
-   - compresses evidence
-   - calls OpenAI with a strict structured schema
-   - normalizes the result into a backward-compatible frontend contract
-   - saves the analysis, research sources, and embeddings best-effort
-3. The frontend renders:
-   - verdict reveal using `keySignals` or `qualitativeInsights`
-   - investment thesis using `investmentThesis` or the legacy thesis arrays
-4. The decision flow stays client-side and submits the user’s intent to `recommend-action`.
-5. `recommend-action`:
-   - optionally reloads the persisted analysis by `analysisId`
-   - generates a structured recommendation with OpenAI
-   - stores the decision answers, recommendation, and recommendation embedding best-effort
-6. The floating chat sends `analysisId` and the current message to `career-chat`.
-7. `career-chat`:
-   - reloads the analysis and latest recommendation when possible
-   - fetches recent chat history
-   - uses pgvector retrieval over embedded analysis context
-   - generates a concise career answer
-   - stores chat messages best-effort
+### `analyze-job`
 
-## API Documentation
+[`supabase/functions/analyze-job/index.ts`](supabase/functions/analyze-job/index.ts)
+
+This endpoint:
+
+- normalizes the company and role
+- checks a 24-hour cache for matching analyses
+- runs role-aware Tavily searches
+- extracts the strongest source pages
+- builds a research packet
+- asks OpenAI for structured career-asset analysis
+- validates and normalizes the payload
+- stores the analysis, sources, and embeddings best effort
+- returns demo-safe fallback output if services fail
+
+### `recommend-action`
+
+[`supabase/functions/recommend-action/index.ts`](supabase/functions/recommend-action/index.ts)
+
+This endpoint:
+
+- accepts the user's answers from the three-question flow
+- reloads persisted analysis context when `analysisId` is available
+- asks OpenAI for a short decision memo
+- stores the decision flow and recommendation best effort
+- returns a fallback recommendation if generation fails
+
+### `career-chat`
+
+[`supabase/functions/career-chat/index.ts`](supabase/functions/career-chat/index.ts)
+
+This endpoint:
+
+- accepts the active chat history
+- reloads the analysis, sources, latest recommendation, and saved answers
+- retrieves relevant embedded context through pgvector
+- asks OpenAI for a concise, grounded reply
+- stores user and assistant messages best effort
+
+## Data Model
+
+The migrations live in [`supabase/migrations`](supabase/migrations).
+
+Main tables:
+
+- `job_analyses`: canonical analysis payloads and cache entries
+- `research_sources`: Tavily sources attached to an analysis
+- `analysis_embeddings`: vector chunks for analysis, thesis, and recommendation context
+- `decision_flows`: answers from the three-question flow
+- `recommendations`: generated next-move memos
+- `chat_messages`: contextual chat history
+
+The second migration, `20260425220500_lock_down_public_tables.sql`, removes broad public table policies. Normal app access should go through Edge Functions using the service role key.
+
+## API Contracts
+
+The frontend depends on the current route names. Keep them stable unless there is a strong reason to change them.
 
 ### `POST /functions/v1/analyze-job`
 
@@ -109,45 +136,36 @@ Request:
 
 ```json
 {
-  "company": "OpenAI",
-  "role": "Research Engineer"
+  "company": "N26",
+  "role": "Product Manager"
 }
 ```
 
-Response shape:
+Important response fields:
 
 ```json
 {
-  "ticker": "OPEN-RE",
-  "rating": "BUY",
-  "wouldBuy": "Conditional",
-  "confidence": 81,
-  "oneLineVerdict": "...",
-  "careerAssetScore": 84,
-  "dimensions": { "...": "..." },
-  "qualitativeInsights": [{ "...": "..." }],
-  "keySignals": [{ "...": "..." }],
-  "investmentThesis": {
-    "keep": ["...", "...", "..."],
-    "caution": ["...", "...", "..."],
-    "triggers": ["...", "...", "..."]
-  },
-  "bullCase": ["...", "...", "..."],
-  "bearCase": ["...", "...", "..."],
-  "ratingChangeTriggers": ["...", "...", "..."],
-  "evidence": {
-    "momentumSignals": ["..."],
-    "riskSignals": ["..."],
-    "hiringSignals": ["..."],
-    "companySignals": ["..."]
-  },
-  "sources": [{ "...": "..." }],
-  "chartData": [{ "month": "Jan", "price": 55.2 }],
   "analysisId": "uuid",
-  "_cached": true,
+  "ticker": "N-PM",
+  "rating": "HOLD",
+  "wouldBuy": "Conditional",
+  "confidence": 58,
+  "oneLineVerdict": "Short role-specific verdict",
+  "careerAssetScore": 62,
+  "researchQuality": "live",
+  "keySignals": [],
+  "investmentThesis": {
+    "keep": [],
+    "caution": [],
+    "triggers": []
+  },
+  "sources": [],
+  "_cached": false,
   "_warning": "optional warning"
 }
 ```
+
+The function also returns legacy-compatible fields such as `bullCase`, `bearCase`, `ratingChangeTriggers`, `qualitativeInsights`, `evidence`, and `chartData`.
 
 ### `POST /functions/v1/recommend-action`
 
@@ -155,13 +173,13 @@ Request:
 
 ```json
 {
+  "company": "N26",
+  "role": "Product Manager",
+  "analysisId": "uuid",
   "decision": {
     "intent": "options",
-    "subIntent": "Stronger company, similar role"
-  },
-  "company": "OpenAI",
-  "role": "Research Engineer",
-  "analysisId": "uuid"
+    "subIntent": "Higher-growth startup -> Just exploring quietly"
+  }
 }
 ```
 
@@ -169,15 +187,18 @@ Response:
 
 ```json
 {
-  "decision": { "...": "..." },
+  "decision": {},
   "data": {
-    "recommendedMove": "...",
-    "why": ["...", "...", "..."],
-    "next30Days": ["...", "...", "..."],
-    "watchOuts": ["...", "..."],
-    "alternativePaths": [
-      { "label": "...", "detail": "..." }
-    ]
+    "headline": "Stay, test the market",
+    "recommendedMove": "One decisive sentence",
+    "becauseYouSaid": [],
+    "becauseResearchShows": [],
+    "why": [],
+    "next30Days": [],
+    "watchOuts": [],
+    "alternativePaths": [],
+    "personalizationBasis": [],
+    "sourceUrls": []
   },
   "recommendationId": "uuid",
   "_warning": "optional warning"
@@ -191,8 +212,10 @@ Request:
 ```json
 {
   "analysisId": "uuid",
+  "company": "N26",
+  "role": "Product Manager",
   "messages": [
-    { "role": "user", "content": "Should I stay six more months?" }
+    { "role": "user", "content": "Why did you recommend this?" }
   ]
 }
 ```
@@ -206,77 +229,87 @@ Response:
 }
 ```
 
-## Fallback and Demo Behavior
-
-The app is designed to keep the demo moving even when external services fail.
-
-- If Supabase writes fail:
-  - the response still returns generated analysis/recommendation/chat
-  - only persistence is skipped
-- If Tavily fails:
-  - analysis still runs with limited public context
-  - confidence should be lower
-  - `_warning` is returned
-- If OpenAI fails:
-  - the analysis route falls back to:
-    - N26 Product Manager
-    - Tesla Mechanical Engineer
-    - OpenAI Research Engineer
-    - Trade Republic Product Manager
-    - lemon.markets Product Designer
-  - other company/role pairs get a generic baseline fallback
-- If chat generation fails:
-  - the app returns a short fallback answer instead of breaking the UI
-
 ## Environment Variables
 
-Frontend:
+Copy `.env.example` to `.env` for local frontend development.
 
-- `VITE_SUPABASE_URL`
-- `VITE_SUPABASE_PUBLISHABLE_KEY`
-- `VITE_SUPABASE_PROJECT_ID`
+Frontend variables:
 
-Backend / Edge Functions:
+```bash
+VITE_SUPABASE_URL=
+VITE_SUPABASE_PUBLISHABLE_KEY=
+VITE_SUPABASE_PROJECT_ID=
+```
 
-- `SUPABASE_URL`
-- `SUPABASE_SERVICE_ROLE_KEY`
-- `OPENAI_API_KEY`
-- `OPENAI_MODEL`
-- `TAVILY_API_KEY`
+Supabase Edge Function secrets:
 
-See [.env.example](/Users/raphaelhildbrand/Documents/Codex/2026-04-25-i-want-to-work-with-you/career-capital/.env.example) for the full template.
+```bash
+SUPABASE_URL=
+SUPABASE_SERVICE_ROLE_KEY=
+OPENAI_API_KEY=
+OPENAI_MODEL=gpt-5.4-mini
+TAVILY_API_KEY=
+```
 
-## Local Setup
+Do not expose `OPENAI_API_KEY`, `TAVILY_API_KEY`, or `SUPABASE_SERVICE_ROLE_KEY` in the frontend. They should only be configured as Supabase function secrets.
 
-1. Install dependencies:
+## Local Development
+
+Install dependencies:
 
 ```bash
 npm install
 ```
 
-2. Configure frontend variables:
-
-- use `.env.example` as the reference
-- the current frontend expects a live Supabase project URL and publishable key
-
-3. Set Supabase Edge Function secrets in your project:
+Run the frontend:
 
 ```bash
-supabase secrets set \
-  SUPABASE_URL=... \
-  SUPABASE_SERVICE_ROLE_KEY=... \
-  OPENAI_API_KEY=... \
-  OPENAI_MODEL=gpt-5.4-mini \
-  TAVILY_API_KEY=...
+npm run dev
 ```
 
-4. Apply database migrations:
+Run a production preview:
+
+```bash
+npm run build
+npm run preview
+```
+
+Run checks:
+
+```bash
+npm run test
+npm run lint
+npm run build
+```
+
+Current lint output includes warnings from generated shadcn/ui files about fast refresh exports. They are non-blocking and pre-existing.
+
+## Supabase Setup
+
+Link the Supabase project if needed:
+
+```bash
+supabase link --project-ref <project-ref>
+```
+
+Apply migrations:
 
 ```bash
 supabase db push
 ```
 
-5. Deploy or serve the functions:
+Set function secrets:
+
+```bash
+supabase secrets set \
+  SUPABASE_URL=https://your-project.supabase.co \
+  SUPABASE_SERVICE_ROLE_KEY=your-service-role-key \
+  OPENAI_API_KEY=your-openai-key \
+  OPENAI_MODEL=gpt-5.4-mini \
+  TAVILY_API_KEY=your-tavily-key
+```
+
+Deploy functions:
 
 ```bash
 supabase functions deploy analyze-job
@@ -284,61 +317,55 @@ supabase functions deploy recommend-action
 supabase functions deploy career-chat
 ```
 
-6. Run the frontend:
+Minimum database requirements:
 
-```bash
-npm run dev
-```
-
-## Validation Commands
-
-```bash
-npm run lint
-npm run test
-npm run build
-```
-
-## Required Supabase Setup
-
-Minimum requirements:
-
-- pgvector enabled
-- the initial schema migration applied
-- the policy lock-down migration applied
+- migrations applied
+- `pgvector` enabled by the initial schema
+- lock-down migration applied
 - Edge Function secrets configured
 
-The repo already includes the SQL migrations. No extra hand-written SQL is required beyond running the migrations.
+## Fallback Behavior
 
-## Current Stability Notes
+The demo should keep moving even when one service is down.
 
-What was improved in this stabilization pass:
+- If Supabase writes fail, the API still returns generated output.
+- If Tavily fails, analysis continues with limited context and lower confidence.
+- If OpenAI fails, the app returns demo fallback data for the known examples.
+- If chat generation fails, the chat returns a short fallback reply instead of breaking the UI.
 
-- preserved the existing Lovable user journey
-- switched backend generation from Lovable’s AI gateway dependency to direct OpenAI server-side calls
-- added strict structured schemas for analysis and recommendation generation
-- added richer, job-specific `keySignals`, `investmentThesis`, and `sources` while keeping legacy fields for frontend compatibility
-- improved Tavily usage to do discovery first, then targeted extract on the top URLs only
-- added stronger demo fallbacks for the five named companies
-- normalized analysis payloads so partial AI output does not crash the frontend
-- made recommendation and chat routes fallback-safe
-- added shared backend helpers to reduce duplicated logic
-- added `.env.example`
-- tightened database exposure by removing broad public table policies
-- replaced the placeholder README with real setup and architecture documentation
+Demo fallback pairs:
+
+- N26, Product Manager
+- Tesla, Mechanical Engineer
+- OpenAI, Research Engineer
+- Trade Republic, Product Manager
+- lemon.markets, Product Designer
+
+When live evidence is weak, the UI should mark the output as limited evidence rather than pretending all claims are sourced.
+
+## Testing Notes
+
+Useful smoke tests:
+
+- Run `N26 / Product Manager` from landing page to recommendation.
+- Run `Trade Republic / Product Manager` and ask chat: `Why did you recommend this?`
+- Confirm the analysis loader visibly walks through all sections.
+- Confirm source chips appear under key signals when live sources are available.
+- Confirm the final recommendation changes when different answer paths are selected.
 
 ## Known Limitations
 
-- the frontend now restores verdict, dashboard, and recommendation stages from local storage after a refresh
-- shadcn/Lovable-generated UI files still produce some non-blocking lint warnings around fast-refresh patterns
-- the production bundle is larger than ideal and should be split further after the hackathon demo
-- there is no user authentication yet; this repo is optimized for demo reliability, not multi-user privacy workflows
-- Edge Function validation in this repo is primarily by static review and shared-module typing; the frontend build does not execute Deno functions locally
+- There is no user authentication. This is demo-oriented, not a multi-user product.
+- The frontend is still a single phase controller instead of route-based pages.
+- Some shadcn/ui files produce fast refresh lint warnings.
+- The production bundle is larger than ideal and should be split later.
+- Edge Function tests are mostly contract and static checks. Full live validation requires a configured Supabase project.
 
-## Future Improvements
+## Future Work
 
-- persist the active analysis state in the URL or storage so refreshes are resilient
-- add route-based pages instead of a single phase controller
-- add server-side analytics and trace logging for prompt / research quality
-- tighten chat retrieval ranking with richer source embeddings and recency weighting
-- code-split the heavy UI bundle
-- add end-to-end tests for the core flow and Edge Function contract tests
+- Add route-based deep links for each stage.
+- Add end-to-end tests for the full browser flow.
+- Add server-side tracing for Tavily quality, OpenAI parsing, and fallback usage.
+- Improve retrieval ranking for chat with fresher source weighting.
+- Add authentication and per-user analysis ownership.
+- Code-split the frontend bundle.

@@ -28,7 +28,7 @@ const LOAD_STEPS = [
   "Building your 30-day plan",
   "Grounding the recommendation",
 ];
-const MIN_RECOMMENDATION_VISIBLE_MS = 3400;
+const MIN_RECOMMENDATION_VISIBLE_MS = 5200;
 
 export function Recommendations({
   company,
@@ -83,7 +83,7 @@ export function Recommendations({
 
   return (
     <div className="min-h-[calc(100vh-3.5rem)] pb-44 relative">
-      <SignalGrid variant="recommendation" />
+      <SignalGrid variant="recommendation" intensity={!data && !error ? "active" : "quiet"} />
 
       <div className="relative z-10 mx-auto w-full max-w-[920px] px-4 py-10 sm:px-6 md:py-14">
         <main className="min-w-0 space-y-8">
@@ -150,10 +150,15 @@ function Loading({
       setStep(LOAD_STEPS.length);
       return;
     }
-    if (step >= LOAD_STEPS.length) return;
-    const t = setTimeout(() => setStep((s) => s + 1), 720);
+    if (step >= LOAD_STEPS.length - 1) return;
+    const t = setTimeout(() => setStep((s) => Math.min(s + 1, LOAD_STEPS.length - 1)), 920);
     return () => clearTimeout(t);
   }, [step, animationsEnabled]);
+
+  const isFinished = !animationsEnabled;
+  const activeStep = Math.min(step, LOAD_STEPS.length - 1);
+  const progress = Math.round(((activeStep + 1) / LOAD_STEPS.length) * 100);
+  const activeLabel = LOAD_STEPS[activeStep];
 
   return (
     <div className="mx-auto grid w-full max-w-[900px] items-center gap-7 animate-fade-in px-2 py-8 md:grid-cols-[0.9fr_1.1fr]">
@@ -176,24 +181,49 @@ function Loading({
             {decision.intent} · {decision.subIntent}
           </span>
         </div>
+        <div className="air-card max-w-[430px] overflow-hidden p-4">
+          <div className="flex items-center justify-between gap-4 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+            <span>Decision engine</span>
+            <span>{progress}%</span>
+          </div>
+          <div className="mt-3 h-2 overflow-hidden rounded-full bg-primary/[0.08]">
+            <div
+              className="relative h-full rounded-full bg-primary transition-[width] duration-700 ease-out"
+              style={{ width: `${progress}%` }}
+            >
+              {animationsEnabled && (
+                <span className="absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-transparent via-white/45 to-transparent animate-shimmer-line" />
+              )}
+            </div>
+          </div>
+          <div className="mt-3 flex items-center gap-2 text-[13px] font-semibold text-foreground/78">
+            <span className="h-1.5 w-1.5 rounded-full bg-primary animate-breathe" />
+            {activeLabel}
+          </div>
+        </div>
       </div>
 
       <div className="space-y-3">
         {LOAD_STEPS.map((label, index) => {
-          const isComplete = index < step;
-          const isCurrent = index === step || (!animationsEnabled && index === LOAD_STEPS.length - 1);
-          const isVisible = index <= step || !animationsEnabled;
-          if (!isVisible) return null;
+          const isComplete = index < activeStep || isFinished || !animationsEnabled;
+          const isCurrent = index === activeStep && !isFinished && animationsEnabled;
           return (
             <div
               key={label}
-              className={`rounded-[28px] border border-border/[0.03] bg-white/[0.36] px-4 py-4 shadow-soft backdrop-blur-2xl transition-all duration-700 animate-fade-in-soft ${
-                isCurrent ? "opacity-100" : "opacity-70"
+              className={`relative overflow-hidden rounded-[28px] border border-border/[0.03] px-4 py-4 backdrop-blur-2xl transition-all duration-700 animate-fade-in-soft ${
+                isCurrent
+                  ? "scale-[1.012] bg-white/[0.52] opacity-100 shadow-floating"
+                  : isComplete
+                    ? "bg-white/[0.4] opacity-[0.85] shadow-soft"
+                    : "bg-white/[0.24] opacity-[0.45]"
               }`}
             >
+              {isCurrent && (
+                <span className="pointer-events-none absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-primary/45 to-transparent animate-shimmer-line" />
+              )}
               <div className="flex items-center gap-3">
                 <span className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/55">
-                  {isComplete || !animationsEnabled ? (
+                  {isComplete ? (
                     <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary">
                       <CheckCircle2 className="h-3.5 w-3.5 text-primary-foreground" />
                     </span>
@@ -210,7 +240,7 @@ function Loading({
                     {label}
                   </div>
                   <div className="mt-1 text-[12.5px] text-muted-foreground">
-                    {isCurrent ? "working through your context…" : "complete"}
+                    {isCurrent ? "working through your context…" : isComplete ? "complete" : "queued"}
                   </div>
                 </div>
               </div>

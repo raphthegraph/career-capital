@@ -75,6 +75,9 @@ export function AnalysisRunner({ company, role, done, animationsEnabled, onCompl
   }, [step, onComplete, animationsEnabled]);
 
   const activePhase = step >= FLAT.length ? PHASES.length - 1 : FLAT[step].phaseIdx;
+  const visibleStep = Math.min(step + 1, FLAT.length);
+  const progress = Math.round((visibleStep / FLAT.length) * 100);
+  const activeLabel = step >= FLAT.length ? "Sourced read ready" : FLAT[step].label;
 
   return (
     <div className="min-h-[calc(100vh-3.5rem)] flex items-center justify-center px-4 py-10 sm:px-6 md:py-14 relative">
@@ -92,6 +95,29 @@ export function AnalysisRunner({ company, role, done, animationsEnabled, onCompl
           <p className="max-w-[420px] text-[15px] leading-[1.65] text-muted-foreground">
             $JOB is reading live sources, compressing evidence, and mapping it to your role.
           </p>
+          <div className="air-card max-w-[420px] overflow-hidden p-4">
+            <div className="flex items-center justify-between gap-4 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+              <span>Live pricing sequence</span>
+              <span>{progress}%</span>
+            </div>
+            <div className="mt-3 h-2 overflow-hidden rounded-full bg-primary/[0.08]">
+              <div
+                className="relative h-full rounded-full bg-primary transition-[width] duration-700 ease-out"
+                style={{ width: `${progress}%` }}
+              >
+                {animationsEnabled && (
+                  <span className="absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-transparent via-white/45 to-transparent animate-shimmer-line" />
+                )}
+              </div>
+            </div>
+            <div className="mt-3 flex items-center gap-2 text-[13px] font-semibold text-foreground/78">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary animate-breathe" />
+              {activeLabel}
+            </div>
+            <p className="mt-1 text-[12.5px] leading-relaxed text-muted-foreground">
+              {done ? "Evidence is ready. Finishing the reveal sequence." : "Waiting for the live research layer to finish cleanly."}
+            </p>
+          </div>
           <div className="hidden max-w-[360px] space-y-2 md:block">
             <div className="h-px w-full bg-gradient-to-r from-primary/20 via-primary/5 to-transparent" />
             <p className="text-[12.5px] leading-relaxed text-muted-foreground">
@@ -102,71 +128,84 @@ export function AnalysisRunner({ company, role, done, animationsEnabled, onCompl
 
         <div className="relative space-y-4">
           <div className="absolute -left-4 top-8 bottom-8 hidden w-px bg-gradient-to-b from-transparent via-primary/12 to-transparent md:block" />
-            {PHASES.map((phase, pi) => {
-              const phaseStart = PHASES.slice(0, pi).reduce((n, p) => n + p.steps.length, 0);
-              const isActive = pi === activePhase && step < FLAT.length;
-              const isComplete = pi < activePhase || step >= FLAT.length;
-              const isPending = !isActive && !isComplete;
-              const Icon = PHASE_ICONS[pi];
+          {PHASES.map((phase, pi) => {
+            const phaseStart = PHASES.slice(0, pi).reduce((n, p) => n + p.steps.length, 0);
+            const isActive = pi === activePhase && step < FLAT.length;
+            const isComplete = pi < activePhase || step >= FLAT.length;
+            const isPending = !isActive && !isComplete;
+            const Icon = PHASE_ICONS[pi];
 
-              return (
-                <div
-                  key={phase.key}
-                  className={`rounded-[28px] border border-border/[0.028] bg-white/[0.34] px-4 py-4 backdrop-blur-2xl transition-all duration-700 md:px-5 ${
-                    isPending ? "opacity-40" : "opacity-100 shadow-soft"
-                  }`}
-                >
-                  <div className="flex items-center gap-3.5 mb-3.5">
-                    <span className="relative w-8 h-8 flex items-center justify-center shrink-0 rounded-full bg-white/50">
-                      {isComplete ? (
-                        <span className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-                          <Check className="w-3 h-3 text-primary-foreground" strokeWidth={3} />
-                        </span>
-                      ) : isActive ? (
-                        <>
-                          <span className="absolute w-8 h-8 rounded-full border-[1.5px] border-primary/30" />
-                          <span className="absolute w-8 h-8 rounded-full border-[1.5px] border-primary border-r-transparent animate-spin" style={{ animationDuration: "1.4s" }} />
-                          <Icon className="h-3.5 w-3.5 text-primary" />
-                        </>
-                      ) : (
-                        <Icon className="h-3.5 w-3.5 text-muted-foreground/40" />
-                      )}
-                    </span>
-                    <span
-                      className={`text-[15px] font-semibold tracking-tight transition-colors ${
-                        isActive || isComplete ? "text-foreground" : "text-muted-foreground"
-                      }`}
-                    >
-                      {phase.title}
-                    </span>
-                  </div>
-
-                  {(isActive || isComplete) && (
-                    <ul className="pl-[46px] space-y-2">
-                      {phase.steps.map((s, si) => {
-                        const globalIdx = phaseStart + si;
-                        if (globalIdx > step) return null;
-                        const isCurrent = globalIdx === step && step < FLAT.length;
-                        return (
-                          <li
-                            key={s}
-                            className={`flex items-center gap-2 text-[13.5px] leading-relaxed transition-colors animate-fade-in-soft ${
-                              isCurrent ? "text-foreground/90" : "text-muted-foreground"
-                            }`}
-                          >
-                            <span className={`h-1.5 w-1.5 rounded-full ${isCurrent ? "bg-primary animate-breathe" : "bg-primary/35"}`} />
-                            {s}
-                            {isCurrent && (
-                              <span className="ml-1 text-foreground/40 animate-pulse">…</span>
-                            )}
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  )}
+            return (
+              <div
+                key={phase.key}
+                className={`relative overflow-hidden rounded-[28px] border border-border/[0.028] bg-white/[0.34] px-4 py-4 backdrop-blur-2xl transition-all duration-700 md:px-5 ${
+                  isPending
+                    ? "opacity-[0.38]"
+                    : isActive
+                      ? "scale-[1.012] bg-white/[0.5] opacity-100 shadow-floating"
+                      : "opacity-100 shadow-soft"
+                }`}
+              >
+                {isActive && animationsEnabled && (
+                  <span className="pointer-events-none absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-primary/45 to-transparent animate-shimmer-line" />
+                )}
+                <div className="flex items-center gap-3.5 mb-3.5">
+                  <span className="relative w-8 h-8 flex items-center justify-center shrink-0 rounded-full bg-white/50">
+                    {isComplete ? (
+                      <span className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+                        <Check className="w-3 h-3 text-primary-foreground" strokeWidth={3} />
+                      </span>
+                    ) : isActive ? (
+                      <>
+                        <span className="absolute w-8 h-8 rounded-full border-[1.5px] border-primary/30" />
+                        <span className="absolute w-8 h-8 rounded-full border-[1.5px] border-primary border-r-transparent animate-spin" style={{ animationDuration: "1.4s" }} />
+                        <Icon className="h-3.5 w-3.5 text-primary" />
+                      </>
+                    ) : (
+                      <Icon className="h-3.5 w-3.5 text-muted-foreground/40" />
+                    )}
+                  </span>
+                  <span
+                    className={`text-[15px] font-semibold tracking-tight transition-colors ${
+                      isActive || isComplete ? "text-foreground" : "text-muted-foreground"
+                    }`}
+                  >
+                    {phase.title}
+                  </span>
                 </div>
-              );
-            })}
+
+                {(isActive || isComplete) && (
+                  <ul className="pl-[46px] space-y-2">
+                    {phase.steps.map((s, si) => {
+                      const globalIdx = phaseStart + si;
+                      if (globalIdx > step) return null;
+                      const isCurrent = globalIdx === step && step < FLAT.length;
+                      return (
+                        <li
+                          key={s}
+                          className={`flex items-center gap-2 text-[13.5px] leading-relaxed transition-colors animate-fade-in-soft ${
+                            isCurrent ? "text-foreground/90" : "text-muted-foreground"
+                          }`}
+                        >
+                          <span
+                            className={`rounded-full ${
+                              isCurrent
+                                ? "h-2 w-2 bg-primary shadow-[0_0_0_6px_hsl(var(--primary)/0.08)] animate-breathe"
+                                : "h-1.5 w-1.5 bg-primary/35"
+                            }`}
+                          />
+                          {s}
+                          {isCurrent && (
+                            <span className="ml-1 text-foreground/40 animate-pulse">…</span>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

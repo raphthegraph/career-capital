@@ -272,9 +272,9 @@
     opacity: 0.66;
     transition: opacity 600ms var(--ease-out-quart), background-position 800ms var(--ease-out-quart);
   }
-  .signal-grid--quiet { opacity: 0.26; }
-  .signal-grid--active { opacity: 0.34; }
-  .signal-grid--focus { opacity: 0.38; }
+  .signal-grid--quiet { opacity: 0.32; }
+  .signal-grid--active { opacity: 0.44; }
+  .signal-grid--focus { opacity: 0.46; }
   .signal-grid--focus {
     -webkit-mask-image: radial-gradient(
       ellipse 72% 58% at 50% 42%,
@@ -294,18 +294,18 @@
     overflow: hidden;
   }
 
-  .ambient-field--quiet { opacity: 0.3; }
-  .ambient-field--active { opacity: 0.38; }
-  .ambient-field--focus { opacity: 0.42; }
+  .ambient-field--quiet { opacity: 0.48; }
+  .ambient-field--active { opacity: 0.62; }
+  .ambient-field--focus { opacity: 0.66; }
 
   .ambient-line {
     position: absolute;
     display: block;
     width: 46vw;
     height: 1px;
-    background: linear-gradient(90deg, transparent, hsl(var(--primary) / 0.055), transparent);
+    background: linear-gradient(90deg, transparent, hsl(var(--primary) / 0.085), transparent);
     transform-origin: center;
-    opacity: 0.38;
+    opacity: 0.5;
     animation: ambient-drift 18s var(--ease-out-quart) infinite alternate;
   }
 
@@ -328,8 +328,8 @@
     top: 18vh;
     width: 124vw;
     height: 1px;
-    background: linear-gradient(90deg, transparent, hsl(var(--primary) / 0.048), transparent);
-    opacity: 0.24;
+    background: linear-gradient(90deg, transparent, hsl(var(--primary) / 0.075), transparent);
+    opacity: 0.34;
     transform: rotate(-8deg);
     animation: ambient-scan 12s linear infinite;
   }
@@ -348,10 +348,10 @@
     height: var(--h);
     border-radius: 999px;
     background:
-      radial-gradient(circle at 32% 35%, hsl(212 78% 72% / 0.2), transparent 58%),
-      linear-gradient(135deg, hsl(212 72% 56% / 0.16), hsl(218 78% 76% / 0.07));
-    filter: blur(18px);
-    opacity: 0.34;
+      radial-gradient(circle at 32% 35%, hsl(211 84% 70% / 0.32), transparent 58%),
+      linear-gradient(135deg, hsl(212 76% 54% / 0.25), hsl(218 84% 76% / 0.12));
+    filter: blur(16px);
+    opacity: 0.52;
     transform: translate(-50%, -50%) rotate(var(--rotate));
     animation: ambient-blue-breathe var(--duration) var(--ease-out-quart) infinite alternate;
     animation-delay: var(--delay);
@@ -362,8 +362,8 @@
     width: 4px;
     height: 4px;
     border-radius: 999px;
-    background: hsl(var(--primary) / 0.12);
-    box-shadow: 0 0 0 8px hsl(var(--primary) / 0.024);
+    background: hsl(var(--primary) / 0.18);
+    box-shadow: 0 0 0 8px hsl(var(--primary) / 0.035);
     animation: ambient-node var(--duration) ease-in-out infinite;
     animation-delay: var(--delay);
   }
@@ -371,11 +371,11 @@
   .ambient-glint {
     width: var(--w);
     height: 24px;
-    border: 1px solid hsl(var(--primary) / 0.032);
+    border: 1px solid hsl(var(--primary) / 0.05);
     border-radius: 10px;
     background:
-      linear-gradient(90deg, hsl(0 0% 100% / 0.02), hsl(0 0% 100% / 0.24), hsl(0 0% 100% / 0.02));
-    opacity: 0.24;
+      linear-gradient(90deg, hsl(0 0% 100% / 0.02), hsl(0 0% 100% / 0.34), hsl(0 0% 100% / 0.02));
+    opacity: 0.34;
     transform: translate(-50%, -50%) rotate(var(--rotate));
     animation: ambient-glint var(--duration) var(--ease-out-quart) infinite alternate;
     animation-delay: var(--delay);
@@ -388,12 +388,12 @@
     min-width: 360px;
     height: 32px;
     border-radius: 999px;
-    opacity: 0.24;
+    opacity: 0.34;
     background:
       repeating-linear-gradient(
         90deg,
         transparent 0 22px,
-        hsl(var(--primary) / 0.05) 22px 34px,
+        hsl(var(--primary) / 0.075) 22px 34px,
         transparent 34px 56px
       );
     mask-image: linear-gradient(90deg, transparent, black 18%, black 82%, transparent);
@@ -479,7 +479,7 @@
     }
 
     .ambient-field {
-      opacity: 0.2;
+      opacity: 0.34;
     }
 
     .ambient-node {
@@ -495,7 +495,7 @@
     }
 
     .ambient-blue-shape {
-      opacity: 0.2;
+      opacity: 0.32;
       filter: blur(22px);
       transform: translate(-50%, -50%) rotate(var(--rotate)) scale(0.72);
     }
@@ -504,14 +504,14 @@
 
 @keyframes ambient-blue-breathe {
   0% {
-    opacity: 0.16;
+    opacity: 0.22;
     transform: translate(-50%, -50%) rotate(var(--rotate)) scale(0.84) translate3d(-10px, 8px, 0);
   }
   50% {
-    opacity: 0.36;
+    opacity: 0.62;
   }
   100% {
-    opacity: 0.28;
+    opacity: 0.44;
     transform: translate(-50%, -50%) rotate(var(--rotate)) scale(var(--scale)) translate3d(12px, -10px, 0);
   }
 }
@@ -528,8 +528,8 @@
 
 @keyframes ambient-scan {
   0% { transform: translateY(-22vh) rotate(-8deg); opacity: 0; }
-  20% { opacity: 0.26; }
-  70% { opacity: 0.2; }
+  20% { opacity: 0.38; }
+  70% { opacity: 0.28; }
   100% { transform: translateY(86vh) rotate(-8deg); opacity: 0; }
 }
 
@@ -539,9 +539,9 @@
 }
 
 @keyframes ambient-track {
-  0% { background-position-x: 0; opacity: 0.08; }
-  35% { opacity: 0.24; }
-  100% { background-position-x: 220px; opacity: 0.12; }
+  0% { background-position-x: 0; opacity: 0.12; }
+  35% { opacity: 0.34; }
+  100% { background-position-x: 220px; opacity: 0.16; }
 }
 
 @keyframes breathe {

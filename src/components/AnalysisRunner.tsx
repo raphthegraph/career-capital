@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Check } from "lucide-react";
+import { Check, Search, Sparkles, TrendingUp } from "lucide-react";
 import { SignalGrid } from "@/components/SignalGrid";
 
 interface Phase {
@@ -42,6 +42,8 @@ const FLAT = PHASES.flatMap((p, pi) =>
   p.steps.map((s, si) => ({ label: s, phaseIdx: pi, stepIdx: si })),
 );
 
+const PHASE_ICONS = [Search, TrendingUp, Sparkles];
+
 interface Props {
   company: string;
   role: string;
@@ -78,7 +80,7 @@ export function AnalysisRunner({ company, role, done, animationsEnabled, onCompl
     <div className="min-h-[calc(100vh-3.5rem)] flex items-center justify-center px-4 py-10 sm:px-6 md:py-14 relative">
       <SignalGrid variant="analysis" pulses intensity="active" />
 
-      <div className="relative z-10 grid w-full max-w-[1000px] items-center gap-8 animate-fade-in md:grid-cols-[0.82fr_1.18fr]">
+      <div className="relative z-10 grid w-full max-w-[980px] items-center gap-8 animate-fade-in md:grid-cols-[0.86fr_1.14fr]">
         <div className="space-y-6 text-left">
           <div className="inline-flex items-center gap-2 rounded-full border border-primary/10 bg-white/70 px-3 py-2 text-[12px] font-semibold text-muted-foreground shadow-soft backdrop-blur-xl">
             <span className="w-1.5 h-1.5 rounded-full bg-primary animate-breathe" />
@@ -90,50 +92,44 @@ export function AnalysisRunner({ company, role, done, animationsEnabled, onCompl
           <p className="max-w-[420px] text-[15px] leading-[1.65] text-muted-foreground">
             $JOB is scanning public momentum, risk, hiring, and career leverage signals.
           </p>
-          <div className="air-card hidden p-5 md:block">
-            <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-              AI pricing status
-            </div>
-            <div className="mt-2 text-[23px] font-extrabold tracking-tight text-primary-strong">
-              Gathering context
-            </div>
+          <div className="hidden max-w-[360px] space-y-2 md:block">
+            <div className="h-px w-full bg-gradient-to-r from-primary/20 via-primary/5 to-transparent" />
+            <p className="text-[12.5px] leading-relaxed text-muted-foreground">
+              Signals are collected quietly first, then compressed into one career-asset read.
+            </p>
           </div>
         </div>
 
-        <div className="surface-floating relative overflow-hidden rounded-[34px] p-5 md:p-7">
-          {/* subtle progress shimmer along top edge */}
-          <div className="absolute top-0 left-0 right-0 h-px overflow-hidden">
-            <div className="absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-primary/40 to-transparent animate-shimmer-line" />
-          </div>
-
-          <div className="space-y-5">
+        <div className="relative space-y-4">
+          <div className="absolute -left-4 top-8 bottom-8 hidden w-px bg-gradient-to-b from-transparent via-primary/12 to-transparent md:block" />
             {PHASES.map((phase, pi) => {
               const phaseStart = PHASES.slice(0, pi).reduce((n, p) => n + p.steps.length, 0);
               const isActive = pi === activePhase && step < FLAT.length;
               const isComplete = pi < activePhase || step >= FLAT.length;
               const isPending = !isActive && !isComplete;
+              const Icon = PHASE_ICONS[pi];
 
               return (
                 <div
                   key={phase.key}
-                  className={`transition-all duration-700 ${
-                    isPending ? "opacity-35" : "opacity-100"
+                  className={`rounded-[28px] border border-border/[0.028] bg-white/[0.34] px-4 py-4 backdrop-blur-2xl transition-all duration-700 md:px-5 ${
+                    isPending ? "opacity-40" : "opacity-100 shadow-soft"
                   }`}
                 >
                   <div className="flex items-center gap-3.5 mb-3.5">
-                    <span className="relative w-6 h-6 flex items-center justify-center shrink-0">
+                    <span className="relative w-8 h-8 flex items-center justify-center shrink-0 rounded-full bg-white/50">
                       {isComplete ? (
-                        <span className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+                        <span className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
                           <Check className="w-3 h-3 text-primary-foreground" strokeWidth={3} />
                         </span>
                       ) : isActive ? (
                         <>
-                          <span className="absolute w-6 h-6 rounded-full border-[1.5px] border-primary/40" />
-                          <span className="absolute w-6 h-6 rounded-full border-[1.5px] border-primary border-r-transparent animate-spin" style={{ animationDuration: "1.4s" }} />
-                          <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                          <span className="absolute w-8 h-8 rounded-full border-[1.5px] border-primary/30" />
+                          <span className="absolute w-8 h-8 rounded-full border-[1.5px] border-primary border-r-transparent animate-spin" style={{ animationDuration: "1.4s" }} />
+                          <Icon className="h-3.5 w-3.5 text-primary" />
                         </>
                       ) : (
-                        <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30" />
+                        <Icon className="h-3.5 w-3.5 text-muted-foreground/40" />
                       )}
                     </span>
                     <span
@@ -146,7 +142,7 @@ export function AnalysisRunner({ company, role, done, animationsEnabled, onCompl
                   </div>
 
                   {(isActive || isComplete) && (
-                    <ul className="pl-[38px] space-y-2">
+                    <ul className="pl-[46px] space-y-2">
                       {phase.steps.map((s, si) => {
                         const globalIdx = phaseStart + si;
                         if (globalIdx > step) return null;
@@ -154,10 +150,11 @@ export function AnalysisRunner({ company, role, done, animationsEnabled, onCompl
                         return (
                           <li
                             key={s}
-                            className={`rounded-[24px] border border-border/[0.035] bg-white/45 px-3 py-2 text-[13.5px] leading-relaxed transition-colors animate-fade-in-soft ${
+                            className={`flex items-center gap-2 text-[13.5px] leading-relaxed transition-colors animate-fade-in-soft ${
                               isCurrent ? "text-foreground/90" : "text-muted-foreground"
                             }`}
                           >
+                            <span className={`h-1.5 w-1.5 rounded-full ${isCurrent ? "bg-primary animate-breathe" : "bg-primary/35"}`} />
                             {s}
                             {isCurrent && (
                               <span className="ml-1 text-foreground/40 animate-pulse">…</span>
@@ -170,7 +167,6 @@ export function AnalysisRunner({ company, role, done, animationsEnabled, onCompl
                 </div>
               );
             })}
-          </div>
         </div>
       </div>
     </div>

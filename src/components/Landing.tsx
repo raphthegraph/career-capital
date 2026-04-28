@@ -43,9 +43,9 @@ export function Landing({ onSubmit }: Props) {
 
           <form
             onSubmit={submit}
-            className="surface-floating mx-auto grid w-full max-w-[820px] gap-2 rounded-[36px] p-2 text-left shadow-floating sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]"
+            className="surface-floating mx-auto grid w-full max-w-[820px] gap-2 rounded-[34px] p-2 text-left shadow-floating sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:rounded-full"
           >
-            <label className="rounded-[28px] bg-white/45 px-4 py-3.5 transition-all focus-within:bg-white/70">
+            <label className="rounded-[28px] bg-white/45 px-4 py-3.5 transition-all focus-within:bg-white/70 sm:rounded-full">
               <span className="block text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
                 Company
               </span>
@@ -56,7 +56,7 @@ export function Landing({ onSubmit }: Props) {
                 className="mt-0.5 h-8 border-0 bg-transparent px-0 text-[16px] font-semibold text-foreground shadow-none outline-none placeholder:text-muted-foreground/70 focus-visible:ring-0 focus-visible:ring-offset-0"
               />
             </label>
-            <label className="rounded-[28px] bg-white/45 px-4 py-3.5 transition-all focus-within:bg-white/70">
+            <label className="rounded-[28px] bg-white/45 px-4 py-3.5 transition-all focus-within:bg-white/70 sm:rounded-full">
               <span className="block text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
                 Role
               </span>
@@ -70,7 +70,7 @@ export function Landing({ onSubmit }: Props) {
             <Button
               type="submit"
               size="lg"
-              className="h-[58px] rounded-[28px] bg-primary px-6 text-[15px] font-bold text-primary-foreground hover:bg-primary-hover lift-on-hover glow-primary sm:h-full"
+              className="h-[58px] rounded-[28px] bg-primary px-6 text-[15px] font-bold text-primary-foreground hover:bg-primary-hover lift-on-hover glow-primary sm:h-full sm:rounded-full"
             >
               Price it <ArrowRight className="ml-1 h-4 w-4" />
             </Button>

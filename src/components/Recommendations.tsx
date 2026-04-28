@@ -12,7 +12,6 @@ import {
   Sparkles,
 } from "lucide-react";
 import { SignalGrid } from "@/components/SignalGrid";
-import { AssetSnapshot } from "@/components/AssetSnapshot";
 
 interface Props {
   company: string;
@@ -77,13 +76,9 @@ export function Recommendations({
     <div className="min-h-[calc(100vh-3.5rem)] pb-44 relative">
       <SignalGrid variant="recommendation" />
 
-      <div className="relative z-10 mx-auto grid w-full max-w-[1200px] gap-7 px-4 py-10 sm:px-6 md:py-14 lg:grid-cols-[minmax(0,1fr)_330px]">
+      <div className="relative z-10 mx-auto w-full max-w-[920px] px-4 py-10 sm:px-6 md:py-14">
         <main className="min-w-0 space-y-8">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <div className="eyebrow">Personal recommendation</div>
-              <h2 className="mt-1 text-[24px] font-semibold text-foreground">Your next move</h2>
-            </div>
+          <div className="flex justify-end">
             <Button
               variant="ghost"
               onClick={onRestart}
@@ -93,18 +88,12 @@ export function Recommendations({
             </Button>
           </div>
 
-          <AssetSnapshot company={company} role={role} analysis={analysis} className="lg:hidden" />
-
           {!data && !error && <Loading />}
           {error && (
             <div className="air-card p-6 text-short text-sm">{error}</div>
           )}
           {data && <RecommendationView data={data} animationsEnabled={animationsEnabled} />}
         </main>
-
-        <div className="hidden lg:block">
-          <AssetSnapshot company={company} role={role} analysis={analysis} className="sticky top-24" />
-        </div>
       </div>
 
       {data && (
@@ -130,11 +119,11 @@ function Loading() {
   }, [step]);
 
   return (
-    <div className="section-plain mx-auto max-w-md space-y-8 animate-fade-in px-2 py-8">
-      <h2 className="font-display text-[26px] md:text-[30px] font-[680] text-foreground">
+    <div className="mx-auto max-w-md space-y-8 animate-fade-in px-2 py-8 text-center">
+      <h2 className="font-display text-[28px] md:text-[34px] font-[720] text-foreground">
         Composing your next move…
       </h2>
-      <ul className="space-y-3.5">
+      <ul className="mx-auto max-w-[320px] space-y-3.5 text-left">
         {LOAD_STEPS.map((s, i) => {
           if (i > step) return null;
           const isCurrent = i === step;
@@ -211,12 +200,11 @@ function RecommendationView({
   const focusIdx = revealed - 1;
 
   return (
-    <section className="space-y-10">
+    <section className="mx-auto max-w-[820px] space-y-10">
       <div ref={refs.current[0]} className={revealed >= 1 ? (focusIdx === 0 ? "dim-active" : "") : "hidden"}>
         {revealed >= 1 && (
-          <div className="section-plain space-y-4 animate-fade-in-up py-2">
-            <div className="eyebrow">Recommended move</div>
-            <h2 className="font-display text-[32px] md:text-[46px] font-[720] leading-[1.08] max-w-3xl text-foreground text-elegant">
+          <div className="space-y-4 animate-fade-in-up py-2 text-center">
+            <h2 className="font-display text-[40px] md:text-[56px] font-[760] leading-[1.06] text-foreground text-elegant">
               {data.recommendedMove}
             </h2>
           </div>

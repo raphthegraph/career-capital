@@ -1,4 +1,4 @@
-import { createRef, useEffect, useMemo, useRef, useState } from "react";
+import { createRef, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Analysis, DecisionContext, Intent } from "@/lib/job-types";
 import { RatingPill } from "@/components/RatingPill";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,6 @@ import {
 import { SignalGrid } from "@/components/SignalGrid";
 import { getInvestmentThesis } from "@/lib/analysis-helpers";
 import { ratingColorClass } from "@/lib/rating";
-import { AssetSnapshot } from "@/components/AssetSnapshot";
 
 interface Props {
   company: string;
@@ -85,6 +84,22 @@ const THIRD_QUESTION: Record<Intent, { question: string; options: string[]; plac
   },
 };
 
+const OVERVIEW_DIMENSIONS = [
+  { key: "careerDividend", label: "Career dividend" },
+  { key: "momentum", label: "Momentum" },
+  { key: "volatility", label: "Volatility" },
+] as const;
+
+function getStayStatement(company: string, role: string, analysis: Analysis) {
+  if (analysis.wouldBuy === "Yes") {
+    return `Would stay at ${company} as ${role}.`;
+  }
+  if (analysis.wouldBuy === "Conditional") {
+    return `Would stay at ${company}, but only with clearer upside.`;
+  }
+  return `Would not stay at ${company} without a stronger path.`;
+}
+
 function scrollNearestIfNeeded(element: HTMLElement | null) {
   if (!element) return;
   const rect = element.getBoundingClientRect();
@@ -95,20 +110,39 @@ function scrollNearestIfNeeded(element: HTMLElement | null) {
 }
 
 export function AnalysisDashboard({ company, role, analysis, animationsEnabled, onDecision }: Props) {
+  const [showIntro, setShowIntro] = useState(false);
+  const [showMetrics, setShowMetrics] = useState(false);
+  const [showBars, setShowBars] = useState(false);
   const [showThesis, setShowThesis] = useState(false);
   const [showIntent, setShowIntent] = useState(false);
+  const stayStatement = getStayStatement(company, role, analysis);
+  const handleThesisComplete = useCallback(() => setShowIntent(true), []);
 
   useEffect(() => {
     if (!animationsEnabled) {
+      setShowIntro(true);
+      setShowMetrics(true);
+      setShowBars(true);
       setShowThesis(true);
       setShowIntent(true);
       return;
     }
-    const t1 = setTimeout(() => setShowThesis(true), 400);
-    const t2 = setTimeout(() => setShowIntent(true), 1600);
+
+    setShowIntro(false);
+    setShowMetrics(false);
+    setShowBars(false);
+    setShowThesis(false);
+    setShowIntent(false);
+
+    const t1 = setTimeout(() => setShowIntro(true), 120);
+    const t2 = setTimeout(() => setShowMetrics(true), 760);
+    const t3 = setTimeout(() => setShowBars(true), 1180);
+    const t4 = setTimeout(() => setShowThesis(true), 1900);
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
+      clearTimeout(t3);
+      clearTimeout(t4);
     };
   }, [animationsEnabled]);
 
@@ -116,35 +150,39 @@ export function AnalysisDashboard({ company, role, analysis, animationsEnabled, 
     <div className="min-h-[calc(100vh-3.5rem)] pb-28 relative">
       <SignalGrid variant="dashboard" />
 
-      <div className="relative z-10 mx-auto grid w-full max-w-[1200px] gap-7 px-4 py-10 sm:px-6 md:py-14 lg:grid-cols-[minmax(0,1fr)_330px]">
+      <div className="relative z-10 mx-auto w-full max-w-[980px] px-4 py-10 sm:px-6 md:py-14">
         <main className="space-y-12 md:space-y-16">
-          <section className="surface-floating animate-fade-in-up rounded-[34px] p-5 sm:p-7">
-            <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-              <div className="space-y-3">
-                <div className="eyebrow">Pricing result</div>
-                <p
-                  className={`font-display text-[44px] font-[720] leading-none md:text-[62px] ${ratingColorClass(
-                    analysis.rating,
-                  )}`}
-                >
-                  {analysis.wouldBuy}.
-                </p>
-                <p className="max-w-[680px] text-[16px] leading-[1.65] text-foreground/80 md:text-[18px]">
-                  {analysis.oneLineVerdict}
-                </p>
+          {showIntro && (
+            <section className="mx-auto max-w-[860px] space-y-5 text-center animate-fade-in-up">
+              <div className="eyebrow">Final result</div>
+              <h2 className="font-display text-[40px] font-[760] leading-[1.04] text-foreground text-elegant sm:text-[58px]">
+                {stayStatement}
+              </h2>
+              <p className="mx-auto max-w-[680px] text-[16px] leading-[1.65] text-foreground/75 md:text-[18px]">
+                {analysis.oneLineVerdict}
+              </p>
+              <div className="flex flex-col items-center justify-center gap-3 pt-2 sm:flex-row">
+                <span className="rounded-full border border-border/[0.035] bg-white/40 px-4 py-2 text-[13px] font-semibold text-foreground/75 shadow-soft backdrop-blur-2xl">
+                  Pricing result: <span className={ratingColorClass(analysis.rating)}>{analysis.wouldBuy}</span>
+                </span>
+                <RatingPill rating={analysis.rating} size="lg" glow />
               </div>
-              <RatingPill rating={analysis.rating} size="lg" glow />
-            </div>
-          </section>
+            </section>
+          )}
 
-          <AssetSnapshot
-            company={company}
-            role={role}
-            analysis={analysis}
-            className="lg:hidden"
-          />
+          {showMetrics && <ResultMetrics analysis={analysis} />}
 
-          {showThesis && <ThesisSequence analysis={analysis} animationsEnabled={animationsEnabled} />}
+          {showBars && (
+            <DimensionBars analysis={analysis} animationsEnabled={animationsEnabled} />
+          )}
+
+          {showThesis && (
+            <ThesisSequence
+              analysis={analysis}
+              animationsEnabled={animationsEnabled}
+              onComplete={handleThesisComplete}
+            />
+          )}
 
           {showIntent && (
             <IntentFlow
@@ -156,17 +194,77 @@ export function AnalysisDashboard({ company, role, analysis, animationsEnabled, 
             />
           )}
         </main>
-
-        <div className="hidden lg:block">
-          <AssetSnapshot
-            company={company}
-            role={role}
-            analysis={analysis}
-            className="sticky top-24"
-          />
-        </div>
       </div>
     </div>
+  );
+}
+
+function ResultMetrics({ analysis }: { analysis: Analysis }) {
+  return (
+    <section className="mx-auto grid max-w-[760px] grid-cols-1 gap-3 animate-fade-in-up sm:grid-cols-3">
+      <div className="rounded-[28px] border border-border/[0.03] bg-white/38 p-4 text-center shadow-soft backdrop-blur-2xl">
+        <div className="eyebrow">Ticker</div>
+        <div className="mt-1 font-mono text-[28px] font-semibold tracking-[0.08em] text-primary-strong">
+          {analysis.ticker}
+        </div>
+      </div>
+      <div className="rounded-[28px] border border-border/[0.03] bg-white/38 p-4 text-center shadow-soft backdrop-blur-2xl">
+        <div className="eyebrow">Confidence</div>
+        <div className="mt-1 text-[28px] font-semibold text-foreground">{analysis.confidence}%</div>
+      </div>
+      <div className="rounded-[28px] border border-border/[0.03] bg-white/38 p-4 text-center shadow-soft backdrop-blur-2xl">
+        <div className="eyebrow">Asset score</div>
+        <div className="mt-1 text-[28px] font-semibold text-foreground">
+          {analysis.careerAssetScore}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function DimensionBars({
+  analysis,
+  animationsEnabled,
+}: {
+  analysis: Analysis;
+  animationsEnabled: boolean;
+}) {
+  const [filled, setFilled] = useState(!animationsEnabled);
+
+  useEffect(() => {
+    if (!animationsEnabled) {
+      setFilled(true);
+      return;
+    }
+    setFilled(false);
+    const t = setTimeout(() => setFilled(true), 120);
+    return () => clearTimeout(t);
+  }, [animationsEnabled]);
+
+  return (
+    <section className="mx-auto max-w-[780px] space-y-4 animate-fade-in-up">
+      {OVERVIEW_DIMENSIONS.map((dimension, index) => {
+        const value = analysis.dimensions[dimension.key].score;
+        return (
+          <div
+            key={dimension.key}
+            className="space-y-2"
+            style={{ animationDelay: `${index * 90}ms` }}
+          >
+            <div className="flex items-center justify-between gap-4 text-[13px]">
+              <span className="font-semibold text-foreground/78">{dimension.label}</span>
+              <span className="font-semibold text-primary-strong">{value}</span>
+            </div>
+            <div className="h-2.5 overflow-hidden rounded-full bg-white/45 shadow-soft backdrop-blur-xl">
+              <div
+                className="h-full rounded-full bg-primary transition-[width] duration-1000 ease-out"
+                style={{ width: filled ? `${Math.max(7, Math.min(100, value))}%` : "0%" }}
+              />
+            </div>
+          </div>
+        );
+      })}
+    </section>
   );
 }
 
@@ -175,9 +273,11 @@ export function AnalysisDashboard({ company, role, analysis, animationsEnabled, 
 function ThesisSequence({
   analysis,
   animationsEnabled,
+  onComplete,
 }: {
   analysis: Analysis;
   animationsEnabled: boolean;
+  onComplete: () => void;
 }) {
   const thesis = useMemo(() => getInvestmentThesis(analysis), [analysis]);
   // openMap = sections that have been opened (and stay open)
@@ -195,6 +295,7 @@ function ThesisSequence({
       setOpenMap({ 0: true, 1: true, 2: true });
       setRevealedPerSection({ 0: 3, 1: 3, 2: 3 });
       setActiveIdx(SECTIONS.length + 1);
+      onComplete();
       return;
     }
 
@@ -212,21 +313,24 @@ function ThesisSequence({
         const items = thesis[SECTIONS[i].field] ?? [];
         const total = Math.min(3, items?.length ?? 0);
         for (let j = 0; j < total; j++) {
-          await new Promise((r) => setTimeout(r, 720));
+          await new Promise((r) => setTimeout(r, 620));
           if (cancelled) return;
           setRevealedPerSection((prev) => ({ ...prev, [i]: j + 1 }));
         }
-        // dwell so the user can read
-        await new Promise((r) => setTimeout(r, 650));
+        // Short dwell so the user can read without the flow feeling stuck.
+        await new Promise((r) => setTimeout(r, 420));
       }
-      if (!cancelled) setActiveIdx(SECTIONS.length + 1);
+      if (!cancelled) {
+        setActiveIdx(SECTIONS.length + 1);
+        setTimeout(onComplete, 260);
+      }
     };
     const start = setTimeout(run, 220);
     return () => {
       cancelled = true;
       clearTimeout(start);
     };
-  }, [thesis, animationsEnabled]);
+  }, [thesis, animationsEnabled, onComplete]);
 
   const sequenceDone = activeIdx > SECTIONS.length;
 
@@ -442,9 +546,9 @@ function Question({
   children: React.ReactNode;
 }) {
   return (
-    <div className="surface-floating animate-fade-in-up rounded-[34px] p-5 sm:p-6">
-      <div className="mb-6 flex items-start gap-4">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[22px] bg-primary-tint/70 text-primary-strong shadow-soft">
+    <div className="section-plain animate-fade-in-up border-t border-border/[0.055] py-7">
+      <div className="mb-5 flex items-start gap-4">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/45 text-primary-strong shadow-soft backdrop-blur-2xl">
           <Icon className="h-[18px] w-[18px]" />
         </div>
         <div className="min-w-0">
@@ -455,7 +559,7 @@ function Question({
         </div>
       </div>
       {locked ? (
-        <div className="rounded-[26px] border border-primary/10 bg-primary-tint/60 px-4 py-3.5 flex items-center justify-between gap-3">
+        <div className="rounded-[24px] border border-primary/10 bg-white/45 px-4 py-3.5 flex items-center justify-between gap-3 shadow-soft backdrop-blur-2xl">
           <div className="flex items-center gap-3">
             <CheckCircle2 className="h-4 w-4 shrink-0 text-primary-strong" />
             <span className="text-[14.5px] text-foreground font-medium">{lockedAnswer}</span>
@@ -495,7 +599,7 @@ function SuggestionsWithFreeText({
             key={label}
             type="button"
             onClick={() => onPick(label)}
-            className="group w-full text-left px-4 py-4 rounded-[26px] border border-border/[0.035] bg-white/45 hover:bg-primary-tint/60 hover:border-primary/15 lift-on-hover animate-fade-in-soft flex items-center justify-between gap-3"
+            className="group w-full text-left px-4 py-4 rounded-[24px] border border-border/[0.035] bg-white/40 hover:bg-primary-tint/60 hover:border-primary/15 lift-on-hover animate-fade-in-soft flex items-center justify-between gap-3 shadow-soft backdrop-blur-2xl"
             style={{ animationDelay: `${i * 90}ms` }}
           >
             <span className="text-[15px] font-medium text-foreground/95">{label}</span>
@@ -510,7 +614,7 @@ function SuggestionsWithFreeText({
           const v = text.trim();
           if (v) onFreeText(v);
         }}
-        className="rounded-[28px] border border-border/[0.035] bg-white/55 flex items-center gap-2 p-2 pl-4 animate-fade-in-soft shadow-soft backdrop-blur-xl"
+        className="rounded-full border border-border/[0.035] bg-white/50 flex items-center gap-2 p-2 pl-4 animate-fade-in-soft shadow-soft backdrop-blur-xl"
         style={{ animationDelay: `${items.length * 90 + 80}ms` }}
       >
         <Sparkles className="w-4 h-4 text-primary shrink-0" />

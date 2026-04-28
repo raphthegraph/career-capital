@@ -20,8 +20,7 @@ const MOTION_STORAGE_KEY = "$job-motion-enabled-v5";
 const MIN_ANALYSIS_VISIBLE_MS = 12400;
 
 function loadMotionPreference() {
-  if (typeof window === "undefined") return true;
-  return window.localStorage.getItem(MOTION_STORAGE_KEY) !== "false";
+  return true;
 }
 
 export default function Index() {
@@ -37,9 +36,17 @@ export default function Index() {
     restoredSession?.phase === "dashboard" || restoredSession?.phase === "decision",
   );
 
+  const enableMotionForFlow = () => {
+    document.documentElement.classList.remove("motion-off");
+    window.localStorage.setItem(MOTION_STORAGE_KEY, "true");
+    setAnimationsEnabled(true);
+  };
+
   useEffect(() => {
     document.documentElement.classList.toggle("motion-off", !animationsEnabled);
-    window.localStorage.setItem(MOTION_STORAGE_KEY, String(animationsEnabled));
+    if (animationsEnabled) {
+      window.localStorage.removeItem(MOTION_STORAGE_KEY);
+    }
   }, [animationsEnabled]);
 
   useEffect(() => {
@@ -57,6 +64,7 @@ export default function Index() {
 
   const start = async (c: string, r: string) => {
     const startedAt = Date.now();
+    enableMotionForFlow();
     clearStoredAnalysisSession();
     setCompany(c);
     setRole(r);
@@ -80,12 +88,10 @@ export default function Index() {
         setPhase("landing");
         return;
       }
-      if (animationsEnabled) {
-        const elapsed = Date.now() - startedAt;
-        const remaining = MIN_ANALYSIS_VISIBLE_MS - elapsed;
-        if (remaining > 0) {
-          await new Promise((resolve) => setTimeout(resolve, remaining));
-        }
+      const elapsed = Date.now() - startedAt;
+      const remaining = MIN_ANALYSIS_VISIBLE_MS - elapsed;
+      if (remaining > 0) {
+        await new Promise((resolve) => setTimeout(resolve, remaining));
       }
       setNetworkDone(true);
     } catch (e) {
@@ -123,10 +129,12 @@ export default function Index() {
 
   const goForward = () => {
     if (phase === "verdict" && verdictCanContinue) {
+      enableMotionForFlow();
       setPhase("dashboard");
       return;
     }
     if (phase === "dashboard" && decision) {
+      enableMotionForFlow();
       setPhase("decision");
     }
   };
@@ -162,6 +170,7 @@ export default function Index() {
             if (ready) setVerdictCanContinue(true);
           }}
           onContinue={() => {
+            enableMotionForFlow();
             setVerdictCanContinue(true);
             setPhase("dashboard");
           }}
@@ -175,6 +184,7 @@ export default function Index() {
           analysis={analysis}
           animationsEnabled={animationsEnabled}
           onDecision={(d) => {
+            enableMotionForFlow();
             setDecision(d);
             setPhase("decision");
           }}

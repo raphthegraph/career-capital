@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Check, Search, Sparkles, TrendingUp } from "lucide-react";
 import { SignalGrid } from "@/components/SignalGrid";
 
@@ -43,6 +43,7 @@ const FLAT = PHASES.flatMap((p, pi) =>
 );
 
 const PHASE_ICONS = [Search, TrendingUp, Sparkles];
+const MIN_RUNNER_VISIBLE_MS = 11800;
 
 interface Props {
   company: string;
@@ -54,6 +55,7 @@ interface Props {
 
 export function AnalysisRunner({ company, role, done, animationsEnabled, onComplete }: Props) {
   const [step, setStep] = useState(0);
+  const mountedAtRef = useRef(Date.now());
 
   useEffect(() => {
     if (!animationsEnabled && done) {
@@ -69,7 +71,11 @@ export function AnalysisRunner({ company, role, done, animationsEnabled, onCompl
 
   useEffect(() => {
     if (step >= FLAT.length) {
-      const t = setTimeout(onComplete, animationsEnabled ? 620 : 0);
+      const elapsed = Date.now() - mountedAtRef.current;
+      const remaining = animationsEnabled
+        ? Math.max(620, MIN_RUNNER_VISIBLE_MS - elapsed)
+        : 0;
+      const t = setTimeout(onComplete, remaining);
       return () => clearTimeout(t);
     }
   }, [step, onComplete, animationsEnabled]);

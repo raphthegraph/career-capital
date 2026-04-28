@@ -458,12 +458,20 @@ function IntentFlow({
   const q3Ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!animationsEnabled) return;
-    if (intent) q2Ref.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    if (intent) {
+      q2Ref.current?.scrollIntoView({
+        behavior: animationsEnabled ? "smooth" : "auto",
+        block: "center",
+      });
+    }
   }, [intent, animationsEnabled]);
   useEffect(() => {
-    if (!animationsEnabled) return;
-    if (sub) q3Ref.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    if (sub) {
+      q3Ref.current?.scrollIntoView({
+        behavior: animationsEnabled ? "smooth" : "auto",
+        block: "center",
+      });
+    }
   }, [sub, animationsEnabled]);
 
   useEffect(() => {

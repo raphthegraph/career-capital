@@ -114,8 +114,11 @@ Return valid JSON matching the schema exactly.
 Rules:
 - Ground the recommendation in the job analysis and the user's stated intent.
 - Make it feel written for this exact person, not a generic person in the same company.
+- headline must be punchy and short: 3-7 words, no company name unless needed, no punctuation-heavy sentence.
 - The recommendedMove must mention the user's concrete focus or constraint from the decision context.
 - Be opinionated and practical, not generic or therapeutic.
+- becauseYouSaid must summarize the user's answers in short, readable bullets; do not copy long free text verbatim.
+- becauseResearchShows must summarize the most important source-backed facts as short career consequences.
 - Tie each "why" bullet to both a concrete signal from the analysis and the user's selected direction.
 - next30Days must contain actions this person can actually do in the next month from their current ${args.role} seat.
 - watchOuts should be situational, not generic career advice.
@@ -159,7 +162,10 @@ User focus: ${args.decision.subIntent}
 ${args.decision.freeText ? `User free text: ${args.decision.freeText}` : ""}
 
 Output guidance:
+- headline: 3-7 words, like "Stay, but test the market" or "Leave with a plan".
 - recommendedMove: one decisive sentence, tailored to the user's focus.
+- becauseYouSaid: 2-3 short bullets, each under 12 words.
+- becauseResearchShows: 2-3 short bullets, each under 14 words.
 - why: three bullets; each should combine a public signal, what it means for this person, and why it supports the move.
 - next30Days: three concrete actions with wording the user could actually execute this month.
 - watchOuts: two traps specific to this company/role/decision context.

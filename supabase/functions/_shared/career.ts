@@ -98,7 +98,10 @@ export interface ChatTurn {
 }
 
 export interface Recommendation {
+  headline?: string;
   recommendedMove: string;
+  becauseYouSaid?: string[];
+  becauseResearchShows?: string[];
   why: string[];
   next30Days: string[];
   watchOuts: string[];
@@ -1349,6 +1352,12 @@ export function buildFallbackRecommendation(
   decision: DecisionContext,
 ): Recommendation {
   const focus = decision.freeText || decision.subIntent || "your next career step";
+  const headlineByIntent: Record<DecisionContext["intent"], string> = {
+    stay: "Stay, but make it compound",
+    options: "Stay, but test the market",
+    leave: "Leave with a plan",
+    other: "Turn the next step into proof",
+  };
   const moveByIntent: Record<DecisionContext["intent"], string> = {
     stay: `Stay at ${company} for one more cycle, but make "${focus}" the explicit scope-expansion agenda.`,
     options: `Keep your ${role} seat at ${company}, while quietly testing whether "${focus}" is better priced elsewhere.`,
@@ -1357,7 +1366,18 @@ export function buildFallbackRecommendation(
   };
 
   return {
+    headline: headlineByIntent[decision.intent],
     recommendedMove: moveByIntent[decision.intent],
+    becauseYouSaid: [
+      `You are leaning toward ${decision.intent}.`,
+      `Your focus is ${focus}.`,
+      `You want a move you can explain clearly.`,
+    ],
+    becauseResearchShows: [
+      `${role} value depends on visible proof, not just company narrative.`,
+      `${company} can still be useful if the seat creates measurable leverage.`,
+      "The best next move should keep optionality open before you commit.",
+    ],
     why: [
       `Your stated focus is "${focus}", so the next move should test that thesis rather than stay generic.`,
       `The ${role} seat is most valuable if it creates visible proof you can use inside or outside ${company}.`,
@@ -1416,7 +1436,18 @@ export function normalizeRecommendationPayload(
     : [];
 
   return {
+    headline: toOptionalString(input.headline) || fallback.headline,
     recommendedMove: toStringValue(input.recommendedMove, fallback.recommendedMove),
+    becauseYouSaid: takeStrings(
+      input.becauseYouSaid,
+      3,
+      fallback.becauseYouSaid ?? [],
+    ),
+    becauseResearchShows: takeStrings(
+      input.becauseResearchShows,
+      3,
+      fallback.becauseResearchShows ?? [],
+    ),
     why: takeStrings(input.why, 3, fallback.why),
     next30Days: takeStrings(input.next30Days, 3, fallback.next30Days),
     watchOuts: takeStrings(input.watchOuts, 2, fallback.watchOuts),

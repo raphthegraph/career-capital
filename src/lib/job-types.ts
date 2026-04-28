@@ -112,7 +112,10 @@ export interface DecisionContext {
 export type Decision = DecisionContext;
 
 export interface Recommendation {
+  headline?: string;
   recommendedMove: string;
+  becauseYouSaid?: string[];
+  becauseResearchShows?: string[];
   why: string[];
   next30Days: string[];
   watchOuts: string[];

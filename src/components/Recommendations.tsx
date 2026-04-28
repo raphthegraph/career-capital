@@ -12,7 +12,6 @@ import {
   Sparkles,
 } from "lucide-react";
 import { SignalGrid } from "@/components/SignalGrid";
-import { SourceChips } from "@/components/SourceChips";
 
 interface Props {
   company: string;
@@ -24,11 +23,12 @@ interface Props {
 }
 
 const LOAD_STEPS = [
-  "Understanding your intent",
-  "Repricing your current role",
-  "Comparing alternative paths",
-  "Generating recommendation",
+  "Reading your answers",
+  "Repricing stay vs leave",
+  "Building your 30-day plan",
+  "Grounding the recommendation",
 ];
+const MIN_RECOMMENDATION_VISIBLE_MS = 3400;
 
 export function Recommendations({
   company,
@@ -43,6 +43,7 @@ export function Recommendations({
 
   useEffect(() => {
     let cancelled = false;
+    const startedAt = Date.now();
     setData(null);
     setError(null);
     (async () => {
@@ -61,6 +62,13 @@ export function Recommendations({
           setError("Could not generate recommendations.");
           return;
         }
+        if (animationsEnabled) {
+          const remaining = MIN_RECOMMENDATION_VISIBLE_MS - (Date.now() - startedAt);
+          if (remaining > 0) {
+            await new Promise((resolve) => setTimeout(resolve, remaining));
+          }
+          if (cancelled) return;
+        }
         setData(recommendation);
       } catch (e) {
         if (cancelled) return;
@@ -71,7 +79,7 @@ export function Recommendations({
     return () => {
       cancelled = true;
     };
-  }, [decision, company, role, analysis, analysis.analysisId]);
+  }, [decision, company, role, analysis, analysis.analysisId, animationsEnabled]);
 
   return (
     <div className="min-h-[calc(100vh-3.5rem)] pb-44 relative">
@@ -89,7 +97,14 @@ export function Recommendations({
             </Button>
           </div>
 
-          {!data && !error && <Loading />}
+          {!data && !error && (
+            <Loading
+              company={company}
+              role={role}
+              decision={decision}
+              animationsEnabled={animationsEnabled}
+            />
+          )}
           {error && (
             <div className="air-card p-6 text-short text-sm">{error}</div>
           )}
@@ -118,41 +133,91 @@ export function Recommendations({
   );
 }
 
-function Loading() {
+function Loading({
+  company,
+  role,
+  decision,
+  animationsEnabled,
+}: {
+  company: string;
+  role: string;
+  decision: DecisionContext;
+  animationsEnabled: boolean;
+}) {
   const [step, setStep] = useState(0);
   useEffect(() => {
+    if (!animationsEnabled) {
+      setStep(LOAD_STEPS.length);
+      return;
+    }
     if (step >= LOAD_STEPS.length) return;
-    const t = setTimeout(() => setStep((s) => s + 1), 540);
+    const t = setTimeout(() => setStep((s) => s + 1), 720);
     return () => clearTimeout(t);
-  }, [step]);
+  }, [step, animationsEnabled]);
 
   return (
-    <div className="mx-auto max-w-md space-y-8 animate-fade-in px-2 py-8 text-center">
-      <h2 className="font-display text-[28px] md:text-[34px] font-[720] text-foreground">
-        Composing your next move…
-      </h2>
-      <ul className="mx-auto max-w-[320px] space-y-3.5 text-left">
-        {LOAD_STEPS.map((s, i) => {
-          if (i > step) return null;
-          const isCurrent = i === step;
+    <div className="mx-auto grid w-full max-w-[900px] items-center gap-7 animate-fade-in px-2 py-8 md:grid-cols-[0.9fr_1.1fr]">
+      <div className="space-y-5 text-left">
+        <div className="inline-flex items-center gap-2 rounded-full border border-primary/10 bg-white/60 px-3 py-2 text-[12px] font-semibold text-muted-foreground shadow-soft backdrop-blur-xl">
+          <span className="h-1.5 w-1.5 rounded-full bg-primary animate-breathe" />
+          {company} · {role}
+        </div>
+        <div className="space-y-3">
+          <h2 className="font-display text-[34px] font-[780] leading-[1.03] text-foreground md:text-[48px]">
+            Preparing your next move
+          </h2>
+          <p className="max-w-[430px] text-[15px] leading-[1.65] text-muted-foreground">
+            $JOB is using your answers to turn the asset read into a focused decision memo.
+          </p>
+        </div>
+        <div className="air-card inline-flex max-w-full items-center gap-2 rounded-[24px] px-4 py-3">
+          <Sparkles className="h-4 w-4 shrink-0 text-primary" />
+          <span className="truncate text-[13px] font-semibold text-foreground/78">
+            {decision.intent} · {decision.subIntent}
+          </span>
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        {LOAD_STEPS.map((label, index) => {
+          const isComplete = index < step;
+          const isCurrent = index === step || (!animationsEnabled && index === LOAD_STEPS.length - 1);
+          const isVisible = index <= step || !animationsEnabled;
+          if (!isVisible) return null;
           return (
-            <li
-              key={s}
-              className={`flex items-center gap-3 text-[14.5px] animate-fade-in-soft ${
-                isCurrent ? "text-foreground" : "text-muted-foreground"
+            <div
+              key={label}
+              className={`rounded-[28px] border border-border/[0.03] bg-white/[0.36] px-4 py-4 shadow-soft backdrop-blur-2xl transition-all duration-700 animate-fade-in-soft ${
+                isCurrent ? "opacity-100" : "opacity-70"
               }`}
             >
-              <span
-                className={`w-1.5 h-1.5 rounded-full ${
-                  isCurrent ? "bg-primary animate-breathe" : "bg-primary/60"
-                }`}
-              />
-              {s}
-              {isCurrent && <span className="text-foreground/40 animate-pulse">…</span>}
-            </li>
+              <div className="flex items-center gap-3">
+                <span className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/55">
+                  {isComplete || !animationsEnabled ? (
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary">
+                      <CheckCircle2 className="h-3.5 w-3.5 text-primary-foreground" />
+                    </span>
+                  ) : (
+                    <>
+                      <span className="absolute h-8 w-8 rounded-full border-[1.5px] border-primary/25" />
+                      <span className="absolute h-8 w-8 rounded-full border-[1.5px] border-primary border-r-transparent animate-spin" style={{ animationDuration: "1.5s" }} />
+                      <Sparkles className="h-3.5 w-3.5 text-primary" />
+                    </>
+                  )}
+                </span>
+                <div>
+                  <div className="text-[15px] font-semibold tracking-tight text-foreground">
+                    {label}
+                  </div>
+                  <div className="mt-1 text-[12.5px] text-muted-foreground">
+                    {isCurrent ? "working through your context…" : "complete"}
+                  </div>
+                </div>
+              </div>
+            </div>
           );
         })}
-      </ul>
+      </div>
     </div>
   );
 }
@@ -167,6 +232,75 @@ function scrollNearestIfNeeded(element: HTMLElement | null) {
   if (rect.bottom > viewportBottom || rect.top < 88) {
     element.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }
+}
+
+function stripMarkdown(value: string) {
+  return value
+    .replace(/\*\*/g, "")
+    .replace(/`/g, "")
+    .replace(/^\s*[-*]\s+/gm, "")
+    .replace(/\s*\((https?:\/\/[^\s)]+)\)/g, " (source)")
+    .replace(/https?:\/\/\S+/g, "source")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function shortenWords(value: string, maxWords: number) {
+  const cleaned = stripMarkdown(value);
+  const words = cleaned.split(/\s+/).filter(Boolean);
+  if (words.length <= maxWords) return cleaned;
+  return `${words.slice(0, maxWords).join(" ")}…`;
+}
+
+function getDisplayHeadline(data: Recommendation, decision: DecisionContext, analysis: Analysis) {
+  const headline = stripMarkdown(data.headline ?? "");
+  if (headline && headline.length <= 54) return headline;
+
+  if (decision.intent === "leave") return analysis.rating === "BUY" ? "Compare bigger upside" : "Leave with a plan";
+  if (decision.intent === "stay") return "Stay, but make it compound";
+  if (decision.intent === "other") return "Turn the next step into proof";
+  return analysis.wouldBuy === "Yes" ? "Stay, keep options open" : "Stay, test the market";
+}
+
+function getBecauseYouSaid(data: Recommendation, decision: DecisionContext) {
+  const fromAi = (data.becauseYouSaid ?? [])
+    .map((item) => shortenWords(item, 11))
+    .filter(Boolean)
+    .slice(0, 3);
+  if (fromAi.length >= 2) return fromAi;
+
+  const intentLabel: Record<DecisionContext["intent"], string> = {
+    stay: "You are open to staying.",
+    options: "You want optionality.",
+    leave: "You are considering leaving.",
+    other: "You have a custom path in mind.",
+  };
+  const parts = decision.subIntent
+    .split(/\s*(?:→|->|·)\s*/)
+    .map((part) => shortenWords(part, 8))
+    .filter(Boolean);
+
+  return [
+    intentLabel[decision.intent],
+    ...parts,
+    ...(decision.freeText ? [shortenWords(decision.freeText, 10)] : []),
+  ].slice(0, 3);
+}
+
+function getBecauseResearchShows(data: Recommendation, analysis: Analysis) {
+  const fromAi = (data.becauseResearchShows ?? [])
+    .map((item) => shortenWords(item, 13))
+    .filter(Boolean)
+    .slice(0, 3);
+  if (fromAi.length >= 2) return fromAi;
+
+  const fromBasis = (data.personalizationBasis ?? [])
+    .filter((item) => /public|research|signal|source|evidence/i.test(item))
+    .map((item) => shortenWords(item, 13));
+  const fromSignals = (analysis.keySignals ?? [])
+    .map((signal) => shortenWords(signal.roleImpact || signal.impact, 13));
+
+  return [...fromBasis, ...fromSignals, shortenWords(analysis.oneLineVerdict, 13)].filter(Boolean).slice(0, 3);
 }
 
 function RecommendationView({
@@ -210,49 +344,27 @@ function RecommendationView({
 
   // a section is "focused" if it is the most recently revealed one
   const focusIdx = revealed - 1;
-  const researchSummary = analysis.keySignals?.slice(0, 2).map((signal) => signal.roleImpact || signal.impact) ?? [];
-  const recommendationSources = data.sourceUrls?.length
-    ? data.sourceUrls
-    : analysis.keySignals?.flatMap((signal) => signal.sourceUrls ?? []).slice(0, 4) ?? [];
-  const personalizationBasis = data.personalizationBasis?.filter(Boolean).slice(0, 4) ?? [];
+  const headline = getDisplayHeadline(data, decision, analysis);
+  const becauseYouSaid = getBecauseYouSaid(data, decision);
+  const becauseResearchShows = getBecauseResearchShows(data, analysis);
 
   return (
-    <section className="mx-auto max-w-[820px] space-y-10">
+    <section className="mx-auto max-w-[880px] space-y-10">
       <div ref={refs.current[0]} className={revealed >= 1 ? (focusIdx === 0 ? "dim-active" : "") : "hidden"}>
         {revealed >= 1 && (
-          <div className="space-y-6 animate-fade-in-up py-2 text-center">
-            <h2 className="font-display text-[40px] md:text-[56px] font-[760] leading-[1.06] text-foreground text-elegant">
-              {data.recommendedMove}
-            </h2>
-            <div className="mx-auto grid max-w-[760px] gap-3 text-left md:grid-cols-2">
-              <div className="rounded-[28px] border border-border/[0.035] bg-white/38 p-4 shadow-soft backdrop-blur-2xl">
-                <div className="eyebrow">Because you said</div>
-                <p className="mt-2 text-[14.5px] leading-relaxed text-foreground/78">
-                  {decision.intent} · {decision.subIntent}
-                  {decision.freeText ? ` · ${decision.freeText}` : ""}
-                </p>
-              </div>
-              <div className="rounded-[28px] border border-border/[0.035] bg-white/38 p-4 shadow-soft backdrop-blur-2xl">
-                <div className="eyebrow">Because research shows</div>
-                <p className="mt-2 text-[14.5px] leading-relaxed text-foreground/78">
-                  {researchSummary[0] ?? analysis.oneLineVerdict}
-                </p>
-              </div>
+          <div className="space-y-7 animate-fade-in-up py-2 text-center">
+            <div className="space-y-4">
+              <div className="eyebrow">Recommended move</div>
+              <h2 className="font-display text-[42px] md:text-[62px] font-[780] leading-[1.02] text-foreground text-elegant">
+                {headline}
+              </h2>
+              <p className="mx-auto max-w-[720px] text-[16px] leading-[1.65] text-foreground/76 md:text-[18px]">
+                {stripMarkdown(data.recommendedMove)}
+              </p>
             </div>
-            {personalizationBasis.length > 0 && (
-              <div className="mx-auto flex max-w-[760px] flex-wrap justify-center gap-2">
-                {personalizationBasis.map((basis) => (
-                  <span
-                    key={basis}
-                    className="rounded-full border border-primary/10 bg-white/42 px-3 py-1.5 text-[11.5px] font-semibold text-primary-strong shadow-soft backdrop-blur-xl"
-                  >
-                    {basis}
-                  </span>
-                ))}
-              </div>
-            )}
-            <div className="flex justify-center">
-              <SourceChips urls={recommendationSources} sources={analysis.sources ?? []} />
+            <div className="mx-auto grid max-w-[820px] gap-3 text-left md:grid-cols-2">
+              <SummaryCard title="Because you said" items={becauseYouSaid} icon={Sparkles} accent="text-primary-strong" />
+              <SummaryCard title="Because research shows" items={becauseResearchShows} icon={CheckCircle2} accent="text-buy" />
             </div>
           </div>
         )}
@@ -261,9 +373,11 @@ function RecommendationView({
       <div ref={refs.current[1]} className={revealed >= 2 ? (focusIdx === 1 ? "dim-active" : focusIdx > 1 ? "dim" : "") : "hidden"}>
         {revealed >= 2 && (
           <Block title="Why this move" icon={Sparkles} accent="text-buy">
-            {data.why.slice(0, 3).map((w, i) => (
-              <Bullet key={i} text={w} icon={CheckCircle2} accent="text-buy" />
-            ))}
+            <div className="grid gap-3 md:grid-cols-3">
+              {data.why.slice(0, 3).map((w, i) => (
+                <MiniCard key={i} index={i + 1} text={w} accent="text-buy" />
+              ))}
+            </div>
           </Block>
         )}
       </div>
@@ -271,9 +385,11 @@ function RecommendationView({
       <div ref={refs.current[2]} className={revealed >= 3 ? (focusIdx === 2 ? "dim-active" : focusIdx > 2 ? "dim" : "") : "hidden"}>
         {revealed >= 3 && (
           <Block title="Next 30 days" icon={Calendar} accent="text-primary-strong">
-            {data.next30Days.slice(0, 3).map((w, i) => (
-              <Bullet key={i} text={w} icon={Calendar} accent="text-primary-strong" />
-            ))}
+            <div className="space-y-2.5">
+              {data.next30Days.slice(0, 3).map((w, i) => (
+                <ActionRow key={i} index={i + 1} text={w} icon={Calendar} accent="text-primary-strong" />
+              ))}
+            </div>
           </Block>
         )}
       </div>
@@ -281,9 +397,11 @@ function RecommendationView({
       <div ref={refs.current[3]} className={revealed >= 4 ? (focusIdx === 3 ? "dim-active" : focusIdx > 3 ? "dim" : "") : "hidden"}>
         {revealed >= 4 && (
           <Block title="Watch-outs" icon={AlertTriangle} accent="text-short">
-            {data.watchOuts.slice(0, 2).map((w, i) => (
-              <Bullet key={i} text={w} icon={AlertTriangle} accent="text-short" />
-            ))}
+            <div className="grid gap-3 md:grid-cols-2">
+              {data.watchOuts.slice(0, 2).map((w, i) => (
+                <MiniCard key={i} index={i + 1} text={w} accent="text-short" />
+              ))}
+            </div>
           </Block>
         )}
       </div>
@@ -291,17 +409,22 @@ function RecommendationView({
       <div ref={refs.current[4]} className={revealed >= 5 ? (focusIdx === 4 ? "dim-active" : "") : "hidden"}>
         {revealed >= 5 && (
           <Block title="Alternative paths" icon={Compass} accent="text-hold">
-            <div className="space-y-3">
+            <div className="grid gap-3 md:grid-cols-3">
               {data.alternativePaths.slice(0, 3).map((p, i) => (
                 <div
                   key={i}
-                  className="section-row space-y-1.5 animate-fade-in-soft py-4"
+                  className="air-card lift-on-hover space-y-2 p-4 animate-fade-in-soft"
                   style={{ animationDelay: `${i * 100}ms` }}
                 >
-                  <div className="font-semibold text-[14.5px] text-foreground tracking-tight">
-                    {p.label}
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary-tint text-[12px] font-semibold text-primary-strong">
+                      {i + 1}
+                    </span>
+                    <div className="font-semibold text-[14.5px] text-foreground tracking-tight">
+                      {stripMarkdown(p.label)}
+                    </div>
                   </div>
-                  <p className="text-[14px] text-muted-foreground leading-[1.6]">{p.detail}</p>
+                  <p className="text-[14px] text-muted-foreground leading-[1.6]">{stripMarkdown(p.detail)}</p>
                 </div>
               ))}
             </div>
@@ -309,6 +432,35 @@ function RecommendationView({
         )}
       </div>
     </section>
+  );
+}
+
+function SummaryCard({
+  title,
+  items,
+  icon: Icon,
+  accent,
+}: {
+  title: string;
+  items: string[];
+  icon: LucideIcon;
+  accent: string;
+}) {
+  return (
+    <div className="air-card p-4 md:p-5">
+      <div className="mb-4 flex items-center gap-2.5">
+        <Icon className={`h-4 w-4 ${accent}`} />
+        <span className="eyebrow">{title}</span>
+      </div>
+      <div className="space-y-2.5">
+        {items.slice(0, 3).map((item) => (
+          <p key={item} className="flex gap-2.5 text-[14.5px] leading-[1.55] text-foreground/78">
+            <CheckCircle2 className={`mt-0.5 h-4 w-4 shrink-0 ${accent}`} />
+            <span>{item}</span>
+          </p>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -334,20 +486,104 @@ function Block({
   );
 }
 
-function Bullet({
+function MiniCard({
+  index,
+  text,
+  accent,
+}: {
+  index: number;
+  text: string;
+  accent: string;
+}) {
+  return (
+    <div className="air-card lift-on-hover min-h-[150px] space-y-3 p-4 animate-fade-in-soft">
+      <span className={`inline-flex h-7 w-7 items-center justify-center rounded-full bg-white/55 text-[12px] font-semibold ${accent}`}>
+        {index}
+      </span>
+      <p className="text-[14px] leading-[1.6] text-foreground/78">{stripMarkdown(text)}</p>
+    </div>
+  );
+}
+
+function ActionRow({
+  index,
   text,
   icon: Icon,
   accent,
 }: {
+  index: number;
   text: string;
   icon: LucideIcon;
   accent: string;
 }) {
   return (
-    <p className="text-[15.5px] text-foreground/80 leading-[1.65] flex gap-3">
-      <Icon className={`mt-1 h-4 w-4 shrink-0 ${accent}`} />
-      <span className="flex-1">{text}</span>
-    </p>
+    <div className="rounded-[26px] border border-border/[0.035] bg-white/38 p-4 shadow-soft backdrop-blur-2xl">
+      <div className="flex gap-3">
+        <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-tint text-[12px] font-semibold text-primary-strong">
+          {index}
+        </span>
+        <div className="flex-1">
+          <div className="mb-1 flex items-center gap-2">
+            <Icon className={`h-3.5 w-3.5 ${accent}`} />
+            <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+              Action {index}
+            </span>
+          </div>
+          <p className="text-[15px] leading-[1.62] text-foreground/80">{stripMarkdown(text)}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function cleanChatLine(value: string) {
+  return value
+    .replace(/\*\*/g, "")
+    .replace(/`/g, "")
+    .replace(/^\s*[-*]\s+/, "")
+    .replace(/\s*\((https?:\/\/[^\s)]+)\)/g, " (source)")
+    .replace(/https?:\/\/\S+/g, "source")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function formatChatText(value: string) {
+  const lines = value
+    .split(/\n+/)
+    .map(cleanChatLine)
+    .filter(Boolean);
+
+  if (lines.length === 0) return { intro: "", bullets: [] };
+  if (lines.length === 1) {
+    const [firstSentence, ...rest] = lines[0].split(/(?<=\.)\s+/);
+    const bullets = rest.filter(Boolean).slice(0, 3);
+    return { intro: firstSentence, bullets };
+  }
+
+  return {
+    intro: lines[0],
+    bullets: lines.slice(1, 4),
+  };
+}
+
+function ChatMessageText({ content }: { content: string }) {
+  const formatted = formatChatText(content);
+  if (!formatted.intro && formatted.bullets.length === 0) return null;
+
+  return (
+    <div className="space-y-2">
+      {formatted.intro && <p>{formatted.intro}</p>}
+      {formatted.bullets.length > 0 && (
+        <ul className="space-y-1.5">
+          {formatted.bullets.map((bullet, index) => (
+            <li key={`${index}-${bullet}`} className="flex gap-2">
+              <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-primary/55" />
+              <span>{bullet}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }
 
@@ -453,13 +689,17 @@ function FloatingChat({
                     }`}
                   >
                     <div
-                      className={`max-w-[88%] rounded-[24px] px-4 py-3 text-[14px] leading-[1.6] whitespace-pre-wrap ${
+                      className={`max-w-[88%] rounded-[24px] px-4 py-3 text-[14px] leading-[1.6] ${
                         m.role === "user"
-                          ? "bg-primary text-primary-foreground"
+                          ? "bg-primary text-primary-foreground whitespace-pre-wrap"
                           : "bg-white/60 text-foreground/90 border border-border/[0.06]"
                       }`}
                     >
-                      {m.content}
+                      {m.role === "assistant" ? (
+                        <ChatMessageText content={m.content} />
+                      ) : (
+                        m.content
+                      )}
                       {loading && m.role === "assistant" && i === messages.length - 1 && (
                         <span className="ml-0.5 inline-block h-4 w-px translate-y-0.5 animate-pulse bg-primary" />
                       )}

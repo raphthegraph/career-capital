@@ -250,7 +250,20 @@ export const recommendationSchema = {
   type: "object",
   additionalProperties: false,
   properties: {
+    headline: { type: "string" },
     recommendedMove: { type: "string" },
+    becauseYouSaid: {
+      type: "array",
+      minItems: 2,
+      maxItems: 3,
+      items: { type: "string" },
+    },
+    becauseResearchShows: {
+      type: "array",
+      minItems: 2,
+      maxItems: 3,
+      items: { type: "string" },
+    },
     why: {
       type: "array",
       minItems: 3,
@@ -297,7 +310,10 @@ export const recommendationSchema = {
     },
   },
   required: [
+    "headline",
     "recommendedMove",
+    "becauseYouSaid",
+    "becauseResearchShows",
     "why",
     "next30Days",
     "watchOuts",

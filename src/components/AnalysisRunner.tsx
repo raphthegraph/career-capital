@@ -14,8 +14,8 @@ const PHASES: Phase[] = [
     title: "Collecting signals",
     steps: [
       "Searching source-backed company signals",
-      "Reading hiring and team evidence",
-      "Checking risk and market indicators",
+      "Extracting the strongest public evidence",
+      "Checking hiring, risk, and momentum",
     ],
   },
   {
@@ -23,16 +23,16 @@ const PHASES: Phase[] = [
     title: "Interpreting career asset",
     steps: [
       "Mapping evidence to your role",
-      "Evaluating promotion and scope upside",
+      "Pricing promotion and ownership upside",
       "Separating sources from AI inference",
     ],
   },
   {
     key: "decide",
-    title: "Forming recommendation",
+    title: "Preparing sourced read",
     steps: [
-      "Comparing stay vs leave scenarios",
-      "Preparing sourced asset rating",
+      "Scoring the career asset",
+      "Preparing sourced key signals",
       "Generating personalized follow-up questions",
     ],
   },
@@ -63,7 +63,7 @@ export function AnalysisRunner({ company, role, done, animationsEnabled, onCompl
     if (step >= FLAT.length) return;
     const isLast = step === FLAT.length - 1;
     if (isLast && !done) return;
-    const t = setTimeout(() => setStep((s) => s + 1), 650);
+    const t = setTimeout(() => setStep((s) => s + 1), 720);
     return () => clearTimeout(t);
   }, [step, done, animationsEnabled]);
 
@@ -90,12 +90,12 @@ export function AnalysisRunner({ company, role, done, animationsEnabled, onCompl
             Pricing your career asset
           </h2>
           <p className="max-w-[420px] text-[15px] leading-[1.65] text-muted-foreground">
-            $JOB is scanning public momentum, risk, hiring, and career leverage signals.
+            $JOB is reading live sources, compressing evidence, and mapping it to your role.
           </p>
           <div className="hidden max-w-[360px] space-y-2 md:block">
             <div className="h-px w-full bg-gradient-to-r from-primary/20 via-primary/5 to-transparent" />
             <p className="text-[12.5px] leading-relaxed text-muted-foreground">
-              Signals are collected quietly first, then compressed into one career-asset read.
+              The sequence is paced so each source-backed signal has a moment to land.
             </p>
           </div>
         </div>

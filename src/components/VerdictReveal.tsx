@@ -17,7 +17,7 @@ interface Props {
 }
 
 // 0 idle → 1 title → 2 subtitle → 3 ticker → 4 question → 5 answer → 6 metrics → 7 signals → 8 cta
-const TIMINGS = [120, 360, 420, 420, 420, 520, 340, 220];
+const TIMINGS = [180, 520, 560, 500, 500, 560, 380, 260];
 
 const LEVEL_TONE: Record<string, { dot: string; chip: string; label: string }> = {
   strong: { dot: "bg-buy", chip: "text-buy", label: "Positive" },
@@ -38,6 +38,15 @@ const FALLBACK_INSIGHTS: RevealSignal[] = [
   { label: "Learning upside", value: "Strong", level: "strong", detail: "Surface area still expanding inside your scope.", sourceUrls: [] },
   { label: "Exit opportunities", value: "Strong", level: "strong", detail: "Brand converts well to peer companies.", sourceUrls: [] },
 ];
+
+function scrollNearestIfNeeded(element: HTMLElement | null) {
+  if (!element) return;
+  const rect = element.getBoundingClientRect();
+  const viewportBottom = window.innerHeight - 112;
+  if (rect.bottom > viewportBottom || rect.top < 84) {
+    element.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+}
 
 export function VerdictReveal({
   analysis,
@@ -84,13 +93,13 @@ export function VerdictReveal({
   useEffect(() => {
     if (!animationsEnabled) return;
     if (insightsRevealed === 0) return;
-    lastSignalRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    scrollNearestIfNeeded(lastSignalRef.current);
   }, [insightsRevealed, animationsEnabled]);
 
   useEffect(() => {
     if (!animationsEnabled) return;
     if (phase >= 8 && insightsRevealed >= insights.length) {
-      ctaRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      scrollNearestIfNeeded(ctaRef.current);
     }
   }, [phase, insightsRevealed, insights.length, animationsEnabled]);
 

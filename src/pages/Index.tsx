@@ -17,6 +17,7 @@ import {
 type Phase = "landing" | "analyzing" | "verdict" | "dashboard" | "decision";
 
 const MOTION_STORAGE_KEY = "$job-motion-enabled-v2";
+const MIN_ANALYSIS_VISIBLE_MS = 5800;
 
 function loadMotionPreference() {
   if (typeof window === "undefined") return true;
@@ -55,6 +56,7 @@ export default function Index() {
   }, [phase, company, role, analysis, decision]);
 
   const start = async (c: string, r: string) => {
+    const startedAt = Date.now();
     clearStoredAnalysisSession();
     setCompany(c);
     setRole(r);
@@ -77,6 +79,13 @@ export default function Index() {
         toast.error("Could not analyze. Try again.");
         setPhase("landing");
         return;
+      }
+      if (animationsEnabled) {
+        const elapsed = Date.now() - startedAt;
+        const remaining = MIN_ANALYSIS_VISIBLE_MS - elapsed;
+        if (remaining > 0) {
+          await new Promise((resolve) => setTimeout(resolve, remaining));
+        }
       }
       setNetworkDone(true);
     } catch (e) {

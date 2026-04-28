@@ -16,6 +16,8 @@ type AmbientStyle = CSSProperties & {
   "--delay": string;
   "--duration": string;
   "--w"?: string;
+  "--h"?: string;
+  "--scale"?: string;
   "--rotate"?: string;
 };
 
@@ -89,6 +91,44 @@ const NODES = [
   { x: "57%", y: "34%", delay: "5.2s", duration: "12s" },
 ];
 
+const BLUE_SHAPES: Record<SignalVariant, Array<{
+  x: string;
+  y: string;
+  w: string;
+  h: string;
+  scale: string;
+  delay: string;
+  duration: string;
+  rotate: string;
+  desktopOnly?: boolean;
+}>> = {
+  landing: [
+    { x: "15%", y: "22%", w: "180px", h: "84px", scale: "1.24", delay: "0s", duration: "16s", rotate: "-14deg" },
+    { x: "78%", y: "24%", w: "220px", h: "96px", scale: "1.18", delay: "2.6s", duration: "19s", rotate: "10deg" },
+    { x: "70%", y: "78%", w: "170px", h: "72px", scale: "1.22", delay: "4.1s", duration: "18s", rotate: "-8deg", desktopOnly: true },
+  ],
+  analysis: [
+    { x: "12%", y: "30%", w: "190px", h: "86px", scale: "1.22", delay: "0.4s", duration: "15s", rotate: "10deg" },
+    { x: "80%", y: "66%", w: "230px", h: "98px", scale: "1.16", delay: "2.2s", duration: "18s", rotate: "-11deg", desktopOnly: true },
+    { x: "60%", y: "18%", w: "150px", h: "66px", scale: "1.25", delay: "4s", duration: "17s", rotate: "7deg" },
+  ],
+  reveal: [
+    { x: "18%", y: "18%", w: "190px", h: "82px", scale: "1.18", delay: "0s", duration: "17s", rotate: "-10deg" },
+    { x: "76%", y: "28%", w: "240px", h: "104px", scale: "1.2", delay: "2s", duration: "19s", rotate: "12deg" },
+    { x: "54%", y: "78%", w: "180px", h: "74px", scale: "1.24", delay: "4.4s", duration: "18s", rotate: "-7deg", desktopOnly: true },
+  ],
+  dashboard: [
+    { x: "13%", y: "26%", w: "185px", h: "78px", scale: "1.2", delay: "0.8s", duration: "18s", rotate: "11deg" },
+    { x: "82%", y: "24%", w: "230px", h: "94px", scale: "1.16", delay: "2.8s", duration: "20s", rotate: "-10deg", desktopOnly: true },
+    { x: "70%", y: "76%", w: "180px", h: "70px", scale: "1.22", delay: "4.8s", duration: "19s", rotate: "8deg" },
+  ],
+  recommendation: [
+    { x: "16%", y: "24%", w: "210px", h: "88px", scale: "1.18", delay: "0s", duration: "17s", rotate: "-12deg" },
+    { x: "80%", y: "26%", w: "245px", h: "102px", scale: "1.2", delay: "2.4s", duration: "20s", rotate: "9deg" },
+    { x: "68%", y: "72%", w: "190px", h: "78px", scale: "1.24", delay: "4.2s", duration: "19s", rotate: "-8deg", desktopOnly: true },
+  ],
+};
+
 export function SignalGrid({
   focus = false,
   pulses = false,
@@ -98,6 +138,7 @@ export function SignalGrid({
   const [pos, setPos] = useState({ x: 50, y: 40 });
   const resolvedIntensity = intensity ?? (focus ? "focus" : pulses ? "active" : "quiet");
   const glints = useMemo(() => GLINTS[variant], [variant]);
+  const blueShapes = useMemo(() => BLUE_SHAPES[variant], [variant]);
 
   useEffect(() => {
     if (focus) return;
@@ -135,6 +176,25 @@ export function SignalGrid({
         <span className="ambient-scan" />
         <span className="ambient-track ambient-track--one" />
         <span className="ambient-track ambient-track--two" />
+        {blueShapes.map((shape, index) => (
+          <span
+            key={`blue-shape-${index}`}
+            className={cn(
+              "ambient-blue-shape",
+              shape.desktopOnly && "ambient-blue-shape--desktop",
+            )}
+            style={{
+              "--x": shape.x,
+              "--y": shape.y,
+              "--w": shape.w,
+              "--h": shape.h,
+              "--scale": shape.scale,
+              "--delay": shape.delay,
+              "--duration": shape.duration,
+              "--rotate": shape.rotate,
+            } as AmbientStyle}
+          />
+        ))}
         {NODES.map((node, index) => (
           <span
             key={`node-${index}`}

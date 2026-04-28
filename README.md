@@ -361,7 +361,15 @@ Post-deploy smoke test:
 - Run `N26 / Product Manager`.
 - Run `Trade Republic / Product Manager`.
 - Ask chat: `Why did you recommend this?`
-- Confirm disallowed origins and excessive requests return JSON errors.
+- Confirm excessive requests return JSON errors.
+- Confirm Vercel security headers are present on the production URL.
+
+Public demo guardrails:
+
+- Vercel provides the frontend DDoS and firewall layer.
+- Supabase Edge Functions validate request size, method, and required fields.
+- AI endpoints use per-client and global hourly rate limits to reduce cost-abuse risk.
+- Provider keys and the Supabase service role key stay in Supabase function secrets only.
 
 ## Fallback Behavior
 

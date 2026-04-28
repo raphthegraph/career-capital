@@ -269,6 +269,7 @@ Deno.serve(async (request) => {
   const rateLimitError = await enforceRateLimit(supabase, request, {
     endpoint: "career-chat",
     maxRequests: 30,
+    globalMaxRequests: 720,
     windowSeconds: 60 * 60,
   });
   if (rateLimitError) return rateLimitError;

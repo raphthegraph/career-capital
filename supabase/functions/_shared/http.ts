@@ -158,7 +158,7 @@ export async function enforceRateLimit(
   // this intentionally structural instead of importing client-specific types.
   supabase: { rpc: (name: string, args: Record<string, unknown>) => PromiseLike<{ data: unknown; error: unknown }> },
   request: Request,
-  options: { endpoint: string; maxRequests: number; windowSeconds: number },
+  options: { endpoint: string; maxRequests: number; windowSeconds: number; globalMaxRequests?: number },
 ) {
   const identifier = getClientIdentifier(request);
   const identifierHash = await sha256(identifier);
@@ -169,43 +169,87 @@ export async function enforceRateLimit(
   const key = `${options.endpoint}:${identifierHash}:${windowStart.toISOString()}`;
 
   try {
-    const { data, error } = await supabase.rpc("check_edge_rate_limit", {
-      p_key: key,
-      p_endpoint: options.endpoint,
-      p_identifier_hash: identifierHash,
-      p_window_start: windowStart.toISOString(),
-      p_max_count: options.maxRequests,
-    });
+    if (options.globalMaxRequests) {
+      const globalLimit = await checkRateLimit(supabase, {
+        key: `${options.endpoint}:global:${windowStart.toISOString()}`,
+        endpoint: `${options.endpoint}:global`,
+        identifierHash: "global",
+        windowStart,
+        maxRequests: options.globalMaxRequests,
+      });
 
-    if (error) {
-      console.error("rate limit check failed", error);
-      return null;
+      if (globalLimit === "blocked") {
+        return rateLimitResponse(resetAt, request);
+      }
     }
 
-    const row = Array.isArray(data) ? data[0] : data;
-    const allowed = Boolean((row as { allowed?: boolean } | undefined)?.allowed);
-    if (allowed) return null;
+    const clientLimit = await checkRateLimit(supabase, {
+      key,
+      endpoint: options.endpoint,
+      identifierHash,
+      windowStart,
+      maxRequests: options.maxRequests,
+    });
 
-    return jsonResponse(
-      {
-        error: "Rate limit exceeded. Try again later.",
-        retryAfterSeconds: Math.max(
-          1,
-          Math.ceil((resetAt.getTime() - Date.now()) / 1000),
-        ),
-      },
-      {
-        status: 429,
-        headers: {
-          "Retry-After": String(Math.max(1, Math.ceil((resetAt.getTime() - Date.now()) / 1000))),
-        },
-      },
-      request,
-    );
+    if (clientLimit === "blocked") {
+      return rateLimitResponse(resetAt, request);
+    }
+
+    return null;
   } catch (error) {
     console.error("rate limit exception", error);
     return null;
   }
+}
+
+async function checkRateLimit(
+  supabase: { rpc: (name: string, args: Record<string, unknown>) => PromiseLike<{ data: unknown; error: unknown }> },
+  args: {
+    key: string;
+    endpoint: string;
+    identifierHash: string;
+    windowStart: Date;
+    maxRequests: number;
+  },
+) {
+  const { data, error } = await supabase.rpc("check_edge_rate_limit", {
+    p_key: args.key,
+    p_endpoint: args.endpoint,
+    p_identifier_hash: args.identifierHash,
+    p_window_start: args.windowStart.toISOString(),
+    p_max_count: args.maxRequests,
+  });
+
+  if (error) {
+    console.error("rate limit check failed", error);
+    return "allowed";
+  }
+
+  const row = Array.isArray(data) ? data[0] : data;
+  return (row as { allowed?: boolean } | undefined)?.allowed
+    ? "allowed"
+    : "blocked";
+}
+
+function rateLimitResponse(resetAt: Date, request: Request) {
+  const retryAfterSeconds = Math.max(
+    1,
+    Math.ceil((resetAt.getTime() - Date.now()) / 1000),
+  );
+
+  return jsonResponse(
+    {
+      error: "Rate limit exceeded. Try again later.",
+      retryAfterSeconds,
+    },
+    {
+      status: 429,
+      headers: {
+        "Retry-After": String(retryAfterSeconds),
+      },
+    },
+    request,
+  );
 }
 
 export function jsonResponse(

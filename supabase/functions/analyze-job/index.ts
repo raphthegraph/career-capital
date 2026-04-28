@@ -481,6 +481,7 @@ Deno.serve(async (request) => {
   const rateLimitError = await enforceRateLimit(supabase, request, {
     endpoint: "analyze-job",
     maxRequests: 5,
+    globalMaxRequests: 120,
     windowSeconds: 60 * 60,
   });
   if (rateLimitError) return rateLimitError;

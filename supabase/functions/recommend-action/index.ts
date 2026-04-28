@@ -260,6 +260,7 @@ Deno.serve(async (request) => {
   const rateLimitError = await enforceRateLimit(supabase, request, {
     endpoint: "recommend-action",
     maxRequests: 10,
+    globalMaxRequests: 240,
     windowSeconds: 60 * 60,
   });
   if (rateLimitError) return rateLimitError;

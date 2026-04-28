@@ -2,15 +2,24 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Analysis, ChatMessage, DecisionContext, Recommendation } from "@/lib/job-types";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowUp, AlertTriangle, Sparkles, Calendar, Compass } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import {
+  ArrowUp,
+  AlertTriangle,
+  Calendar,
+  CheckCircle2,
+  Compass,
+  Sparkles,
+} from "lucide-react";
 import { SignalGrid } from "@/components/SignalGrid";
+import { AssetSnapshot } from "@/components/AssetSnapshot";
 
 interface Props {
   company: string;
   role: string;
   analysis: Analysis;
   decision: DecisionContext;
-  onBack: () => void;
+  animationsEnabled: boolean;
   onRestart: () => void;
 }
 
@@ -26,7 +35,7 @@ export function Recommendations({
   role,
   analysis,
   decision,
-  onBack,
+  animationsEnabled,
   onRestart,
 }: Props) {
   const [data, setData] = useState<Recommendation | null>(null);
@@ -47,7 +56,12 @@ export function Recommendations({
           setError("Could not generate recommendations.");
           return;
         }
-        setData((res?.data as Recommendation) ?? null);
+        const recommendation = (res?.data ?? res) as Recommendation | null;
+        if (!recommendation?.recommendedMove) {
+          setError("Could not generate recommendations.");
+          return;
+        }
+        setData(recommendation);
       } catch (e) {
         if (cancelled) return;
         console.error(e);
@@ -57,40 +71,40 @@ export function Recommendations({
     return () => {
       cancelled = true;
     };
-  }, [decision, company, role]);
+  }, [decision, company, role, analysis, analysis.analysisId]);
 
   return (
-    <div className="min-h-screen pb-44 relative">
-      <SignalGrid />
+    <div className="min-h-[calc(100vh-3.5rem)] pb-44 relative">
+      <SignalGrid variant="recommendation" />
 
-      <div className="relative z-20 border-b hairline bg-background/70 backdrop-blur-xl sticky top-0">
-        <div className="container py-4 flex items-center justify-between">
-          <Button
-            variant="ghost"
-            onClick={onBack}
-            className="gap-2 text-[12px] h-9 text-muted-foreground hover:text-foreground hover:bg-background/40"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" /> Back
-          </Button>
-          <div className="text-[11px] text-muted-foreground truncate max-w-[60%] tracking-[0.14em] font-mono uppercase">
-            {analysis.ticker}
+      <div className="relative z-10 mx-auto grid w-full max-w-[1200px] gap-7 px-4 py-10 sm:px-6 md:py-14 lg:grid-cols-[minmax(0,1fr)_330px]">
+        <main className="min-w-0 space-y-8">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <div className="eyebrow">Personal recommendation</div>
+              <h2 className="mt-1 text-[24px] font-semibold text-foreground">Your next move</h2>
+            </div>
+            <Button
+              variant="ghost"
+              onClick={onRestart}
+              className="h-9 rounded-full text-[12px] text-muted-foreground hover:bg-primary-tint hover:text-foreground"
+            >
+              New analysis
+            </Button>
           </div>
-          <Button
-            variant="ghost"
-            onClick={onRestart}
-            className="text-[12px] h-9 text-muted-foreground hover:text-foreground hover:bg-background/40"
-          >
-            New analysis
-          </Button>
-        </div>
-      </div>
 
-      <div className="relative z-10 container py-20 max-w-2xl space-y-16">
-        {!data && !error && <Loading />}
-        {error && (
-          <div className="surface rounded-2xl p-6 text-short text-sm">{error}</div>
-        )}
-        {data && <RecommendationView data={data} />}
+          <AssetSnapshot company={company} role={role} analysis={analysis} className="lg:hidden" />
+
+          {!data && !error && <Loading />}
+          {error && (
+            <div className="air-card p-6 text-short text-sm">{error}</div>
+          )}
+          {data && <RecommendationView data={data} animationsEnabled={animationsEnabled} />}
+        </main>
+
+        <div className="hidden lg:block">
+          <AssetSnapshot company={company} role={role} analysis={analysis} className="sticky top-24" />
+        </div>
       </div>
 
       {data && (
@@ -100,6 +114,7 @@ export function Recommendations({
           analysis={analysis}
           decision={decision}
           recommendation={data}
+          animationsEnabled={animationsEnabled}
         />
       )}
     </div>
@@ -110,13 +125,13 @@ function Loading() {
   const [step, setStep] = useState(0);
   useEffect(() => {
     if (step >= LOAD_STEPS.length) return;
-    const t = setTimeout(() => setStep((s) => s + 1), 850);
+    const t = setTimeout(() => setStep((s) => s + 1), 540);
     return () => clearTimeout(t);
   }, [step]);
 
   return (
-    <div className="max-w-md mx-auto space-y-8 animate-fade-in py-10">
-      <h2 className="font-display text-[26px] md:text-[30px] font-[680] text-center tracking-[-0.035em] text-foreground">
+    <div className="section-plain mx-auto max-w-md space-y-8 animate-fade-in px-2 py-8">
+      <h2 className="font-display text-[26px] md:text-[30px] font-[680] text-foreground">
         Composing your next move…
       </h2>
       <ul className="space-y-3.5">
@@ -146,86 +161,106 @@ function Loading() {
 }
 
 // slower section reveal — let user read each block
-const SECTION_DELAYS = [0, 1100, 2400, 3700, 5000];
+const SECTION_DELAYS = [0, 760, 1580, 2400, 3220];
 
-function RecommendationView({ data }: { data: Recommendation }) {
+function scrollNearestIfNeeded(element: HTMLElement | null) {
+  if (!element) return;
+  const rect = element.getBoundingClientRect();
+  const viewportBottom = window.innerHeight - 120;
+  if (rect.bottom > viewportBottom || rect.top < 88) {
+    element.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+}
+
+function RecommendationView({
+  data,
+  animationsEnabled,
+}: {
+  data: Recommendation;
+  animationsEnabled: boolean;
+}) {
   const [revealed, setRevealed] = useState(0);
-  const refs = [
-    useRef<HTMLDivElement>(null),
-    useRef<HTMLDivElement>(null),
-    useRef<HTMLDivElement>(null),
-    useRef<HTMLDivElement>(null),
-    useRef<HTMLDivElement>(null),
-  ];
+  const refs = useRef([
+    { current: null as HTMLDivElement | null },
+    { current: null as HTMLDivElement | null },
+    { current: null as HTMLDivElement | null },
+    { current: null as HTMLDivElement | null },
+    { current: null as HTMLDivElement | null },
+  ]);
 
   useEffect(() => {
+    if (!animationsEnabled) {
+      setRevealed(SECTION_DELAYS.length);
+      return;
+    }
+
     setRevealed(0);
     const timers = SECTION_DELAYS.map((d, i) =>
       setTimeout(() => {
         setRevealed((r) => Math.max(r, i + 1));
         // gentle scroll to focus newly revealed section
         setTimeout(() => {
-          refs[i].current?.scrollIntoView({ behavior: "smooth", block: "center" });
-        }, 200);
+          scrollNearestIfNeeded(refs.current[i].current);
+        }, 180);
       }, d + 100),
     );
     return () => timers.forEach(clearTimeout);
-  }, [data]);
+  }, [data, animationsEnabled]);
 
   // a section is "focused" if it is the most recently revealed one
   const focusIdx = revealed - 1;
 
   return (
-    <section className="space-y-16">
-      <div ref={refs[0]} className={revealed >= 1 ? (focusIdx === 0 ? "dim-active" : "") : "hidden"}>
+    <section className="space-y-10">
+      <div ref={refs.current[0]} className={revealed >= 1 ? (focusIdx === 0 ? "dim-active" : "") : "hidden"}>
         {revealed >= 1 && (
-          <div className="text-center space-y-4 animate-fade-in-up">
+          <div className="section-plain space-y-4 animate-fade-in-up py-2">
             <div className="eyebrow">Recommended move</div>
-            <h2 className="font-display text-[32px] md:text-[44px] font-[680] leading-[1.08] tracking-[-0.04em] max-w-xl mx-auto text-foreground text-elegant">
+            <h2 className="font-display text-[32px] md:text-[46px] font-[720] leading-[1.08] max-w-3xl text-foreground text-elegant">
               {data.recommendedMove}
             </h2>
           </div>
         )}
       </div>
 
-      <div ref={refs[1]} className={revealed >= 2 ? (focusIdx === 1 ? "dim-active" : focusIdx > 1 ? "dim" : "") : "hidden"}>
+      <div ref={refs.current[1]} className={revealed >= 2 ? (focusIdx === 1 ? "dim-active" : focusIdx > 1 ? "dim" : "") : "hidden"}>
         {revealed >= 2 && (
-          <Block title="Why this move" icon={Sparkles} accent="text-buy" dot="bg-buy">
+          <Block title="Why this move" icon={Sparkles} accent="text-buy">
             {data.why.slice(0, 3).map((w, i) => (
-              <Bullet key={i} text={w} dot="bg-buy" />
+              <Bullet key={i} text={w} icon={CheckCircle2} accent="text-buy" />
             ))}
           </Block>
         )}
       </div>
 
-      <div ref={refs[2]} className={revealed >= 3 ? (focusIdx === 2 ? "dim-active" : focusIdx > 2 ? "dim" : "") : "hidden"}>
+      <div ref={refs.current[2]} className={revealed >= 3 ? (focusIdx === 2 ? "dim-active" : focusIdx > 2 ? "dim" : "") : "hidden"}>
         {revealed >= 3 && (
-          <Block title="Next 30 days" icon={Calendar} accent="text-primary-strong" dot="bg-primary">
+          <Block title="Next 30 days" icon={Calendar} accent="text-primary-strong">
             {data.next30Days.slice(0, 3).map((w, i) => (
-              <Bullet key={i} text={w} dot="bg-primary" />
+              <Bullet key={i} text={w} icon={Calendar} accent="text-primary-strong" />
             ))}
           </Block>
         )}
       </div>
 
-      <div ref={refs[3]} className={revealed >= 4 ? (focusIdx === 3 ? "dim-active" : focusIdx > 3 ? "dim" : "") : "hidden"}>
+      <div ref={refs.current[3]} className={revealed >= 4 ? (focusIdx === 3 ? "dim-active" : focusIdx > 3 ? "dim" : "") : "hidden"}>
         {revealed >= 4 && (
-          <Block title="Watch-outs" icon={AlertTriangle} accent="text-short" dot="bg-short">
+          <Block title="Watch-outs" icon={AlertTriangle} accent="text-short">
             {data.watchOuts.slice(0, 2).map((w, i) => (
-              <Bullet key={i} text={w} dot="bg-short" />
+              <Bullet key={i} text={w} icon={AlertTriangle} accent="text-short" />
             ))}
           </Block>
         )}
       </div>
 
-      <div ref={refs[4]} className={revealed >= 5 ? (focusIdx === 4 ? "dim-active" : "") : "hidden"}>
+      <div ref={refs.current[4]} className={revealed >= 5 ? (focusIdx === 4 ? "dim-active" : "") : "hidden"}>
         {revealed >= 5 && (
-          <Block title="Alternative paths" icon={Compass} accent="text-hold" dot="bg-hold">
+          <Block title="Alternative paths" icon={Compass} accent="text-hold">
             <div className="space-y-3">
               {data.alternativePaths.slice(0, 3).map((p, i) => (
                 <div
                   key={i}
-                  className="surface rounded-[18px] p-5 space-y-1.5 animate-fade-in-soft lift-on-hover"
+                  className="section-row space-y-1.5 animate-fade-in-soft py-4"
                   style={{ animationDelay: `${i * 100}ms` }}
                 >
                   <div className="font-semibold text-[14.5px] text-foreground tracking-tight">
@@ -246,17 +281,15 @@ function Block({
   title,
   icon: Icon,
   accent,
-  dot,
   children,
 }: {
   title: string;
-  icon: any;
+  icon: LucideIcon;
   accent: string;
-  dot: string;
   children: React.ReactNode;
 }) {
   return (
-    <div className="space-y-5 animate-fade-in-up">
+    <div className="section-plain space-y-5 animate-fade-in-up border-t border-border/[0.055] py-5">
       <div className="flex items-center gap-2.5">
         <Icon className={`w-3.5 h-3.5 ${accent}`} />
         <span className="eyebrow">{title}</span>
@@ -266,10 +299,18 @@ function Block({
   );
 }
 
-function Bullet({ text, dot }: { text: string; dot: string }) {
+function Bullet({
+  text,
+  icon: Icon,
+  accent,
+}: {
+  text: string;
+  icon: LucideIcon;
+  accent: string;
+}) {
   return (
-    <p className="text-[15.5px] text-foreground/85 leading-[1.65] flex gap-3">
-      <span className={`shrink-0 mt-2.5 w-1.5 h-1.5 rounded-full ${dot}`} />
+    <p className="text-[15.5px] text-foreground/80 leading-[1.65] flex gap-3">
+      <Icon className={`mt-1 h-4 w-4 shrink-0 ${accent}`} />
       <span className="flex-1">{text}</span>
     </p>
   );
@@ -283,12 +324,14 @@ function FloatingChat({
   analysis,
   decision,
   recommendation,
+  animationsEnabled,
 }: {
   company: string;
   role: string;
   analysis: Analysis;
   decision: DecisionContext;
   recommendation: Recommendation;
+  animationsEnabled: boolean;
 }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
@@ -299,6 +342,28 @@ function FloatingChat({
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, loading]);
+
+  const streamAssistantReply = async (baseMessages: ChatMessage[], reply: string) => {
+    if (!animationsEnabled) {
+      setMessages([...baseMessages, { role: "assistant", content: reply }]);
+      return;
+    }
+
+    const assistantIndex = baseMessages.length;
+    setMessages([...baseMessages, { role: "assistant", content: "" }]);
+
+    let cursor = 0;
+    while (cursor < reply.length) {
+      cursor = Math.min(reply.length, cursor + 3 + Math.floor(Math.random() * 5));
+      const visibleReply = reply.slice(0, cursor);
+      setMessages((current) =>
+        current.map((message, index) =>
+          index === assistantIndex ? { ...message, content: visibleReply } : message,
+        ),
+      );
+      await new Promise((resolve) => setTimeout(resolve, 18));
+    }
+  };
 
   const send = async () => {
     const content = input.trim();
@@ -313,13 +378,10 @@ function FloatingChat({
         body: { company, role, decision, analysis, recommendation, messages: next, analysisId: analysis.analysisId },
       });
       if (error) throw error;
-      setMessages([...next, { role: "assistant", content: data?.reply ?? "No response." }]);
+      await streamAssistantReply(next, data?.reply ?? "No response.");
     } catch (e) {
       console.error(e);
-      setMessages([
-        ...next,
-        { role: "assistant", content: "Couldn't reach the AI — try again in a moment." },
-      ]);
+      await streamAssistantReply(next, "Couldn't reach the AI. Try again in a moment.");
     } finally {
       setLoading(false);
     }
@@ -332,12 +394,12 @@ function FloatingChat({
       <div className="relative px-6 pb-7 pt-4 pointer-events-auto flex justify-center">
         <div className="w-full max-w-[760px] space-y-3">
           {open && messages.length > 0 && (
-            <div className="surface-floating rounded-[22px] overflow-hidden animate-fade-in-up">
+            <div className="surface-floating rounded-[34px] overflow-hidden animate-fade-in-up">
               <div className="flex items-center justify-between px-5 py-3.5 border-b hairline">
                 <div className="flex items-center gap-2">
-                  <Sparkles className="w-3.5 h-3.5 text-primary" />
+                  <Sparkles className={`w-3.5 h-3.5 text-primary ${loading ? "animate-breathe" : ""}`} />
                   <span className="text-[12px] font-semibold tracking-tight text-foreground">
-                    Chat with $JOB
+                    {loading ? "$JOB is writing" : "Chat with $JOB"}
                   </span>
                 </div>
                 <button
@@ -356,19 +418,22 @@ function FloatingChat({
                     }`}
                   >
                     <div
-                      className={`max-w-[88%] rounded-[16px] px-4 py-3 text-[14px] leading-[1.6] whitespace-pre-wrap ${
+                      className={`max-w-[88%] rounded-[24px] px-4 py-3 text-[14px] leading-[1.6] whitespace-pre-wrap ${
                         m.role === "user"
                           ? "bg-primary text-primary-foreground"
                           : "bg-secondary text-foreground/90 border border-border/[0.08]"
                       }`}
                     >
                       {m.content}
+                      {loading && m.role === "assistant" && i === messages.length - 1 && (
+                        <span className="ml-0.5 inline-block h-4 w-px translate-y-0.5 animate-pulse bg-primary" />
+                      )}
                     </div>
                   </div>
                 ))}
                 {loading && (
                   <div className="flex justify-start">
-                    <div className="rounded-[16px] px-4 py-2.5 text-[13px] text-muted-foreground flex items-center gap-2">
+                    <div className="rounded-[24px] px-4 py-2.5 text-[13px] text-muted-foreground flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-primary animate-breathe" />
                       thinking
                     </div>

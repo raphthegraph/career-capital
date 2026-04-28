@@ -1,32 +1,6 @@
 import { cn } from "@/lib/utils";
 import type { Rating } from "@/lib/job-types";
-
-const map: Record<Rating, { bg: string; ring: string; text: string; glow: string }> = {
-  BUY: {
-    bg: "bg-buy",
-    ring: "ring-buy/20",
-    text: "text-buy",
-    glow: "shadow-[0_18px_48px_-18px_hsl(var(--buy)/0.55)]",
-  },
-  HOLD: {
-    bg: "bg-hold",
-    ring: "ring-hold/20",
-    text: "text-hold",
-    glow: "shadow-[0_18px_48px_-18px_hsl(var(--hold)/0.55)]",
-  },
-  SELL: {
-    bg: "bg-sell",
-    ring: "ring-sell/20",
-    text: "text-sell",
-    glow: "shadow-[0_18px_48px_-18px_hsl(var(--sell)/0.55)]",
-  },
-  SHORT: {
-    bg: "bg-short",
-    ring: "ring-short/20",
-    text: "text-short",
-    glow: "shadow-[0_18px_48px_-18px_hsl(var(--short)/0.55)]",
-  },
-};
+import { ratingStyleMap } from "@/lib/rating";
 
 export function RatingPill({
   rating,
@@ -43,7 +17,7 @@ export function RatingPill({
     lg: "px-5 py-2 text-[13px] tracking-[0.18em]",
     xl: "px-10 py-4 text-[26px] tracking-[0.22em]",
   } as const;
-  const c = map[rating];
+  const c = ratingStyleMap[rating];
   return (
     <span
       className={cn(
@@ -57,8 +31,4 @@ export function RatingPill({
       {rating}
     </span>
   );
-}
-
-export function ratingColorClass(rating: Rating) {
-  return map[rating].text;
 }

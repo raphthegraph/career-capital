@@ -25,6 +25,30 @@ export interface QualitativeInsight {
   detail: string;
 }
 
+export type SignalSentiment = "positive" | "negative" | "neutral" | "mixed";
+
+export interface JobKeySignal {
+  label: string;
+  detail: string;
+  impact: string;
+  evidence: string;
+  sentiment: SignalSentiment;
+  sourceUrls: string[];
+}
+
+export interface InvestmentThesis {
+  keep: string[];
+  caution: string[];
+  triggers: string[];
+}
+
+export interface AnalysisSource {
+  title: string;
+  url: string;
+  snippet: string;
+  sourceType: string;
+}
+
 export interface Analysis {
   ticker: string;
   rating: Rating;
@@ -40,6 +64,8 @@ export interface Analysis {
     exitLiquidity: Dimension;
   };
   qualitativeInsights?: QualitativeInsight[];
+  keySignals?: JobKeySignal[];
+  investmentThesis?: InvestmentThesis;
   bullCase: string[];
   bearCase: string[];
   ratingChangeTriggers: string[];
@@ -49,9 +75,11 @@ export interface Analysis {
     hiringSignals: string[];
     companySignals: string[];
   };
+  sources?: AnalysisSource[];
   chartData: { month: string; price: number }[];
   _warning?: string;
   analysisId?: string;
+  _cached?: boolean;
 }
 
 /* ---------- Decision / intent flow ---------- */

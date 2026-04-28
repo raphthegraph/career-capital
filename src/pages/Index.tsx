@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { AppShell } from "@/components/AppShell";
 import { Landing } from "@/components/Landing";
 import { AnalysisRunner } from "@/components/AnalysisRunner";
 import { VerdictReveal } from "@/components/VerdictReveal";
@@ -7,22 +8,59 @@ import { AnalysisDashboard } from "@/components/AnalysisDashboard";
 import { Recommendations } from "@/components/Recommendations";
 import type { Analysis, Decision } from "@/lib/job-types";
 import { toast } from "sonner";
+import {
+  clearStoredAnalysisSession,
+  loadStoredAnalysisSession,
+  saveStoredAnalysisSession,
+} from "@/lib/analysis-session";
 
 type Phase = "landing" | "analyzing" | "verdict" | "dashboard" | "decision";
 
+const MOTION_STORAGE_KEY = "$job-motion-enabled-v2";
+
+function loadMotionPreference() {
+  if (typeof window === "undefined") return true;
+  return window.localStorage.getItem(MOTION_STORAGE_KEY) !== "false";
+}
+
 export default function Index() {
-  const [phase, setPhase] = useState<Phase>("landing");
-  const [company, setCompany] = useState("");
-  const [role, setRole] = useState("");
-  const [analysis, setAnalysis] = useState<Analysis | null>(null);
-  const [networkDone, setNetworkDone] = useState(false);
-  const [decision, setDecision] = useState<Decision | null>(null);
+  const restoredSession = useMemo(() => loadStoredAnalysisSession(), []);
+  const [phase, setPhase] = useState<Phase>(restoredSession?.phase ?? "landing");
+  const [company, setCompany] = useState(restoredSession?.company ?? "");
+  const [role, setRole] = useState(restoredSession?.role ?? "");
+  const [analysis, setAnalysis] = useState<Analysis | null>(restoredSession?.analysis ?? null);
+  const [networkDone, setNetworkDone] = useState(Boolean(restoredSession?.analysis));
+  const [decision, setDecision] = useState<Decision | null>(restoredSession?.decision ?? null);
+  const [animationsEnabled, setAnimationsEnabled] = useState(loadMotionPreference);
+  const [verdictCanContinue, setVerdictCanContinue] = useState(
+    restoredSession?.phase === "dashboard" || restoredSession?.phase === "decision",
+  );
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("motion-off", !animationsEnabled);
+    window.localStorage.setItem(MOTION_STORAGE_KEY, String(animationsEnabled));
+  }, [animationsEnabled]);
+
+  useEffect(() => {
+    if (!analysis || !company || !role) return;
+    if (phase !== "verdict" && phase !== "dashboard" && phase !== "decision") return;
+
+    saveStoredAnalysisSession({
+      phase,
+      company,
+      role,
+      analysis,
+      decision,
+    });
+  }, [phase, company, role, analysis, decision]);
 
   const start = async (c: string, r: string) => {
+    clearStoredAnalysisSession();
     setCompany(c);
     setRole(r);
     setAnalysis(null);
     setNetworkDone(false);
+    setVerdictCanContinue(false);
     setPhase("analyzing");
     try {
       const { data, error } = await supabase.functions.invoke("analyze-job", {
@@ -49,11 +87,50 @@ export default function Index() {
   };
 
   const onAnimDone = () => {
-    if (analysis) setPhase("verdict");
+    if (analysis) {
+      setVerdictCanContinue(false);
+      setPhase("verdict");
+    }
+  };
+
+  const goBack = () => {
+    if (phase === "decision") {
+      setPhase("dashboard");
+      return;
+    }
+    if (phase === "dashboard") {
+      setPhase("verdict");
+      return;
+    }
+    if (phase === "verdict" || phase === "analyzing") {
+      clearStoredAnalysisSession();
+      setPhase("landing");
+      setAnalysis(null);
+      setDecision(null);
+      setNetworkDone(false);
+      setVerdictCanContinue(false);
+    }
+  };
+
+  const goForward = () => {
+    if (phase === "verdict" && verdictCanContinue) {
+      setPhase("dashboard");
+      return;
+    }
+    if (phase === "dashboard" && decision) {
+      setPhase("decision");
+    }
   };
 
   return (
-    <>
+    <AppShell
+      canGoBack={phase !== "landing"}
+      canGoForward={(phase === "verdict" && verdictCanContinue) || (phase === "dashboard" && Boolean(decision))}
+      animationsEnabled={animationsEnabled}
+      onBack={goBack}
+      onForward={goForward}
+      onToggleAnimations={() => setAnimationsEnabled((enabled) => !enabled)}
+    >
       {phase === "landing" && <Landing onSubmit={start} />}
 
       {phase === "analyzing" && (
@@ -61,6 +138,7 @@ export default function Index() {
           company={company}
           role={role}
           done={networkDone}
+          animationsEnabled={animationsEnabled}
           onComplete={onAnimDone}
         />
       )}
@@ -70,7 +148,14 @@ export default function Index() {
           company={company}
           role={role}
           analysis={analysis}
-          onContinue={() => setPhase("dashboard")}
+          animationsEnabled={animationsEnabled}
+          onReadyChange={(ready) => {
+            if (ready) setVerdictCanContinue(true);
+          }}
+          onContinue={() => {
+            setVerdictCanContinue(true);
+            setPhase("dashboard");
+          }}
         />
       )}
 
@@ -79,6 +164,7 @@ export default function Index() {
           company={company}
           role={role}
           analysis={analysis}
+          animationsEnabled={animationsEnabled}
           onDecision={(d) => {
             setDecision(d);
             setPhase("decision");
@@ -92,16 +178,18 @@ export default function Index() {
           role={role}
           analysis={analysis}
           decision={decision}
-          onBack={() => setPhase("dashboard")}
+          animationsEnabled={animationsEnabled}
           onRestart={() => {
+            clearStoredAnalysisSession();
             setPhase("landing");
             setAnalysis(null);
             setDecision(null);
             setCompany("");
             setRole("");
+            setVerdictCanContinue(false);
           }}
         />
       )}
-    </>
+    </AppShell>
   );
 }

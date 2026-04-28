@@ -1,19 +1,23 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { Analysis, QualitativeInsight } from "@/lib/job-types";
-import { RatingPill, ratingColorClass } from "@/components/RatingPill";
+import { RatingPill } from "@/components/RatingPill";
 import { ArrowDown } from "lucide-react";
 import { SignalGrid } from "@/components/SignalGrid";
+import { getRevealSignals } from "@/lib/analysis-helpers";
+import { ratingColorClass } from "@/lib/rating";
 
 interface Props {
   company: string;
   role: string;
   analysis: Analysis;
+  animationsEnabled: boolean;
+  onReadyChange?: (ready: boolean) => void;
   onContinue: () => void;
 }
 
 // 0 idle → 1 priced → 2 ticker → 3 rating → 4 question → 5 answer → 6 verdict → 7 signals → 8 cta
-const TIMINGS = [400, 1200, 950, 1100, 1000, 900, 1100, 800];
+const TIMINGS = [160, 360, 420, 420, 420, 520, 340, 220];
 
 const LEVEL_TONE: Record<string, { dot: string; chip: string; label: string }> = {
   strong: { dot: "bg-buy", chip: "text-buy", label: "Positive" },
@@ -35,107 +39,151 @@ const FALLBACK_INSIGHTS: QualitativeInsight[] = [
   { label: "Exit opportunities", value: "Strong", level: "strong", detail: "Brand converts well to peer companies." },
 ];
 
-export function VerdictReveal({ company, role, analysis, onContinue }: Props) {
+export function VerdictReveal({
+  company,
+  role,
+  analysis,
+  animationsEnabled,
+  onReadyChange,
+  onContinue,
+}: Props) {
   const [phase, setPhase] = useState(0);
   const [insightsRevealed, setInsightsRevealed] = useState(0);
   const lastSignalRef = useRef<HTMLDivElement>(null);
   const ctaRef = useRef<HTMLDivElement>(null);
 
+  const insights = useMemo<QualitativeInsight[]>(
+    () => {
+      const resolved = getRevealSignals(analysis);
+      return resolved.length >= 3 ? resolved.slice(0, 5) : FALLBACK_INSIGHTS;
+    },
+    [analysis],
+  );
+
   useEffect(() => {
+    if (!animationsEnabled) {
+      setPhase(TIMINGS.length);
+      setInsightsRevealed(insights.length);
+      return;
+    }
     if (phase >= TIMINGS.length) return;
     const t = setTimeout(() => setPhase((p) => p + 1), TIMINGS[phase]);
     return () => clearTimeout(t);
-  }, [phase]);
-
-  const insights = useMemo<QualitativeInsight[]>(
-    () =>
-      analysis.qualitativeInsights && analysis.qualitativeInsights.length >= 3
-        ? analysis.qualitativeInsights.slice(0, 5)
-        : FALLBACK_INSIGHTS,
-    [analysis.qualitativeInsights],
-  );
+  }, [phase, animationsEnabled, insights.length]);
 
   // Slower, more deliberate signal reveal — let user actually read each one
   useEffect(() => {
+    if (!animationsEnabled) {
+      setInsightsRevealed(insights.length);
+      return;
+    }
     if (phase < 7) return;
     if (insightsRevealed >= insights.length) return;
-    const t = setTimeout(() => setInsightsRevealed((m) => m + 1), 1100);
+    const t = setTimeout(() => setInsightsRevealed((m) => m + 1), 620);
     return () => clearTimeout(t);
-  }, [phase, insightsRevealed, insights.length]);
+  }, [phase, insightsRevealed, insights.length, animationsEnabled]);
 
   useEffect(() => {
+    if (!animationsEnabled) return;
     if (insightsRevealed === 0) return;
-    lastSignalRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-  }, [insightsRevealed]);
+    lastSignalRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [insightsRevealed, animationsEnabled]);
 
   useEffect(() => {
+    if (!animationsEnabled) return;
     if (phase >= 8 && insightsRevealed >= insights.length) {
-      ctaRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      ctaRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
-  }, [phase, insightsRevealed, insights.length]);
+  }, [phase, insightsRevealed, insights.length, animationsEnabled]);
 
   const gridFocus = phase >= 3 && phase < 7;
   const ctaReady = phase >= 8 && insightsRevealed >= insights.length;
 
-  return (
-    <div className="min-h-screen flex flex-col items-center px-6 py-24 relative">
-      <SignalGrid focus={gridFocus} />
+  useEffect(() => {
+    onReadyChange?.(ctaReady);
+  }, [ctaReady, onReadyChange]);
 
-      <div className="relative z-10 max-w-xl w-full text-center space-y-14">
-        {phase >= 1 && (
-          <div className="animate-fade-in-up space-y-4">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full surface text-[11px] text-muted-foreground tracking-wide">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+  return (
+    <div className="min-h-[calc(100vh-3.5rem)] px-4 py-10 sm:px-6 md:py-14 relative">
+      <SignalGrid variant="reveal" focus={gridFocus} intensity={gridFocus ? "focus" : "active"} />
+
+      <div className="relative z-10 mx-auto w-full max-w-[1180px] space-y-10">
+        <section className="grid items-center gap-8 lg:grid-cols-[0.88fr_1.12fr]">
+          <div className="space-y-5 text-left animate-fade-in-up">
+            <div className="inline-flex items-center gap-2 rounded-full border border-primary/10 bg-white/70 px-3 py-1.5 text-[12px] font-semibold text-muted-foreground shadow-soft backdrop-blur-xl">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
               {company} · {role}
             </div>
-            <h2 className="font-display text-[40px] md:text-[58px] font-[680] tracking-[-0.04em] leading-[1.02] text-foreground text-elegant">
-              Your job has been priced.
-            </h2>
+            {phase >= 1 && (
+              <h2 className="font-display text-[38px] font-[720] leading-[1.04] text-foreground text-elegant sm:text-[54px] lg:text-[64px]">
+                Your job has been priced.
+              </h2>
+            )}
+            {phase >= 6 && (
+              <p className="max-w-[560px] animate-fade-in-up text-[16px] leading-[1.65] text-foreground/80 md:text-[18px]">
+                {analysis.oneLineVerdict}
+              </p>
+            )}
           </div>
-        )}
 
-        {phase >= 2 && (
-          <div className="animate-fade-in flex justify-center">
-            <div className="surface rounded-2xl px-6 py-4 inline-flex flex-col items-center gap-1.5">
-              <div className="eyebrow">Synthetic ticker</div>
-              <div className="font-mono text-[22px] md:text-[26px] font-medium tracking-[0.14em] text-foreground">
-                {analysis.ticker}
+          <div className="relative">
+            <div className="terminal-verdict-card animate-scale-in p-5 pl-6 sm:p-6 sm:pl-7 md:p-7 md:pl-8">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <div className="eyebrow">Synthetic ticker</div>
+                {phase >= 2 && (
+                  <div className="mt-2 font-mono text-[30px] font-semibold tracking-[0.08em] text-primary-strong sm:text-[40px]">
+                    {analysis.ticker}
+                  </div>
+                )}
+              </div>
+              <div className="rounded-full bg-primary-tint/75 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-primary-strong">
+                priced
+              </div>
+            </div>
+
+            <div className="mt-8 flex flex-col items-start gap-5 sm:flex-row sm:items-end sm:justify-between">
+              {phase >= 3 && <RatingPill rating={analysis.rating} size="xl" glow />}
+              <div className="text-left sm:text-right">
+                {phase >= 4 && (
+                  <div className="text-[12px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                    Would you buy?
+                  </div>
+                )}
+                {phase >= 5 && (
+                  <div
+                    className={`mt-1 font-display text-[52px] font-[760] leading-none sm:text-[72px] ${ratingColorClass(
+                      analysis.rating,
+                    )}`}
+                  >
+                    {analysis.wouldBuy}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="mt-7 grid grid-cols-3 gap-3">
+              <div className="rounded-[24px] border border-border/[0.035] bg-white/45 p-3">
+                <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Score</div>
+                <div className="mt-1 text-[24px] font-semibold text-foreground">{analysis.careerAssetScore}</div>
+              </div>
+              <div className="rounded-[24px] border border-border/[0.035] bg-white/45 p-3">
+                <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Confidence</div>
+                <div className="mt-1 text-[24px] font-semibold text-foreground">{analysis.confidence}</div>
+              </div>
+              <div className="rounded-[24px] border border-border/[0.035] bg-white/45 p-3">
+                <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Signal</div>
+                <div className="mt-1 text-[24px] font-semibold text-foreground">{analysis.rating}</div>
               </div>
             </div>
           </div>
-        )}
-
-        {phase >= 3 && (
-          <div className="flex justify-center pt-2 animate-scale-in">
-            <RatingPill rating={analysis.rating} size="xl" />
           </div>
-        )}
-
-        {phase >= 4 && (
-          <h2 className="font-display text-[20px] md:text-[24px] font-medium animate-fade-in-up text-muted-foreground tracking-tight">
-            Would you buy this job?
-          </h2>
-        )}
-
-        {phase >= 5 && (
-          <p
-            className={`font-display text-[64px] md:text-[88px] font-[680] animate-scale-in tracking-[-0.045em] leading-[0.95] ${ratingColorClass(
-              analysis.rating,
-            )}`}
-          >
-            {analysis.wouldBuy}.
-          </p>
-        )}
-
-        {phase >= 6 && (
-          <p className="text-[16px] md:text-[18px] text-foreground/80 max-w-[520px] mx-auto animate-fade-in-up leading-[1.6]">
-            {analysis.oneLineVerdict}
-          </p>
-        )}
+        </section>
 
         {phase >= 7 && (
-          <div className="space-y-3.5 max-w-lg mx-auto pt-10 text-left">
-            <div className="eyebrow text-center mb-6">Key signals</div>
+          <section className="space-y-4 pt-2 text-left">
+            <div className="eyebrow">Key signals</div>
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {insights.map((ins, i) => {
               if (i >= insightsRevealed) return null;
               const tone = LEVEL_TONE[ins.level] ?? LEVEL_TONE.neutral;
@@ -144,12 +192,12 @@ export function VerdictReveal({ company, role, analysis, onContinue }: Props) {
                 <div
                   key={ins.label}
                   ref={isLast ? lastSignalRef : null}
-                  className="surface-elevated rounded-[22px] p-6 md:p-7 animate-fade-in-up lift-on-hover"
+                    className="air-card animate-fade-in-up p-5 lift-on-hover"
                 >
-                  <div className="flex items-center justify-between gap-3 mb-3">
+                    <div className="mb-3 flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <span className={`w-2 h-2 rounded-full shrink-0 ${tone.dot}`} />
-                      <div className="text-[15px] font-semibold text-foreground tracking-tight">
+                        <span className={`h-2 w-2 shrink-0 rounded-full ${tone.dot}`} />
+                        <div className="text-[15px] font-semibold text-foreground">
                         {ins.label}
                       </div>
                     </div>
@@ -157,21 +205,22 @@ export function VerdictReveal({ company, role, analysis, onContinue }: Props) {
                       {tone.label}
                     </span>
                   </div>
-                  <p className="text-[15px] text-foreground/75 leading-[1.6] pl-[20px]">
+                    <p className="text-[14.5px] leading-[1.6] text-foreground/75">
                     {ins.detail}
                   </p>
                 </div>
               );
             })}
           </div>
+          </section>
         )}
 
         {ctaReady && (
-          <div ref={ctaRef} className="animate-fade-in-up pt-10">
+          <div ref={ctaRef} className="animate-fade-in-up pt-2 text-center">
             <Button
               onClick={onContinue}
               size="lg"
-              className="gap-2 h-13 py-3.5 px-8 rounded-[14px] bg-primary text-primary-foreground hover:bg-primary-hover lift-on-hover glow-primary text-[15px] font-semibold"
+              className="gap-2 h-[52px] py-3.5 px-8 rounded-[24px] bg-primary text-primary-foreground hover:bg-primary-hover lift-on-hover glow-primary text-[15px] font-semibold"
             >
               Continue <ArrowDown className="w-4 h-4" />
             </Button>

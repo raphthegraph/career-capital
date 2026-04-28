@@ -1,0 +1,290 @@
+export const analysisSchema = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    rating: { type: "string", enum: ["BUY", "HOLD", "SELL", "SHORT"] },
+    wouldBuy: { type: "string", enum: ["Yes", "No", "Conditional"] },
+    confidence: { type: "number" },
+    oneLineVerdict: { type: "string" },
+    careerAssetScore: { type: "number" },
+    dimensions: {
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        careerDividend: {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            score: { type: "number" },
+            explanation: { type: "string" },
+            signalCount: { type: "number" },
+          },
+          required: ["score", "explanation", "signalCount"],
+        },
+        momentum: {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            score: { type: "number" },
+            explanation: { type: "string" },
+            signalCount: { type: "number" },
+          },
+          required: ["score", "explanation", "signalCount"],
+        },
+        volatility: {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            score: { type: "number" },
+            explanation: { type: "string" },
+            signalCount: { type: "number" },
+          },
+          required: ["score", "explanation", "signalCount"],
+        },
+        upsideOptionality: {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            score: { type: "number" },
+            explanation: { type: "string" },
+            signalCount: { type: "number" },
+          },
+          required: ["score", "explanation", "signalCount"],
+        },
+        exitLiquidity: {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            score: { type: "number" },
+            explanation: { type: "string" },
+            signalCount: { type: "number" },
+          },
+          required: ["score", "explanation", "signalCount"],
+        },
+      },
+      required: [
+        "careerDividend",
+        "momentum",
+        "volatility",
+        "upsideOptionality",
+        "exitLiquidity",
+      ],
+    },
+    qualitativeInsights: {
+      type: "array",
+      minItems: 5,
+      maxItems: 5,
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          label: { type: "string" },
+          value: { type: "string" },
+          level: {
+            type: "string",
+            enum: [
+              "strong",
+              "rising",
+              "neutral",
+              "limited",
+              "blocked",
+              "high",
+              "low",
+              "declining",
+              "weak",
+            ],
+          },
+          detail: { type: "string" },
+        },
+        required: ["label", "value", "level", "detail"],
+      },
+    },
+    keySignals: {
+      type: "array",
+      minItems: 3,
+      maxItems: 5,
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          label: { type: "string" },
+          detail: { type: "string" },
+          impact: { type: "string" },
+          evidence: { type: "string" },
+          sentiment: {
+            type: "string",
+            enum: ["positive", "negative", "neutral", "mixed"],
+          },
+          sourceUrls: {
+            type: "array",
+            items: { type: "string" },
+          },
+        },
+        required: [
+          "label",
+          "detail",
+          "impact",
+          "evidence",
+          "sentiment",
+          "sourceUrls",
+        ],
+      },
+    },
+    investmentThesis: {
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        keep: {
+          type: "array",
+          minItems: 3,
+          maxItems: 3,
+          items: { type: "string" },
+        },
+        caution: {
+          type: "array",
+          minItems: 3,
+          maxItems: 3,
+          items: { type: "string" },
+        },
+        triggers: {
+          type: "array",
+          minItems: 3,
+          maxItems: 3,
+          items: { type: "string" },
+        },
+      },
+      required: ["keep", "caution", "triggers"],
+    },
+    bullCase: {
+      type: "array",
+      minItems: 3,
+      maxItems: 3,
+      items: { type: "string" },
+    },
+    bearCase: {
+      type: "array",
+      minItems: 3,
+      maxItems: 3,
+      items: { type: "string" },
+    },
+    ratingChangeTriggers: {
+      type: "array",
+      minItems: 3,
+      maxItems: 3,
+      items: { type: "string" },
+    },
+    evidence: {
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        momentumSignals: {
+          type: "array",
+          minItems: 2,
+          maxItems: 4,
+          items: { type: "string" },
+        },
+        riskSignals: {
+          type: "array",
+          minItems: 2,
+          maxItems: 4,
+          items: { type: "string" },
+        },
+        hiringSignals: {
+          type: "array",
+          minItems: 2,
+          maxItems: 4,
+          items: { type: "string" },
+        },
+        companySignals: {
+          type: "array",
+          minItems: 2,
+          maxItems: 4,
+          items: { type: "string" },
+        },
+      },
+      required: [
+        "momentumSignals",
+        "riskSignals",
+        "hiringSignals",
+        "companySignals",
+      ],
+    },
+    sources: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          title: { type: "string" },
+          url: { type: "string" },
+          snippet: { type: "string" },
+          sourceType: { type: "string" },
+        },
+        required: ["title", "url", "snippet", "sourceType"],
+      },
+    },
+  },
+  required: [
+    "rating",
+    "wouldBuy",
+    "confidence",
+    "oneLineVerdict",
+    "careerAssetScore",
+    "dimensions",
+    "qualitativeInsights",
+    "keySignals",
+    "investmentThesis",
+    "bullCase",
+    "bearCase",
+    "ratingChangeTriggers",
+    "evidence",
+    "sources",
+  ],
+} as const;
+
+export const recommendationSchema = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    recommendedMove: { type: "string" },
+    why: {
+      type: "array",
+      minItems: 3,
+      maxItems: 3,
+      items: { type: "string" },
+    },
+    next30Days: {
+      type: "array",
+      minItems: 3,
+      maxItems: 3,
+      items: { type: "string" },
+    },
+    watchOuts: {
+      type: "array",
+      minItems: 2,
+      maxItems: 2,
+      items: { type: "string" },
+    },
+    alternativePaths: {
+      type: "array",
+      minItems: 2,
+      maxItems: 3,
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          label: { type: "string" },
+          detail: { type: "string" },
+        },
+        required: ["label", "detail"],
+      },
+    },
+  },
+  required: [
+    "recommendedMove",
+    "why",
+    "next30Days",
+    "watchOuts",
+    "alternativePaths",
+  ],
+} as const;

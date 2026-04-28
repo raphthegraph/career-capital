@@ -2,13 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
-/* $JOB — Calm intelligence with conviction.
-   Premium navy-accent fintech meets AI advisor. */
+/* $JOB — Airy AI career workspace.
+   Light SaaS surfaces, navy conviction, playful signal atmosphere. */
 
 @layer base {
   :root {
     /* Neutral, slightly cool light base */
-    --background: 210 20% 97%;             /* #F5F7F9 */
+    --background: 210 24% 98%;             /* #F7F9FB */
     --foreground: 220 39% 11%;             /* #111827 */
 
     --card: 0 0% 100%;
@@ -40,7 +40,7 @@
     --input: 220 39% 11%;
     --ring: 212 62% 24%;
 
-    --radius: 1.25rem;                     /* 20px base */
+    --radius: 1rem;                        /* 16px base */
 
     /* Semantic asset colors */
     --buy: 158 70% 39%;                    /* #1FA971 */
@@ -49,37 +49,40 @@
     --short: 0 73% 62%;
     --neutral: 215 20% 65%;
 
-    /* Soft editorial atmosphere */
+    /* Airy workspace atmosphere */
     --gradient-hero:
-      radial-gradient(ellipse 60% 38% at 88% -8%, hsl(212 60% 88% / 0.55), transparent 65%),
-      radial-gradient(ellipse 55% 38% at 8% 108%, hsl(210 30% 92% / 0.7), transparent 65%),
-      hsl(210 20% 97%);
+      linear-gradient(115deg, hsl(205 92% 96% / 0.72) 0%, transparent 34%),
+      linear-gradient(245deg, hsl(158 58% 95% / 0.46) 0%, transparent 32%),
+      linear-gradient(180deg, hsl(0 0% 100%), hsl(210 28% 98%) 54%, hsl(210 34% 97%));
 
     --gradient-buy: linear-gradient(135deg, hsl(158 64% 44%), hsl(160 60% 36%));
     --gradient-sell: linear-gradient(135deg, hsl(8 78% 64%), hsl(0 76% 60%));
     --gradient-hold: linear-gradient(135deg, hsl(39 78% 60%), hsl(35 80% 52%));
     --gradient-short: linear-gradient(135deg, hsl(0 78% 64%), hsl(8 78% 58%));
 
-    /* Shadows — softer, more deliberate */
+    /* Shadows — softer and more suspended */
     --shadow-soft:
-      0 1px 2px hsl(220 30% 10% / 0.04),
-      0 8px 28px -12px hsl(220 30% 10% / 0.08);
+      0 1px 2px hsl(220 30% 10% / 0.018),
+      0 18px 54px -44px hsl(220 30% 10% / 0.14);
     --shadow-elevated:
-      0 1px 2px hsl(220 30% 10% / 0.04),
-      0 24px 60px -22px hsl(220 30% 10% / 0.14);
+      0 1px 2px hsl(220 30% 10% / 0.024),
+      0 28px 82px -58px hsl(220 30% 10% / 0.18);
     --shadow-floating:
-      0 1px 2px hsl(220 30% 10% / 0.04),
-      0 30px 70px -24px hsl(212 50% 18% / 0.22);
+      0 1px 2px hsl(220 30% 10% / 0.024),
+      0 30px 100px -68px hsl(212 50% 18% / 0.22);
     --shadow-input:
       inset 0 1px 0 hsl(0 0% 100% / 0.7),
       0 1px 2px hsl(220 30% 10% / 0.04);
 
     --glow-primary:
       0 1px 0 hsl(0 0% 100% / 0.12) inset,
-      0 14px 36px -12px hsl(212 62% 24% / 0.45);
+      0 12px 28px -18px hsl(212 62% 24% / 0.36);
+    --glow-terminal:
+      0 1px 0 hsl(0 0% 100% / 0.12) inset,
+      0 34px 90px -42px hsl(212 70% 20% / 0.75);
 
-    --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, "SF Pro Display", sans-serif;
-    --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+    --font-sans: 'Avenir Next', Avenir, ui-sans-serif, system-ui, -apple-system, "SF Pro Display", sans-serif;
+    --font-mono: 'Avenir Next', Avenir, ui-sans-serif, system-ui, -apple-system, "SF Pro Display", sans-serif;
 
     --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
     --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
@@ -98,16 +101,16 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
-    letter-spacing: -0.011em;
+    letter-spacing: 0;
   }
   ::selection { background: hsl(var(--primary) / 0.18); color: hsl(var(--foreground)); }
 
-  h1, h2, h3 { letter-spacing: -0.03em; }
+  h1, h2, h3 { letter-spacing: 0; }
 }
 
 @layer utilities {
   .font-mono { font-family: var(--font-mono); }
-  .font-display { font-family: var(--font-sans); letter-spacing: -0.04em; }
+  .font-display { font-family: var(--font-sans); letter-spacing: 0; }
 
   .text-buy { color: hsl(var(--buy)); }
   .text-hold { color: hsl(var(--hold)); }
@@ -122,25 +125,97 @@
 
   /* Translucent glass surface */
   .surface {
-    background: hsl(0 0% 100% / 0.72);
-    backdrop-filter: blur(20px) saturate(140%);
-    -webkit-backdrop-filter: blur(20px) saturate(140%);
-    border: 1px solid hsl(var(--border) / 0.08);
+    background: hsl(0 0% 100% / 0.48);
+    backdrop-filter: blur(24px) saturate(150%);
+    -webkit-backdrop-filter: blur(24px) saturate(150%);
+    border: 1px solid hsl(var(--border) / 0.032);
+    border-radius: 30px;
     box-shadow: var(--shadow-soft);
   }
 
   .surface-elevated {
-    background: hsl(0 0% 100%);
-    border: 1px solid hsl(var(--border) / 0.07);
+    background: hsl(0 0% 100% / 0.54);
+    backdrop-filter: blur(28px) saturate(155%);
+    -webkit-backdrop-filter: blur(28px) saturate(155%);
+    border: 1px solid hsl(var(--border) / 0.035);
+    border-radius: 32px;
     box-shadow: var(--shadow-elevated);
   }
 
   .surface-floating {
-    background: hsl(0 0% 100% / 0.94);
-    backdrop-filter: blur(28px) saturate(160%);
-    -webkit-backdrop-filter: blur(28px) saturate(160%);
-    border: 1px solid hsl(var(--border) / 0.08);
+    background: hsl(0 0% 100% / 0.5);
+    backdrop-filter: blur(36px) saturate(175%);
+    -webkit-backdrop-filter: blur(36px) saturate(175%);
+    border: 1px solid hsl(var(--border) / 0.034);
+    border-radius: 999px;
     box-shadow: var(--shadow-floating);
+  }
+
+  .terminal-card {
+    background: hsl(0 0% 100% / 0.5);
+    backdrop-filter: blur(28px) saturate(155%);
+    -webkit-backdrop-filter: blur(28px) saturate(155%);
+    border: 1px solid hsl(var(--border) / 0.034);
+    border-radius: 32px;
+    box-shadow: var(--shadow-soft);
+  }
+
+  .terminal-verdict-card {
+    position: relative;
+    overflow: hidden;
+    background: hsl(0 0% 100% / 0.54);
+    backdrop-filter: blur(36px) saturate(175%);
+    -webkit-backdrop-filter: blur(36px) saturate(175%);
+    border: 1px solid hsl(var(--primary) / 0.064);
+    border-radius: 36px;
+    box-shadow: var(--shadow-elevated);
+  }
+
+  .terminal-verdict-card::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 3px;
+    pointer-events: none;
+    background: linear-gradient(180deg, hsl(var(--primary) / 0.62), hsl(var(--buy) / 0.34), hsl(var(--primary) / 0.12));
+  }
+
+  .air-card {
+    background: hsl(0 0% 100% / 0.44);
+    backdrop-filter: blur(28px) saturate(155%);
+    -webkit-backdrop-filter: blur(28px) saturate(155%);
+    border: 1px solid hsl(var(--border) / 0.03);
+    border-radius: 32px;
+    box-shadow: var(--shadow-soft);
+  }
+
+  .section-plain {
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .section-row {
+    background: transparent;
+    border: 0;
+    border-top: 1px solid hsl(var(--border) / 0.055);
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .asset-halo {
+    position: absolute;
+    inset: -22%;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(circle at 50% 42%, hsl(var(--primary) / 0.18), transparent 38%),
+      radial-gradient(circle at 72% 68%, hsl(var(--buy) / 0.16), transparent 28%);
+    filter: blur(4px);
+    opacity: 0.9;
   }
 
   .input-surface {
@@ -149,6 +224,8 @@
   }
 
   .glow-primary { box-shadow: var(--glow-primary); }
+  .shadow-soft { box-shadow: var(--shadow-soft); }
+  .shadow-floating { box-shadow: var(--shadow-floating); }
 
   .hairline { border-color: hsl(var(--border) / 0.08); }
 
@@ -159,40 +236,167 @@
   }
 
   .lift-on-hover {
-    transition: transform 260ms var(--ease-out-quart), box-shadow 260ms var(--ease-out-quart),
+    transition: transform 280ms var(--ease-out-quart), box-shadow 280ms var(--ease-out-quart),
       background-color 220ms var(--ease-out-quart), border-color 220ms var(--ease-out-quart);
   }
-  .lift-on-hover:hover { transform: translateY(-1px); }
+  .lift-on-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-elevated);
+  }
 
-  /* Reactive Signal Grid — fixed fullscreen, very subtle navy */
+  /* Reactive Signal Field — fixed fullscreen, airy and decorative */
   .signal-grid {
     position: fixed;
     inset: 0;
     z-index: 0;
     pointer-events: none;
     background-image:
-      linear-gradient(to right, hsl(212 50% 30% / 0.05) 1px, transparent 1px),
-      linear-gradient(to bottom, hsl(212 50% 30% / 0.05) 1px, transparent 1px);
-    background-size: 56px 56px;
+      linear-gradient(108deg, transparent 0 47%, hsl(var(--primary) / 0.035) 47.1% 47.4%, transparent 47.5% 100%),
+      linear-gradient(72deg, transparent 0 54%, hsl(158 50% 38% / 0.022) 54.1% 54.4%, transparent 54.5% 100%),
+      linear-gradient(to right, hsl(212 50% 30% / 0.012) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(212 50% 30% / 0.012) 1px, transparent 1px);
+    background-size: 920px 920px, 760px 760px, 76px 76px, 76px 76px;
+    background-position:
+      calc(var(--mx, 50%) * 0.02) calc(var(--my, 50%) * 0.02),
+      calc(var(--mx, 50%) * -0.015) calc(var(--my, 50%) * 0.012),
+      0 0,
+      0 0;
     -webkit-mask-image: radial-gradient(
-      circle 340px at var(--mx, 50%) var(--my, 50%),
-      hsl(0 0% 0% / 0.55), hsl(0 0% 0% / 0.08) 60%, transparent 100%
+      ellipse 76% 56% at 50% 42%,
+      hsl(0 0% 0% / 0.24), hsl(0 0% 0% / 0.08) 68%, transparent 100%
     );
             mask-image: radial-gradient(
-      circle 340px at var(--mx, 50%) var(--my, 50%),
-      hsl(0 0% 0% / 0.55), hsl(0 0% 0% / 0.08) 60%, transparent 100%
+      ellipse 76% 56% at 50% 42%,
+      hsl(0 0% 0% / 0.24), hsl(0 0% 0% / 0.08) 68%, transparent 100%
     );
-    transition: opacity 600ms var(--ease-out-quart);
+    opacity: 0.66;
+    transition: opacity 600ms var(--ease-out-quart), background-position 800ms var(--ease-out-quart);
   }
+  .signal-grid--quiet { opacity: 0.26; }
+  .signal-grid--active { opacity: 0.34; }
+  .signal-grid--focus { opacity: 0.38; }
   .signal-grid--focus {
     -webkit-mask-image: radial-gradient(
-      circle 380px at 50% 42%,
-      hsl(0 0% 0% / 0.85), hsl(0 0% 0% / 0.15) 65%, transparent 100%
+      ellipse 72% 58% at 50% 42%,
+      hsl(0 0% 0% / 0.3), hsl(0 0% 0% / 0.08) 68%, transparent 100%
     );
             mask-image: radial-gradient(
-      circle 380px at 50% 42%,
-      hsl(0 0% 0% / 0.85), hsl(0 0% 0% / 0.15) 65%, transparent 100%
+      ellipse 72% 58% at 50% 42%,
+      hsl(0 0% 0% / 0.3), hsl(0 0% 0% / 0.08) 68%, transparent 100%
     );
+  }
+
+  .ambient-field {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  .ambient-field--quiet { opacity: 0.3; }
+  .ambient-field--active { opacity: 0.38; }
+  .ambient-field--focus { opacity: 0.42; }
+
+  .ambient-line {
+    position: absolute;
+    display: block;
+    width: 46vw;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, hsl(var(--primary) / 0.055), transparent);
+    transform-origin: center;
+    opacity: 0.38;
+    animation: ambient-drift 18s var(--ease-out-quart) infinite alternate;
+  }
+
+  .ambient-line--one {
+    left: 7vw;
+    top: 32vh;
+    transform: rotate(-11deg);
+  }
+
+  .ambient-line--two {
+    right: 6vw;
+    bottom: 26vh;
+    transform: rotate(9deg);
+    animation-delay: 2.4s;
+  }
+
+  .ambient-scan {
+    position: absolute;
+    left: -12vw;
+    top: 18vh;
+    width: 124vw;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, hsl(var(--primary) / 0.048), transparent);
+    opacity: 0.24;
+    transform: rotate(-8deg);
+    animation: ambient-scan 12s linear infinite;
+  }
+
+  .ambient-node,
+  .ambient-glint {
+    position: absolute;
+    left: var(--x);
+    top: var(--y);
+    pointer-events: none;
+  }
+
+  .ambient-node {
+    width: 4px;
+    height: 4px;
+    border-radius: 999px;
+    background: hsl(var(--primary) / 0.12);
+    box-shadow: 0 0 0 8px hsl(var(--primary) / 0.024);
+    animation: ambient-node var(--duration) ease-in-out infinite;
+    animation-delay: var(--delay);
+  }
+
+  .ambient-glint {
+    width: var(--w);
+    height: 24px;
+    border: 1px solid hsl(var(--primary) / 0.032);
+    border-radius: 10px;
+    background:
+      linear-gradient(90deg, hsl(0 0% 100% / 0.02), hsl(0 0% 100% / 0.24), hsl(0 0% 100% / 0.02));
+    opacity: 0.24;
+    transform: translate(-50%, -50%) rotate(var(--rotate));
+    animation: ambient-glint var(--duration) var(--ease-out-quart) infinite alternate;
+    animation-delay: var(--delay);
+  }
+
+  .ambient-track {
+    position: absolute;
+    display: block;
+    width: 42vw;
+    min-width: 360px;
+    height: 32px;
+    border-radius: 999px;
+    opacity: 0.24;
+    background:
+      repeating-linear-gradient(
+        90deg,
+        transparent 0 22px,
+        hsl(var(--primary) / 0.05) 22px 34px,
+        transparent 34px 56px
+      );
+    mask-image: linear-gradient(90deg, transparent, black 18%, black 82%, transparent);
+    -webkit-mask-image: linear-gradient(90deg, transparent, black 18%, black 82%, transparent);
+    animation: ambient-track 18s linear infinite;
+  }
+
+  .ambient-track--one {
+    left: 6vw;
+    top: 18vh;
+    transform: rotate(-8deg);
+  }
+
+  .ambient-track--two {
+    right: 4vw;
+    bottom: 18vh;
+    transform: rotate(7deg);
+    animation-duration: 22s;
+    animation-direction: reverse;
   }
 
   /* Editorial uppercase eyebrow */
@@ -215,6 +419,91 @@
     filter: none;
     transition: opacity 600ms var(--ease-out-quart), filter 600ms var(--ease-out-quart);
   }
+
+  .motion-off,
+  .motion-off body {
+    scroll-behavior: auto;
+  }
+
+  .motion-off *,
+  .motion-off *::before,
+  .motion-off *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 1ms !important;
+  }
+
+  .motion-off .ambient-line,
+  .motion-off .ambient-scan,
+  .motion-off .ambient-track,
+  .motion-off .ambient-node,
+  .motion-off .ambient-glint {
+    animation: none !important;
+  }
+
+  .motion-off .signal-grid {
+    background-position: 0 0, 0 0, 0 0, 0 0 !important;
+    transition: none !important;
+  }
+
+  @media (max-width: 767px) {
+    .signal-grid {
+      background-size: 76px 76px, 76px 76px, 100% 100%;
+      opacity: 0.24;
+      -webkit-mask-image: radial-gradient(
+        circle 360px at 50% 20%,
+        hsl(0 0% 0% / 0.28), hsl(0 0% 0% / 0.06) 64%, transparent 100%
+      );
+              mask-image: radial-gradient(
+        circle 360px at 50% 20%,
+        hsl(0 0% 0% / 0.28), hsl(0 0% 0% / 0.06) 64%, transparent 100%
+      );
+    }
+
+    .ambient-field {
+      opacity: 0.2;
+    }
+
+    .ambient-node {
+      opacity: 0.55;
+    }
+
+    .ambient-node--desktop,
+    .ambient-glint--desktop,
+    .ambient-track,
+    .ambient-line {
+      display: none;
+    }
+  }
+}
+
+@keyframes ambient-glint {
+  0% { opacity: 0.16; transform: translate(-50%, -50%) rotate(var(--rotate)) translate3d(-10px, 0, 0); }
+  100% { opacity: 0.44; transform: translate(-50%, -50%) rotate(var(--rotate)) translate3d(10px, -4px, 0); }
+}
+
+@keyframes ambient-drift {
+  0% { opacity: 0.14; filter: blur(0); }
+  100% { opacity: 0.44; filter: blur(0.5px); }
+}
+
+@keyframes ambient-scan {
+  0% { transform: translateY(-22vh) rotate(-8deg); opacity: 0; }
+  20% { opacity: 0.26; }
+  70% { opacity: 0.2; }
+  100% { transform: translateY(86vh) rotate(-8deg); opacity: 0; }
+}
+
+@keyframes ambient-node {
+  0%, 100% { opacity: 0.18; transform: scale(0.82); }
+  50% { opacity: 0.5; transform: scale(1); }
+}
+
+@keyframes ambient-track {
+  0% { background-position-x: 0; opacity: 0.08; }
+  35% { opacity: 0.24; }
+  100% { background-position-x: 220px; opacity: 0.12; }
 }
 
 @keyframes breathe {

@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import tailwindcssAnimate from "tailwindcss-animate";
 
 export default {
   darkMode: ["class"],
@@ -8,9 +9,9 @@ export default {
     container: { center: true, padding: "1.5rem", screens: { "2xl": "1280px" } },
     extend: {
       fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],
-        display: ["Inter", "system-ui", "sans-serif"],
-        mono: ["JetBrains Mono", "ui-monospace", "monospace"],
+        sans: ["Avenir Next", "Avenir", "system-ui", "sans-serif"],
+        display: ["Avenir Next", "Avenir", "system-ui", "sans-serif"],
+        mono: ["Avenir Next", "Avenir", "system-ui", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -45,7 +46,7 @@ export default {
         "accordion-down": { from: { height: "0" }, to: { height: "var(--radix-accordion-content-height)" } },
         "accordion-up": { from: { height: "var(--radix-accordion-content-height)" }, to: { height: "0" } },
         "fade-in": { "0%": { opacity: "0" }, "100%": { opacity: "1" } },
-        "fade-in-up": { "0%": { opacity: "0", transform: "translateY(14px)" }, "100%": { opacity: "1", transform: "translateY(0)" } },
+        "fade-in-up": { "0%": { opacity: "0", transform: "translateY(10px)" }, "100%": { opacity: "1", transform: "translateY(0)" } },
         "fade-in-soft": { "0%": { opacity: "0", transform: "translateY(6px)" }, "100%": { opacity: "1", transform: "translateY(0)" } },
         "scale-in": { "0%": { transform: "scale(0.96)", opacity: "0" }, "100%": { transform: "scale(1)", opacity: "1" } },
         "slide-up": { "0%": { transform: "translateY(20px)", opacity: "0" }, "100%": { transform: "translateY(0)", opacity: "1" } },
@@ -53,13 +54,13 @@ export default {
       animation: {
         "accordion-down": "accordion-down 0.3s var(--ease-out-quart)",
         "accordion-up": "accordion-up 0.3s var(--ease-out-quart)",
-        "fade-in": "fade-in 0.6s var(--ease-out-expo)",
-        "fade-in-up": "fade-in-up 0.8s var(--ease-out-expo)",
-        "fade-in-soft": "fade-in-soft 0.55s var(--ease-out-expo)",
-        "scale-in": "scale-in 0.5s var(--ease-out-expo)",
-        "slide-up": "slide-up 0.7s var(--ease-out-expo)",
+        "fade-in": "fade-in 0.36s var(--ease-out-expo)",
+        "fade-in-up": "fade-in-up 0.46s var(--ease-out-expo)",
+        "fade-in-soft": "fade-in-soft 0.34s var(--ease-out-expo)",
+        "scale-in": "scale-in 0.38s var(--ease-out-expo)",
+        "slide-up": "slide-up 0.45s var(--ease-out-expo)",
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [tailwindcssAnimate],
 } satisfies Config;

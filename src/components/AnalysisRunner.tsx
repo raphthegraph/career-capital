@@ -46,54 +46,67 @@ interface Props {
   company: string;
   role: string;
   done: boolean;
+  animationsEnabled: boolean;
   onComplete: () => void;
 }
 
-export function AnalysisRunner({ company, role, done, onComplete }: Props) {
+export function AnalysisRunner({ company, role, done, animationsEnabled, onComplete }: Props) {
   const [step, setStep] = useState(0);
 
   useEffect(() => {
+    if (!animationsEnabled && done) {
+      setStep(FLAT.length);
+      return;
+    }
     if (step >= FLAT.length) return;
     const isLast = step === FLAT.length - 1;
     if (isLast && !done) return;
-    const t = setTimeout(() => setStep((s) => s + 1), 820);
+    const t = setTimeout(() => setStep((s) => s + 1), 500);
     return () => clearTimeout(t);
-  }, [step, done]);
+  }, [step, done, animationsEnabled]);
 
   useEffect(() => {
     if (step >= FLAT.length) {
-      const t = setTimeout(onComplete, 800);
+      const t = setTimeout(onComplete, animationsEnabled ? 280 : 0);
       return () => clearTimeout(t);
     }
-  }, [step, onComplete]);
+  }, [step, onComplete, animationsEnabled]);
 
   const activePhase = step >= FLAT.length ? PHASES.length - 1 : FLAT[step].phaseIdx;
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-6 relative">
-      <SignalGrid pulses />
+    <div className="min-h-[calc(100vh-3.5rem)] flex items-center justify-center px-4 py-10 sm:px-6 md:py-14 relative">
+      <SignalGrid variant="analysis" pulses intensity="active" />
 
-      <div className="relative z-10 w-full max-w-[520px] animate-fade-in">
-        <div className="text-center space-y-3 mb-14">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full surface text-[11px] text-muted-foreground tracking-wide">
+      <div className="relative z-10 grid w-full max-w-[1000px] items-center gap-8 animate-fade-in md:grid-cols-[0.82fr_1.18fr]">
+        <div className="space-y-6 text-left">
+          <div className="inline-flex items-center gap-2 rounded-full border border-primary/10 bg-white/70 px-3 py-2 text-[12px] font-semibold text-muted-foreground shadow-soft backdrop-blur-xl">
             <span className="w-1.5 h-1.5 rounded-full bg-primary animate-breathe" />
             {company} · {role}
           </div>
-          <h2 className="font-display text-[28px] md:text-[34px] font-[680] tracking-[-0.035em] text-foreground">
+          <h2 className="font-display text-[36px] font-[800] leading-[1.02] text-foreground md:text-[52px]">
             Pricing your career asset
           </h2>
-          <p className="text-[14px] text-muted-foreground">
-            $JOB is analyzing your role in real time
+          <p className="max-w-[420px] text-[15px] leading-[1.65] text-muted-foreground">
+            $JOB is scanning public momentum, risk, hiring, and career leverage signals.
           </p>
+          <div className="air-card hidden p-5 md:block">
+            <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+              AI pricing status
+            </div>
+            <div className="mt-2 text-[23px] font-extrabold tracking-tight text-primary-strong">
+              Gathering context
+            </div>
+          </div>
         </div>
 
-        <div className="surface-elevated rounded-[24px] p-7 md:p-9 relative overflow-hidden">
+        <div className="surface-floating relative overflow-hidden rounded-[34px] p-5 md:p-7">
           {/* subtle progress shimmer along top edge */}
           <div className="absolute top-0 left-0 right-0 h-px overflow-hidden">
             <div className="absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-primary/40 to-transparent animate-shimmer-line" />
           </div>
 
-          <div className="space-y-9">
+          <div className="space-y-5">
             {PHASES.map((phase, pi) => {
               const phaseStart = PHASES.slice(0, pi).reduce((n, p) => n + p.steps.length, 0);
               const isActive = pi === activePhase && step < FLAT.length;
@@ -133,7 +146,7 @@ export function AnalysisRunner({ company, role, done, onComplete }: Props) {
                   </div>
 
                   {(isActive || isComplete) && (
-                    <ul className="pl-[38px] space-y-2.5">
+                    <ul className="pl-[38px] space-y-2">
                       {phase.steps.map((s, si) => {
                         const globalIdx = phaseStart + si;
                         if (globalIdx > step) return null;
@@ -141,7 +154,7 @@ export function AnalysisRunner({ company, role, done, onComplete }: Props) {
                         return (
                           <li
                             key={s}
-                            className={`text-[13.5px] leading-relaxed transition-colors animate-fade-in-soft ${
+                            className={`rounded-[24px] border border-border/[0.035] bg-white/45 px-3 py-2 text-[13.5px] leading-relaxed transition-colors animate-fade-in-soft ${
                               isCurrent ? "text-foreground/90" : "text-muted-foreground"
                             }`}
                           >

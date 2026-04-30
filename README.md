@@ -43,6 +43,7 @@ supabase/
     analyze-job/               Career asset analysis endpoint
     recommend-action/          Next-move recommendation endpoint
     career-chat/               Contextual chat endpoint
+    system-status/             Lightweight internal API health endpoint
     _shared/                   Shared Deno helpers, schemas, OpenAI, Tavily
   migrations/                  Database schema and policy lock-down
 ```
@@ -54,6 +55,8 @@ The main frontend flow is controlled in [`src/pages/Index.tsx`](src/pages/Index.
 - [`src/components/VerdictReveal.tsx`](src/components/VerdictReveal.tsx)
 - [`src/components/AnalysisDashboard.tsx`](src/components/AnalysisDashboard.tsx)
 - [`src/components/Recommendations.tsx`](src/components/Recommendations.tsx)
+
+[`src/pages/SystemStatus.tsx`](src/pages/SystemStatus.tsx) provides a lightweight status view at `/status`.
 
 ## Architecture
 
@@ -110,6 +113,19 @@ This endpoint:
 - retrieves relevant embedded context through pgvector
 - asks OpenAI for a concise, grounded reply
 - stores user and assistant messages best effort
+
+### `system-status`
+
+[`supabase/functions/system-status/index.ts`](supabase/functions/system-status/index.ts)
+
+This endpoint powers the `/status` page. It performs lightweight checks only:
+
+- calls each Edge Function with `?health=1`
+- verifies expected Supabase tables through server-side service-role reads
+- measures response time
+- returns `operational`, `degraded`, or `down`
+
+It does not call OpenAI, Tavily, embeddings, or any expensive provider path.
 
 ## Data Model
 
@@ -246,6 +262,7 @@ Supabase Edge Function secrets:
 ```bash
 SUPABASE_URL=
 SUPABASE_SERVICE_ROLE_KEY=
+FUNCTION_HEALTH_ANON_KEY=
 OPENAI_API_KEY=
 OPENAI_MODEL=gpt-5.4-mini
 TAVILY_API_KEY=
@@ -278,7 +295,7 @@ VITE_SUPABASE_PUBLISHABLE_KEY=
 VITE_SUPABASE_PROJECT_ID=
 ```
 
-Keep the demo protected in Vercel while the app has no user accounts. Store all private AI and Supabase service keys in Supabase function secrets, not in Vercel.
+Store all private AI and Supabase service keys in Supabase function secrets, not in Vercel. The public Vercel app should only receive `VITE_` variables that are safe for the browser.
 
 ## Local Development
 
@@ -330,6 +347,7 @@ Set function secrets:
 supabase secrets set \
   SUPABASE_URL=https://your-project.supabase.co \
   SUPABASE_SERVICE_ROLE_KEY=your-service-role-key \
+  FUNCTION_HEALTH_ANON_KEY=your-supabase-anon-key \
   OPENAI_API_KEY=your-openai-key \
   OPENAI_MODEL=gpt-5.4-mini \
   TAVILY_API_KEY=your-tavily-key \
@@ -346,6 +364,7 @@ Deploy functions:
 supabase functions deploy analyze-job
 supabase functions deploy recommend-action
 supabase functions deploy career-chat
+supabase functions deploy system-status
 ```
 
 Minimum database requirements:
@@ -361,6 +380,7 @@ Post-deploy smoke test:
 - Run `N26 / Product Manager`.
 - Run `Trade Republic / Product Manager`.
 - Ask chat: `Why did you recommend this?`
+- Open `/status` and confirm the backend checks return live statuses.
 - Confirm excessive requests return JSON errors.
 - Confirm Vercel security headers are present on the production URL.
 

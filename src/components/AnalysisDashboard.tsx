@@ -171,15 +171,15 @@ export function AnalysisDashboard({ company, role, analysis, animationsEnabled, 
   }, [animationsEnabled]);
 
   return (
-    <div className="min-h-[calc(100vh-3.5rem)] pb-28 relative">
+    <div className="relative min-h-[100svh] pb-28">
       <SignalGrid variant="dashboard" />
 
-      <div className="relative z-10 mx-auto w-full max-w-[980px] px-4 py-10 sm:px-6 md:py-14">
-        <main className="space-y-12 md:space-y-16">
+      <div className="relative z-10 mx-auto w-full max-w-[980px] px-4 pb-10 pt-[calc(5.75rem+env(safe-area-inset-top))] sm:px-6 sm:py-10 md:py-14">
+        <main className="space-y-10 md:space-y-16">
           {showIntro && (
             <section className="mx-auto max-w-[860px] space-y-5 text-center animate-fade-in-up">
               <div className="eyebrow">Final result</div>
-              <h2 className="font-display text-[40px] font-[760] leading-[1.04] text-foreground text-elegant sm:text-[58px]">
+              <h2 className="break-words font-display text-[34px] font-[760] leading-[1.06] text-foreground text-elegant sm:text-[58px] sm:leading-[1.04]">
                 {stayStatement}
               </h2>
               <p className="mx-auto max-w-[680px] text-[16px] leading-[1.65] text-foreground/75 md:text-[18px]">
@@ -581,22 +581,22 @@ function Question({
 }) {
   return (
     <div className="section-plain animate-fade-in-up border-t border-border/[0.055] py-7">
-      <div className="mb-5 flex items-start gap-4">
+      <div className="mb-5 flex items-start gap-3 sm:gap-4">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/45 text-primary-strong shadow-soft backdrop-blur-2xl">
           <Icon className="h-[18px] w-[18px]" />
         </div>
         <div className="min-w-0">
           <div className="eyebrow">Question {index} of 3</div>
-          <h3 className="mt-2 font-display text-[24px] font-[680] leading-[1.16] text-foreground md:text-[30px]">
+          <h3 className="mt-2 break-words font-display text-[22px] font-[680] leading-[1.18] text-foreground sm:text-[24px] md:text-[30px]">
             {title}
           </h3>
         </div>
       </div>
       {locked ? (
-        <div className="rounded-[24px] border border-primary/10 bg-white/45 px-4 py-3.5 flex items-center justify-between gap-3 shadow-soft backdrop-blur-2xl">
-          <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between gap-3 rounded-[24px] border border-primary/10 bg-white/45 px-4 py-3.5 shadow-soft backdrop-blur-2xl">
+          <div className="flex min-w-0 items-center gap-3">
             <CheckCircle2 className="h-4 w-4 shrink-0 text-primary-strong" />
-            <span className="text-[14.5px] text-foreground font-medium">{lockedAnswer}</span>
+            <span className="min-w-0 break-words text-[14.5px] font-medium text-foreground">{lockedAnswer}</span>
           </div>
           <button
             onClick={onChange}
@@ -633,7 +633,7 @@ function SuggestionsWithFreeText({
             key={label}
             type="button"
             onClick={() => onPick(label)}
-            className="group w-full text-left px-4 py-4 rounded-[24px] border border-border/[0.035] bg-white/40 hover:bg-primary-tint/60 hover:border-primary/15 lift-on-hover animate-fade-in-soft flex items-center justify-between gap-3 shadow-soft backdrop-blur-2xl"
+            className="group flex min-h-[52px] w-full items-center justify-between gap-3 rounded-[24px] border border-border/[0.035] bg-white/40 px-4 py-4 text-left shadow-soft backdrop-blur-2xl lift-on-hover animate-fade-in-soft hover:border-primary/15 hover:bg-primary-tint/60"
             style={{ animationDelay: `${i * 90}ms` }}
           >
             <span className="text-[15px] font-medium text-foreground/95">{label}</span>
@@ -648,7 +648,7 @@ function SuggestionsWithFreeText({
           const v = text.trim();
           if (v) onFreeText(v);
         }}
-        className="rounded-full border border-border/[0.035] bg-white/50 flex items-center gap-2 p-2 pl-4 animate-fade-in-soft shadow-soft backdrop-blur-xl"
+        className="flex items-center gap-2 rounded-[28px] border border-border/[0.035] bg-white/50 p-2 pl-4 shadow-soft backdrop-blur-xl animate-fade-in-soft sm:rounded-full"
         style={{ animationDelay: `${items.length * 90 + 80}ms` }}
       >
         <Sparkles className="w-4 h-4 text-primary shrink-0" />
@@ -656,7 +656,7 @@ function SuggestionsWithFreeText({
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder={placeholder}
-          className="flex-1 h-11 bg-transparent text-[14.5px] text-foreground placeholder:text-muted-foreground/70 outline-none"
+          className="h-11 min-w-0 flex-1 bg-transparent text-[14.5px] text-foreground outline-none placeholder:text-muted-foreground/70"
         />
         <Button
           type="submit"

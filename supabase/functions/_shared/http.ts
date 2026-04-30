@@ -6,7 +6,7 @@ const DEFAULT_ALLOWED_ORIGINS = [
 ];
 
 export const corsHeaders = {
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Methods": "GET, HEAD, POST, OPTIONS",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Max-Age": "86400",
 };
@@ -73,6 +73,57 @@ export function requirePost(request: Request) {
   return jsonResponse(
     { error: "Method not allowed." },
     { status: 405, headers: { Allow: "POST, OPTIONS" } },
+    request,
+  );
+}
+
+export function isHealthCheck(request: Request) {
+  const url = new URL(request.url);
+  return (
+    (request.method === "GET" || request.method === "HEAD") &&
+    url.searchParams.get("health") === "1"
+  );
+}
+
+export function healthResponse(
+  request: Request,
+  body: {
+    endpoint: string;
+    status?: "operational" | "degraded";
+    message?: string;
+    checks?: Record<string, boolean>;
+  },
+) {
+  if (request.method === "HEAD") {
+    return new Response(null, {
+      headers: getCorsHeaders(request),
+    });
+  }
+
+  const checks = body.checks ?? {};
+  const hasFailedCheck = Object.values(checks).some((value) => value === false);
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const hasPrivilegedToken = Boolean(
+    serviceRoleKey &&
+      (
+        request.headers.get("authorization") === `Bearer ${serviceRoleKey}` ||
+        request.headers.get("apikey") === serviceRoleKey
+      ),
+  );
+
+  return jsonResponse(
+    {
+      endpoint: body.endpoint,
+      status: body.status ?? (hasFailedCheck ? "degraded" : "operational"),
+      checkedAt: new Date().toISOString(),
+      ...(body.message ? { message: body.message } : {}),
+      ...(hasPrivilegedToken && body.checks ? { checks: body.checks } : {}),
+    },
+    {
+      headers: {
+        "Cache-Control": "no-store",
+      },
+    },
     request,
   );
 }

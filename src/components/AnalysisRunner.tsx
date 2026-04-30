@@ -87,7 +87,7 @@ export function AnalysisRunner({ company, role, done, animationsEnabled, onCompl
   const activeLabel = step >= FLAT.length ? "Sourced read ready" : FLAT[step].label;
 
   return (
-    <div className="min-h-[calc(100vh-3.5rem)] flex items-center justify-center px-4 py-10 sm:px-6 md:py-14 relative">
+    <div className="relative flex min-h-[100svh] items-center justify-center px-4 pb-10 pt-[calc(5.75rem+env(safe-area-inset-top))] sm:px-6 sm:py-10 md:py-14">
       <SignalGrid variant="analysis" pulses intensity="active" />
 
       <div className="relative z-10 grid w-full max-w-[980px] items-center gap-8 animate-fade-in md:grid-cols-[0.86fr_1.14fr]">
@@ -96,7 +96,7 @@ export function AnalysisRunner({ company, role, done, animationsEnabled, onCompl
             <span className="w-1.5 h-1.5 rounded-full bg-primary animate-breathe" />
             {company} · {role}
           </div>
-          <h2 className="font-display text-[36px] font-[800] leading-[1.02] text-foreground md:text-[52px]">
+          <h2 className="font-display text-[34px] font-[800] leading-[1.04] text-foreground sm:text-[40px] md:text-[52px]">
             Pricing your career asset
           </h2>
           <p className="max-w-[420px] text-[15px] leading-[1.65] text-muted-foreground">
@@ -181,7 +181,7 @@ export function AnalysisRunner({ company, role, done, animationsEnabled, onCompl
                   </span>
                 </div>
 
-                <ul className="pl-[46px] space-y-2">
+                <ul className="space-y-2 pl-0 sm:pl-[46px]">
                     {phase.steps.map((s, si) => {
                       const globalIdx = phaseStart + si;
                       const isCurrent = globalIdx === step && step < FLAT.length;

@@ -91,7 +91,9 @@
 
 @layer base {
   * { border-color: hsl(var(--border) / 0.08); }
-  html, body, #root { @apply min-h-screen; }
+  html, body, #root {
+    @apply min-h-screen overflow-x-hidden;
+  }
   body {
     @apply bg-background text-foreground antialiased;
     font-family: var(--font-sans);

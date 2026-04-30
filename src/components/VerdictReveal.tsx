@@ -133,14 +133,14 @@ export function VerdictReveal({
   }, [ctaReady, onReadyChange]);
 
   return (
-    <div className="min-h-[calc(100vh-3.5rem)] px-4 py-10 sm:px-6 md:py-14 relative">
+    <div className="relative min-h-[100svh] px-4 pb-12 pt-[calc(5.75rem+env(safe-area-inset-top))] sm:px-6 sm:py-10 md:py-14">
       <SignalGrid variant="reveal" focus={gridFocus} intensity={gridFocus ? "focus" : "active"} />
 
       <div className="relative z-10 mx-auto w-full max-w-[1180px] space-y-10">
         <section className="mx-auto max-w-[820px] space-y-7 text-center">
           <div className="space-y-5">
             {phase >= 1 && (
-              <h2 className="animate-pop-in font-display text-[44px] font-[760] leading-[1.02] text-foreground text-elegant sm:text-[64px] lg:text-[76px]">
+              <h2 className="animate-pop-in font-display text-[38px] font-[760] leading-[1.04] text-foreground text-elegant sm:text-[64px] sm:leading-[1.02] lg:text-[76px]">
                 Your job has been priced.
               </h2>
             )}
@@ -159,7 +159,7 @@ export function VerdictReveal({
           {phase >= 3 && (
             <div className="mx-auto max-w-[360px] animate-scale-in rounded-[32px] border border-primary/10 bg-white/45 px-6 py-5 shadow-soft backdrop-blur-2xl">
               <div className="eyebrow">Synthetic ticker</div>
-              <div className="mt-2 font-mono text-[34px] font-semibold tracking-[0.08em] text-primary-strong sm:text-[44px]">
+              <div className="mt-2 break-all font-mono text-[32px] font-semibold tracking-[0.06em] text-primary-strong sm:text-[44px] sm:tracking-[0.08em]">
                 {analysis.ticker}
               </div>
             </div>
@@ -173,7 +173,7 @@ export function VerdictReveal({
             )}
             {phase >= 5 && (
               <div
-                className={`animate-pop-in font-display text-[64px] font-[760] leading-none sm:text-[86px] ${ratingColorClass(
+                className={`animate-pop-in break-words font-display text-[48px] font-[760] leading-none min-[380px]:text-[56px] sm:text-[86px] ${ratingColorClass(
                   analysis.rating,
                 )}`}
               >
@@ -182,7 +182,7 @@ export function VerdictReveal({
             )}
 
             {phase >= 6 && (
-              <div className="mx-auto grid max-w-[680px] grid-cols-1 gap-3 pt-2 sm:grid-cols-3">
+              <div className="mx-auto grid max-w-[680px] grid-cols-1 gap-3 pt-2 min-[520px]:grid-cols-3">
                 <div className="animate-fade-in-up rounded-[28px] border border-border/[0.035] bg-white/42 p-4 shadow-soft backdrop-blur-2xl">
                   <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Score</div>
                   <div className="mt-1 text-[25px] font-semibold text-foreground">{analysis.careerAssetScore}</div>

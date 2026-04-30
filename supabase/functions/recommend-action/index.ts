@@ -12,7 +12,9 @@ import {
 } from "../_shared/career.ts";
 import {
   enforceRateLimit,
+  healthResponse,
   handleCorsPreflight,
+  isHealthCheck,
   jsonResponse,
   readJsonBody,
   rejectDisallowedOrigin,
@@ -253,6 +255,16 @@ Deno.serve(async (request) => {
 
   const originError = rejectDisallowedOrigin(request);
   if (originError) return originError;
+
+  if (isHealthCheck(request)) {
+    return healthResponse(request, {
+      endpoint: "recommend-action",
+      checks: {
+        openaiConfigured: Boolean(Deno.env.get("OPENAI_API_KEY")),
+        supabaseConfigured: Boolean(SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY),
+      },
+    });
+  }
 
   const methodError = requirePost(request);
   if (methodError) return methodError;

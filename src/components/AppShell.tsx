@@ -21,11 +21,11 @@ export function AppShell({
   children,
 }: AppShellProps) {
   return (
-    <div className="min-h-screen relative">
-      <header className="fixed right-4 top-4 z-50 pointer-events-none sm:right-5 sm:top-5">
+    <div className="relative min-h-[100svh] overflow-x-hidden">
+      <header className="fixed right-3 top-[calc(env(safe-area-inset-top)+0.75rem)] z-50 pointer-events-none sm:right-5 sm:top-5">
         <nav
           aria-label="Flow controls"
-          className="surface-floating pointer-events-auto flex items-center gap-1.5 rounded-full p-1.5"
+          className="surface-floating pointer-events-auto flex items-center gap-1 rounded-full p-1.5 sm:gap-1.5"
         >
             <button
               type="button"

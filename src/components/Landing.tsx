@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowRight } from "lucide-react";
@@ -27,13 +28,13 @@ export function Landing({ onSubmit }: Props) {
   };
 
   return (
-    <div className="min-h-[calc(100vh-3.5rem)] flex flex-col relative overflow-hidden">
+    <div className="relative flex min-h-[100svh] flex-col overflow-x-hidden">
       <SignalGrid variant="landing" />
 
-      <main className="relative z-10 flex flex-1 items-center px-4 py-12 sm:px-6 md:py-16">
+      <main className="relative z-10 flex flex-1 items-center px-4 pb-10 pt-[calc(5.75rem+env(safe-area-inset-top))] sm:px-6 sm:py-12 md:py-16">
         <div className="mx-auto w-full max-w-[920px] space-y-8 text-center animate-fade-in-up">
           <div className="mx-auto max-w-[780px] space-y-5">
-            <h1 className="font-display text-[44px] font-[800] leading-[0.98] text-foreground text-elegant sm:text-[64px] lg:text-[78px]">
+            <h1 className="font-display text-[40px] font-[800] leading-[1.02] text-foreground text-elegant sm:text-[64px] sm:leading-[0.98] lg:text-[78px]">
               Price your job like a career asset.
             </h1>
             <p className="mx-auto max-w-[600px] text-[16px] leading-[1.7] text-muted-foreground sm:text-[18px]">
@@ -70,7 +71,7 @@ export function Landing({ onSubmit }: Props) {
             <Button
               type="submit"
               size="lg"
-              className="h-[58px] rounded-[28px] bg-primary px-6 text-[15px] font-bold text-primary-foreground hover:bg-primary-hover lift-on-hover glow-primary sm:h-full sm:rounded-full"
+              className="h-[56px] rounded-[28px] bg-primary px-6 text-[15px] font-bold text-primary-foreground hover:bg-primary-hover lift-on-hover glow-primary sm:h-full sm:rounded-full"
             >
               Price it <ArrowRight className="ml-1 h-4 w-4" />
             </Button>
@@ -96,8 +97,15 @@ export function Landing({ onSubmit }: Props) {
         </div>
       </main>
 
-      <footer className="relative z-10 px-6 pb-5 text-center text-[11px] tracking-wide text-muted-foreground/70">
-        Not financial advice. Definitely career advice.
+      <footer className="relative z-10 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 px-6 pb-5 text-center text-[11px] tracking-wide text-muted-foreground/70">
+        <span>Not financial advice. Definitely career advice.</span>
+        <span className="hidden text-muted-foreground/35 sm:inline">·</span>
+        <Link
+          to="/status"
+          className="font-bold text-muted-foreground/70 transition-colors hover:text-primary"
+        >
+          System status
+        </Link>
       </footer>
     </div>
   );

@@ -82,12 +82,12 @@ export function Recommendations({
   }, [decision, company, role, analysis, analysis.analysisId, animationsEnabled]);
 
   return (
-    <div className="min-h-[calc(100vh-3.5rem)] pb-44 relative">
+    <div className="relative min-h-[100svh] pb-44">
       <SignalGrid variant="recommendation" intensity={!data && !error ? "active" : "quiet"} />
 
-      <div className="relative z-10 mx-auto w-full max-w-[920px] px-4 py-10 sm:px-6 md:py-14">
+      <div className="relative z-10 mx-auto w-full max-w-[920px] px-4 pb-10 pt-[calc(5.75rem+env(safe-area-inset-top))] sm:px-6 sm:py-10 md:py-14">
         <main className="min-w-0 space-y-8">
-          <div className="flex justify-end">
+          <div className="flex justify-start sm:justify-end">
             <Button
               variant="ghost"
               onClick={onRestart}
@@ -163,14 +163,14 @@ function Loading({
   const activeLabel = LOAD_STEPS[activeStep];
 
   return (
-    <div className="mx-auto grid w-full max-w-[900px] items-center gap-7 animate-fade-in px-2 py-8 md:grid-cols-[0.9fr_1.1fr]">
+    <div className="mx-auto grid w-full max-w-[900px] items-center gap-7 px-0 py-4 animate-fade-in sm:px-2 sm:py-8 md:grid-cols-[0.9fr_1.1fr]">
       <div className="space-y-5 text-left">
         <div className="inline-flex items-center gap-2 rounded-full border border-primary/10 bg-white/60 px-3 py-2 text-[12px] font-semibold text-muted-foreground shadow-soft backdrop-blur-xl">
           <span className="h-1.5 w-1.5 rounded-full bg-primary animate-breathe" />
           {company} · {role}
         </div>
         <div className="space-y-3">
-          <h2 className="font-display text-[34px] font-[780] leading-[1.03] text-foreground md:text-[48px]">
+          <h2 className="font-display text-[32px] font-[780] leading-[1.06] text-foreground sm:text-[38px] md:text-[48px]">
             Preparing your next move
           </h2>
           <p className="max-w-[430px] text-[15px] leading-[1.65] text-muted-foreground">
@@ -179,7 +179,7 @@ function Loading({
         </div>
         <div className="air-card inline-flex max-w-full items-center gap-2 rounded-[24px] px-4 py-3">
           <Sparkles className="h-4 w-4 shrink-0 text-primary" />
-          <span className="truncate text-[13px] font-semibold text-foreground/78">
+          <span className="min-w-0 truncate text-[13px] font-semibold text-foreground/78">
             {decision.intent} · {decision.subIntent}
           </span>
         </div>
@@ -389,7 +389,7 @@ function RecommendationView({
           <div className="space-y-7 animate-fade-in-up py-2 text-center">
             <div className="space-y-4">
               <div className="eyebrow">Recommended move</div>
-              <h2 className="font-display text-[42px] md:text-[62px] font-[780] leading-[1.02] text-foreground text-elegant">
+              <h2 className="break-words font-display text-[36px] font-[780] leading-[1.05] text-foreground text-elegant sm:text-[48px] md:text-[62px] md:leading-[1.02]">
                 {headline}
               </h2>
               <p className="mx-auto max-w-[720px] text-[16px] leading-[1.65] text-foreground/76 md:text-[18px]">
@@ -709,7 +709,7 @@ function FloatingChat({
     <div className="fixed bottom-0 left-0 right-0 z-40 pointer-events-none">
       <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-background via-background/85 to-transparent pointer-events-none" />
 
-      <div className="relative px-6 pb-7 pt-4 pointer-events-auto flex justify-center">
+      <div className="relative flex justify-center px-3 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-4 pointer-events-auto sm:px-6 sm:pb-7">
         <div className="w-full max-w-[760px] space-y-3">
           {open && messages.length > 0 && (
             <div className="air-card overflow-hidden rounded-[30px] animate-fade-in-up">
@@ -727,7 +727,7 @@ function FloatingChat({
                   hide
                 </button>
               </div>
-              <div ref={scrollRef} className="max-h-[min(440px,52vh)] overflow-y-auto p-5 space-y-3">
+              <div ref={scrollRef} className="max-h-[min(420px,52dvh)] space-y-3 overflow-y-auto p-4 sm:max-h-[min(440px,52vh)] sm:p-5">
                 {messages.map((m, i) => (
                   <div
                     key={i}
@@ -736,7 +736,7 @@ function FloatingChat({
                     }`}
                   >
                     <div
-                      className={`max-w-[88%] rounded-[24px] px-4 py-3 text-[14px] leading-[1.6] ${
+                      className={`max-w-[90%] rounded-[22px] px-4 py-3 text-[14px] leading-[1.6] sm:max-w-[88%] sm:rounded-[24px] ${
                         m.role === "user"
                           ? "bg-primary text-primary-foreground whitespace-pre-wrap"
                           : "bg-white/60 text-foreground/90 border border-border/[0.06]"
@@ -776,7 +776,7 @@ function FloatingChat({
               e.preventDefault();
               send();
             }}
-            className="surface-floating rounded-full flex items-center gap-2 p-2 pl-6"
+            className="surface-floating flex items-center gap-2 rounded-[30px] p-2 pl-4 sm:rounded-full sm:pl-6"
             onFocus={() => messages.length > 0 && setOpen(true)}
           >
             <Sparkles className="w-4 h-4 text-primary shrink-0" />
@@ -784,14 +784,14 @@ function FloatingChat({
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Ask $JOB about your next move"
-              className="flex-1 h-12 bg-transparent text-[15px] text-foreground placeholder:text-muted-foreground/70 outline-none"
+              className="h-11 min-w-0 flex-1 bg-transparent text-[14.5px] text-foreground outline-none placeholder:text-muted-foreground/70 sm:h-12 sm:text-[15px]"
               disabled={loading}
             />
             <Button
               type="submit"
               size="icon"
               disabled={loading || !input.trim()}
-              className="h-11 w-11 rounded-full bg-primary text-primary-foreground hover:bg-primary-hover disabled:opacity-40 glow-primary"
+              className="h-10 w-10 shrink-0 rounded-full bg-primary text-primary-foreground hover:bg-primary-hover disabled:opacity-40 glow-primary sm:h-11 sm:w-11"
             >
               <ArrowUp className="w-4 h-4" />
             </Button>

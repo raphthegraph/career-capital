@@ -12,6 +12,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { SignalGrid } from "@/components/SignalGrid";
+import { isMobileViewport } from "@/lib/viewport";
 
 interface Props {
   company: string;
@@ -264,6 +265,7 @@ const CHAT_THINKING_STEPS = [
 ];
 
 function scrollNearestIfNeeded(element: HTMLElement | null) {
+  if (isMobileViewport()) return;
   if (!element) return;
   element.scrollIntoView({ behavior: "smooth", block: "center" });
 }

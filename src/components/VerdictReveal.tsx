@@ -6,6 +6,7 @@ import { SignalGrid } from "@/components/SignalGrid";
 import { getRevealSignals, type RevealSignal } from "@/lib/analysis-helpers";
 import { ratingColorClass } from "@/lib/rating";
 import { SourceChips } from "@/components/SourceChips";
+import { isMobileViewport } from "@/lib/viewport";
 
 interface Props {
   company: string;
@@ -40,6 +41,7 @@ const FALLBACK_INSIGHTS: RevealSignal[] = [
 ];
 
 function scrollNearestIfNeeded(element: HTMLElement | null) {
+  if (isMobileViewport()) return;
   if (!element) return;
   const rect = element.getBoundingClientRect();
   const viewportBottom = window.innerHeight - 112;
@@ -103,6 +105,7 @@ export function VerdictReveal({
 
   useEffect(() => {
     if (!animationsEnabled) return;
+    if (isMobileViewport()) return;
     if (phase < 7) return;
     const t = setTimeout(() => {
       signalsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });

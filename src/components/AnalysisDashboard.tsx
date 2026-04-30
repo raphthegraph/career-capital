@@ -17,6 +17,7 @@ import {
 import { SignalGrid } from "@/components/SignalGrid";
 import { getInvestmentThesis } from "@/lib/analysis-helpers";
 import { ratingColorClass } from "@/lib/rating";
+import { isMobileViewport } from "@/lib/viewport";
 
 interface Props {
   company: string;
@@ -129,6 +130,7 @@ function getStayStatement(company: string, role: string, analysis: Analysis) {
 }
 
 function scrollNearestIfNeeded(element: HTMLElement | null) {
+  if (isMobileViewport()) return;
   if (!element) return;
   element.scrollIntoView({ behavior: "smooth", block: "center" });
 }
@@ -459,6 +461,7 @@ function IntentFlow({
 
   useEffect(() => {
     if (intent) {
+      if (isMobileViewport()) return;
       q2Ref.current?.scrollIntoView({
         behavior: animationsEnabled ? "smooth" : "auto",
         block: "center",
@@ -467,6 +470,7 @@ function IntentFlow({
   }, [intent, animationsEnabled]);
   useEffect(() => {
     if (sub) {
+      if (isMobileViewport()) return;
       q3Ref.current?.scrollIntoView({
         behavior: animationsEnabled ? "smooth" : "auto",
         block: "center",

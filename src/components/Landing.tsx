@@ -32,21 +32,21 @@ export function Landing({ onSubmit }: Props) {
       <SignalGrid variant="landing" />
 
       <main className="relative z-10 flex flex-1 items-center px-4 pb-10 pt-[calc(5.75rem+env(safe-area-inset-top))] sm:px-6 sm:py-12 md:py-16">
-        <div className="mx-auto w-full max-w-[920px] space-y-8 text-center animate-fade-in-up">
-          <div className="mx-auto max-w-[780px] space-y-5">
-            <h1 className="font-display text-[40px] font-[800] leading-[1.02] text-foreground text-elegant sm:text-[64px] sm:leading-[0.98] lg:text-[78px]">
+        <div className="mx-auto w-full max-w-[920px] space-y-6 text-center animate-fade-in-up sm:space-y-8">
+          <div className="mx-auto max-w-[780px] space-y-4 sm:space-y-5">
+            <h1 className="font-display text-[36px] font-[800] leading-[1.04] text-foreground text-elegant min-[390px]:text-[40px] sm:text-[64px] sm:leading-[0.98] lg:text-[78px]">
               Price your job like a career asset.
             </h1>
-            <p className="mx-auto max-w-[600px] text-[16px] leading-[1.7] text-muted-foreground sm:text-[18px]">
+            <p className="mx-auto max-w-[600px] text-[15px] leading-[1.6] text-muted-foreground sm:text-[18px] sm:leading-[1.7]">
               Enter your company and role. $JOB reads public signals, prices the opportunity, and helps you decide what to do next.
             </p>
           </div>
 
           <form
             onSubmit={submit}
-            className="surface-floating mx-auto grid w-full max-w-[820px] gap-2 rounded-[34px] p-2 text-left shadow-floating sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:rounded-full"
+            className="surface-floating mx-auto grid w-full max-w-[390px] gap-1.5 rounded-[30px] p-2 text-left shadow-floating sm:max-w-[820px] sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:gap-2 sm:rounded-full"
           >
-            <label className="rounded-[28px] bg-white/45 px-4 py-3.5 transition-all focus-within:bg-white/70 sm:rounded-full">
+            <label className="rounded-[24px] bg-white/45 px-4 py-2.5 transition-all focus-within:bg-white/70 sm:rounded-full sm:py-3.5">
               <span className="block text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
                 Company
               </span>
@@ -54,10 +54,10 @@ export function Landing({ onSubmit }: Props) {
                 placeholder="N26"
                 value={company}
                 onChange={(e) => setCompany(e.target.value)}
-                className="mt-0.5 h-8 border-0 bg-transparent px-0 text-[16px] font-semibold text-foreground shadow-none outline-none placeholder:text-muted-foreground/70 focus-visible:ring-0 focus-visible:ring-offset-0"
+                className="mt-0.5 h-7 border-0 bg-transparent px-0 text-[16px] font-semibold text-foreground shadow-none outline-none placeholder:text-muted-foreground/70 focus-visible:ring-0 focus-visible:ring-offset-0 sm:h-8"
               />
             </label>
-            <label className="rounded-[28px] bg-white/45 px-4 py-3.5 transition-all focus-within:bg-white/70 sm:rounded-full">
+            <label className="rounded-[24px] bg-white/45 px-4 py-2.5 transition-all focus-within:bg-white/70 sm:rounded-full sm:py-3.5">
               <span className="block text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
                 Role
               </span>
@@ -65,13 +65,13 @@ export function Landing({ onSubmit }: Props) {
                 placeholder="Product Manager"
                 value={role}
                 onChange={(e) => setRole(e.target.value)}
-                className="mt-0.5 h-8 border-0 bg-transparent px-0 text-[16px] font-semibold text-foreground shadow-none outline-none placeholder:text-muted-foreground/70 focus-visible:ring-0 focus-visible:ring-offset-0"
+                className="mt-0.5 h-7 border-0 bg-transparent px-0 text-[16px] font-semibold text-foreground shadow-none outline-none placeholder:text-muted-foreground/70 focus-visible:ring-0 focus-visible:ring-offset-0 sm:h-8"
               />
             </label>
             <Button
               type="submit"
               size="lg"
-              className="h-[56px] rounded-[28px] bg-primary px-6 text-[15px] font-bold text-primary-foreground hover:bg-primary-hover lift-on-hover glow-primary sm:h-full sm:rounded-full"
+              className="h-[52px] rounded-[26px] bg-primary px-6 text-[15px] font-bold text-primary-foreground hover:bg-primary-hover lift-on-hover glow-primary sm:h-full sm:rounded-full"
             >
               Price it <ArrowRight className="ml-1 h-4 w-4" />
             </Button>

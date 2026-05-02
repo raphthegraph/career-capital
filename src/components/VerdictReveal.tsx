@@ -136,19 +136,19 @@ export function VerdictReveal({
   }, [ctaReady, onReadyChange]);
 
   return (
-    <div className="relative min-h-[100svh] px-4 pb-12 pt-[calc(5.75rem+env(safe-area-inset-top))] sm:px-6 sm:py-10 md:py-14">
+    <div className="relative min-h-[100svh] px-4 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-[calc(2rem+env(safe-area-inset-top))] sm:px-6 sm:py-10 md:py-14">
       <SignalGrid variant="reveal" focus={gridFocus} intensity={gridFocus ? "focus" : "active"} />
 
-      <div className="relative z-10 mx-auto w-full max-w-[1180px] space-y-10">
-        <section className="mx-auto max-w-[820px] space-y-7 text-center">
-          <div className="space-y-5">
+      <div className="relative z-10 mx-auto w-full max-w-[1180px] space-y-8 md:space-y-10">
+        <section className="mx-auto max-w-[820px] space-y-6 text-center md:space-y-7">
+          <div className="space-y-4 md:space-y-5">
             {phase >= 1 && (
-              <h2 className="animate-pop-in font-display text-[38px] font-[760] leading-[1.04] text-foreground text-elegant sm:text-[64px] sm:leading-[1.02] lg:text-[76px]">
+              <h2 className="animate-pop-in font-display text-[34px] font-[760] leading-[1.04] text-foreground text-elegant min-[390px]:text-[38px] sm:text-[64px] sm:leading-[1.02] lg:text-[76px]">
                 Your job has been priced.
               </h2>
             )}
             {phase >= 2 && (
-              <p className="mx-auto max-w-[620px] animate-fade-in-up text-[16px] leading-[1.65] text-foreground/80 md:text-[18px]">
+              <p className="mx-auto max-w-[620px] animate-fade-in-up text-[15px] leading-[1.65] text-foreground/80 md:text-[18px]">
                 {subtitle}
               </p>
             )}
@@ -160,15 +160,15 @@ export function VerdictReveal({
           </div>
 
           {phase >= 3 && (
-            <div className="mx-auto max-w-[360px] animate-scale-in rounded-[32px] border border-primary/10 bg-white/45 px-6 py-5 shadow-soft backdrop-blur-2xl">
+            <div className="mx-auto max-w-[310px] animate-scale-in rounded-[28px] border border-primary/10 bg-white/45 px-5 py-4 shadow-soft backdrop-blur-2xl sm:max-w-[360px] sm:rounded-[32px] sm:px-6 sm:py-5">
               <div className="eyebrow">Synthetic ticker</div>
-              <div className="mt-2 break-all font-mono text-[32px] font-semibold tracking-[0.06em] text-primary-strong sm:text-[44px] sm:tracking-[0.08em]">
+              <div className="mt-2 break-all font-mono text-[28px] font-semibold tracking-[0.06em] text-primary-strong sm:text-[44px] sm:tracking-[0.08em]">
                 {analysis.ticker}
               </div>
             </div>
           )}
 
-          <div className="min-h-[160px] space-y-4">
+          <div className="min-h-[136px] space-y-4 sm:min-h-[160px]">
             {phase >= 4 && (
               <div className="animate-fade-in-up text-[12px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                 Would you buy?
@@ -176,7 +176,7 @@ export function VerdictReveal({
             )}
             {phase >= 5 && (
               <div
-                className={`animate-pop-in break-words font-display text-[48px] font-[760] leading-none min-[380px]:text-[56px] sm:text-[86px] ${ratingColorClass(
+                className={`animate-pop-in break-words font-display text-[46px] font-[760] leading-none min-[380px]:text-[54px] sm:text-[86px] ${ratingColorClass(
                   analysis.rating,
                 )}`}
               >
@@ -217,7 +217,7 @@ export function VerdictReveal({
                 <div
                   key={ins.label}
                   ref={isLast ? lastSignalRef : null}
-                    className="air-card animate-fade-in-up p-5 lift-on-hover"
+                    className="air-card animate-fade-in-up p-4 active:scale-[0.99] md:p-5 md:lift-on-hover"
                 >
                     <div className="mb-3 flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
@@ -258,7 +258,7 @@ export function VerdictReveal({
             <Button
               onClick={onContinue}
               size="lg"
-              className="gap-2 h-[52px] py-3.5 px-8 rounded-[24px] bg-primary text-primary-foreground hover:bg-primary-hover lift-on-hover glow-primary text-[15px] font-semibold"
+              className="h-[52px] gap-2 rounded-[24px] bg-primary px-8 py-3.5 text-[15px] font-semibold text-primary-foreground hover:bg-primary-hover active:scale-[0.99] md:lift-on-hover glow-primary"
             >
               Continue <ArrowDown className="w-4 h-4" />
             </Button>

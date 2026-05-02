@@ -173,15 +173,15 @@ export function AnalysisDashboard({ company, role, analysis, animationsEnabled, 
   }, [animationsEnabled]);
 
   return (
-    <div className="relative min-h-[100svh] pb-28">
+    <div className="relative min-h-[100svh] pb-[calc(6.75rem+env(safe-area-inset-bottom))] md:pb-28">
       <SignalGrid variant="dashboard" />
 
-      <div className="relative z-10 mx-auto w-full max-w-[980px] px-4 pb-10 pt-[calc(5.75rem+env(safe-area-inset-top))] sm:px-6 sm:py-10 md:py-14">
-        <main className="space-y-10 md:space-y-16">
+      <div className="relative z-10 mx-auto w-full max-w-[980px] px-4 pb-10 pt-[calc(2rem+env(safe-area-inset-top))] sm:px-6 sm:py-10 md:py-14">
+        <main className="space-y-8 md:space-y-16">
           {showIntro && (
-            <section className="mx-auto max-w-[860px] space-y-5 text-center animate-fade-in-up">
+            <section className="mx-auto max-w-[860px] space-y-4 text-center animate-fade-in-up md:space-y-5">
               <div className="eyebrow">Final result</div>
-              <h2 className="break-words font-display text-[34px] font-[760] leading-[1.06] text-foreground text-elegant sm:text-[58px] sm:leading-[1.04]">
+              <h2 className="break-words font-display text-[31px] font-[760] leading-[1.06] text-foreground text-elegant min-[390px]:text-[34px] sm:text-[58px] sm:leading-[1.04]">
                 {stayStatement}
               </h2>
               <p className="mx-auto max-w-[680px] text-[16px] leading-[1.65] text-foreground/75 md:text-[18px]">
@@ -228,18 +228,18 @@ export function AnalysisDashboard({ company, role, analysis, animationsEnabled, 
 
 function ResultMetrics({ analysis }: { analysis: Analysis }) {
   return (
-    <section className="mx-auto grid max-w-[760px] grid-cols-1 gap-3 animate-fade-in-up sm:grid-cols-3">
-      <div className="rounded-[28px] border border-border/[0.03] bg-white/38 p-4 text-center shadow-soft backdrop-blur-2xl">
+    <section className="mx-auto grid max-w-[760px] grid-cols-1 gap-2.5 animate-fade-in-up sm:grid-cols-3 md:gap-3">
+      <div className="rounded-[24px] border border-border/[0.03] bg-white/38 p-3.5 text-center shadow-soft backdrop-blur-2xl md:rounded-[28px] md:p-4">
         <div className="eyebrow">Ticker</div>
         <div className="mt-1 font-mono text-[28px] font-semibold tracking-[0.08em] text-primary-strong">
           {analysis.ticker}
         </div>
       </div>
-      <div className="rounded-[28px] border border-border/[0.03] bg-white/38 p-4 text-center shadow-soft backdrop-blur-2xl">
+      <div className="rounded-[24px] border border-border/[0.03] bg-white/38 p-3.5 text-center shadow-soft backdrop-blur-2xl md:rounded-[28px] md:p-4">
         <div className="eyebrow">Confidence</div>
         <div className="mt-1 text-[28px] font-semibold text-foreground">{analysis.confidence}%</div>
       </div>
-      <div className="rounded-[28px] border border-border/[0.03] bg-white/38 p-4 text-center shadow-soft backdrop-blur-2xl">
+      <div className="rounded-[24px] border border-border/[0.03] bg-white/38 p-3.5 text-center shadow-soft backdrop-blur-2xl md:rounded-[28px] md:p-4">
         <div className="eyebrow">Asset score</div>
         <div className="mt-1 text-[28px] font-semibold text-foreground">
           {analysis.careerAssetScore}
@@ -362,7 +362,7 @@ function ThesisSequence({
 
   return (
     <section className="space-y-3 animate-fade-in-up">
-      <div className="eyebrow text-center mb-6">Investment thesis</div>
+      <div className="eyebrow mb-4 text-center md:mb-6">Investment thesis</div>
       {SECTIONS.map((s, i) => {
         const items = thesis[s.field] ?? [];
         const Icon = s.icon;
@@ -388,7 +388,7 @@ function ThesisSequence({
                 setOpenMap((p) => ({ ...p, [i]: !p[i] }));
               }}
               disabled={!sequenceDone}
-              className={`w-full flex items-center justify-between gap-3 border-t border-border/[0.055] px-1 py-5 text-left transition-colors sm:px-0 ${
+              className={`flex w-full items-center justify-between gap-3 border-t border-border/[0.055] px-1 py-4 text-left transition-colors active:scale-[0.995] sm:px-0 md:py-5 ${
                 sequenceDone ? "cursor-pointer hover:text-primary" : "cursor-default"
               }`}
             >
@@ -397,7 +397,7 @@ function ThesisSequence({
                   <Icon className={`h-4 w-4 ${s.accent}`} />
                 </span>
                 <span
-                  className={`text-[16px] font-semibold tracking-tight ${
+                  className={`text-[15.5px] font-semibold tracking-tight md:text-[16px] ${
                     isOpened ? s.accent : "text-foreground"
                   }`}
                 >
@@ -411,14 +411,14 @@ function ThesisSequence({
               />
             </button>
             {isOpened && (
-              <div className="px-1 pb-6 space-y-3.5 sm:px-0">
+              <div className="space-y-3 px-1 pb-5 sm:px-0 md:space-y-3.5 md:pb-6">
                 {items.slice(0, 3).map((it, j) => {
                   const visible = isAutoRevealing ? j < revealed : true;
                   if (!visible) return null;
                   return (
                     <p
                       key={j}
-                      className="text-[15px] text-foreground/80 leading-[1.65] flex gap-3 animate-fade-in-soft"
+                      className="flex gap-3 text-[14.5px] leading-[1.65] text-foreground/80 animate-fade-in-soft md:text-[15px]"
                     >
                       <CheckCircle2 className={`mt-1 h-4 w-4 shrink-0 ${s.accent}`} />
                       <span className="flex-1">{it}</span>
@@ -495,7 +495,7 @@ function IntentFlow({
   const reset3 = () => setThird(null);
 
   return (
-    <section className="space-y-6">
+    <section className="space-y-4 md:space-y-6">
       <Question
         index={1}
         title={primaryQuestion}
@@ -584,27 +584,27 @@ function Question({
   children: React.ReactNode;
 }) {
   return (
-    <div className="section-plain animate-fade-in-up border-t border-border/[0.055] py-7">
-      <div className="mb-5 flex items-start gap-3 sm:gap-4">
+    <div className="section-plain animate-fade-in-up border-t border-border/[0.055] py-5 md:py-7">
+      <div className="mb-4 flex items-start gap-3 sm:gap-4 md:mb-5">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/45 text-primary-strong shadow-soft backdrop-blur-2xl">
           <Icon className="h-[18px] w-[18px]" />
         </div>
         <div className="min-w-0">
           <div className="eyebrow">Question {index} of 3</div>
-          <h3 className="mt-2 break-words font-display text-[22px] font-[680] leading-[1.18] text-foreground sm:text-[24px] md:text-[30px]">
+          <h3 className="mt-2 break-words font-display text-[21px] font-[680] leading-[1.18] text-foreground sm:text-[24px] md:text-[30px]">
             {title}
           </h3>
         </div>
       </div>
       {locked ? (
-        <div className="flex items-center justify-between gap-3 rounded-[24px] border border-primary/10 bg-white/45 px-4 py-3.5 shadow-soft backdrop-blur-2xl">
+        <div className="flex items-center justify-between gap-3 rounded-[22px] border border-primary/10 bg-white/45 px-4 py-3.5 shadow-soft backdrop-blur-2xl md:rounded-[24px]">
           <div className="flex min-w-0 items-center gap-3">
             <CheckCircle2 className="h-4 w-4 shrink-0 text-primary-strong" />
             <span className="min-w-0 break-words text-[14.5px] font-medium text-foreground">{lockedAnswer}</span>
           </div>
           <button
             onClick={onChange}
-            className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground hover:text-foreground transition-colors"
+            className="min-h-9 shrink-0 text-[11px] uppercase tracking-[0.14em] text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
           >
             change
           </button>
@@ -637,7 +637,7 @@ function SuggestionsWithFreeText({
             key={label}
             type="button"
             onClick={() => onPick(label)}
-            className="group flex min-h-[52px] w-full items-center justify-between gap-3 rounded-[24px] border border-border/[0.035] bg-white/40 px-4 py-4 text-left shadow-soft backdrop-blur-2xl lift-on-hover animate-fade-in-soft hover:border-primary/15 hover:bg-primary-tint/60"
+            className="group flex min-h-[54px] w-full items-center justify-between gap-3 rounded-[22px] border border-border/[0.035] bg-white/40 px-4 py-3.5 text-left shadow-soft backdrop-blur-2xl transition-all active:scale-[0.99] animate-fade-in-soft hover:border-primary/15 hover:bg-primary-tint/60 md:rounded-[24px] md:py-4 md:lift-on-hover"
             style={{ animationDelay: `${i * 90}ms` }}
           >
             <span className="text-[15px] font-medium text-foreground/95">{label}</span>
@@ -652,7 +652,7 @@ function SuggestionsWithFreeText({
           const v = text.trim();
           if (v) onFreeText(v);
         }}
-        className="flex items-center gap-2 rounded-[28px] border border-border/[0.035] bg-white/50 p-2 pl-4 shadow-soft backdrop-blur-xl animate-fade-in-soft sm:rounded-full"
+        className="flex items-center gap-2 rounded-[24px] border border-border/[0.035] bg-white/50 p-2 pl-4 shadow-soft backdrop-blur-xl animate-fade-in-soft sm:rounded-full"
         style={{ animationDelay: `${items.length * 90 + 80}ms` }}
       >
         <Sparkles className="w-4 h-4 text-primary shrink-0" />

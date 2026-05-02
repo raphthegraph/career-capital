@@ -87,22 +87,22 @@ export function AnalysisRunner({ company, role, done, animationsEnabled, onCompl
   const activeLabel = step >= FLAT.length ? "Sourced read ready" : FLAT[step].label;
 
   return (
-    <div className="relative flex min-h-[100svh] items-center justify-center px-4 pb-10 pt-[calc(5.75rem+env(safe-area-inset-top))] sm:px-6 sm:py-10 md:py-14">
+    <div className="relative flex min-h-[100svh] items-center justify-center px-4 pb-[calc(6.75rem+env(safe-area-inset-bottom))] pt-[calc(2rem+env(safe-area-inset-top))] sm:px-6 sm:py-10 md:py-14">
       <SignalGrid variant="analysis" pulses intensity="active" />
 
-      <div className="relative z-10 grid w-full max-w-[980px] items-center gap-8 animate-fade-in md:grid-cols-[0.86fr_1.14fr]">
-        <div className="space-y-6 text-left">
+      <div className="relative z-10 grid w-full max-w-[980px] items-center gap-6 animate-fade-in md:grid-cols-[0.86fr_1.14fr] md:gap-8">
+        <div className="space-y-5 text-left md:space-y-6">
           <div className="inline-flex items-center gap-2 rounded-full border border-primary/10 bg-white/70 px-3 py-2 text-[12px] font-semibold text-muted-foreground shadow-soft backdrop-blur-xl">
             <span className="w-1.5 h-1.5 rounded-full bg-primary animate-breathe" />
             {company} · {role}
           </div>
-          <h2 className="font-display text-[34px] font-[800] leading-[1.04] text-foreground sm:text-[40px] md:text-[52px]">
+          <h2 className="font-display text-[32px] font-[800] leading-[1.04] text-foreground sm:text-[40px] md:text-[52px]">
             Pricing your career asset
           </h2>
           <p className="max-w-[420px] text-[15px] leading-[1.65] text-muted-foreground">
             $JOB is reading live sources, compressing evidence, and mapping it to your role.
           </p>
-          <div className="air-card max-w-[420px] overflow-hidden p-4">
+          <div className="air-card max-w-[420px] overflow-hidden p-3.5 md:p-4">
             <div className="flex items-center justify-between gap-4 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
               <span>Live pricing sequence</span>
               <span>{progress}%</span>
@@ -133,7 +133,7 @@ export function AnalysisRunner({ company, role, done, animationsEnabled, onCompl
           </div>
         </div>
 
-        <div className="relative space-y-4">
+        <div className="relative space-y-3 md:space-y-4">
           <div className="absolute -left-4 top-8 bottom-8 hidden w-px bg-gradient-to-b from-transparent via-primary/12 to-transparent md:block" />
           {PHASES.map((phase, pi) => {
             const phaseStart = PHASES.slice(0, pi).reduce((n, p) => n + p.steps.length, 0);
@@ -145,7 +145,7 @@ export function AnalysisRunner({ company, role, done, animationsEnabled, onCompl
             return (
               <div
                 key={phase.key}
-                className={`relative overflow-hidden rounded-[28px] border border-border/[0.028] bg-white/[0.34] px-4 py-4 backdrop-blur-2xl transition-all duration-700 md:px-5 ${
+                className={`relative overflow-hidden rounded-[24px] border border-border/[0.028] bg-white/[0.34] px-4 py-3.5 backdrop-blur-2xl transition-all duration-700 md:rounded-[28px] md:px-5 md:py-4 ${
                   isPending
                     ? "opacity-[0.38]"
                     : isActive
@@ -181,7 +181,7 @@ export function AnalysisRunner({ company, role, done, animationsEnabled, onCompl
                   </span>
                 </div>
 
-                <ul className="space-y-2 pl-0 sm:pl-[46px]">
+                <ul className="space-y-2 pl-0 md:pl-[46px]">
                     {phase.steps.map((s, si) => {
                       const globalIdx = phaseStart + si;
                       const isCurrent = globalIdx === step && step < FLAT.length;

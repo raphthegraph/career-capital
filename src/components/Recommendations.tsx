@@ -83,16 +83,16 @@ export function Recommendations({
   }, [decision, company, role, analysis, analysis.analysisId, animationsEnabled]);
 
   return (
-    <div className="relative min-h-[100svh] pb-44">
+    <div className="relative min-h-[100svh] pb-[calc(10.5rem+env(safe-area-inset-bottom))] md:pb-44">
       <SignalGrid variant="recommendation" intensity={!data && !error ? "active" : "quiet"} />
 
-      <div className="relative z-10 mx-auto w-full max-w-[920px] px-4 pb-10 pt-[calc(5.75rem+env(safe-area-inset-top))] sm:px-6 sm:py-10 md:py-14">
-        <main className="min-w-0 space-y-8">
+      <div className="relative z-10 mx-auto w-full max-w-[920px] px-4 pb-10 pt-[calc(5.5rem+env(safe-area-inset-top))] sm:px-6 sm:py-10 md:py-14">
+        <main className="min-w-0 space-y-6 md:space-y-8">
           <div className="flex justify-start sm:justify-end">
             <Button
               variant="ghost"
               onClick={onRestart}
-              className="h-9 rounded-full text-[12px] text-muted-foreground hover:bg-primary-tint hover:text-foreground"
+              className="h-9 rounded-full text-[12px] text-muted-foreground hover:bg-primary-tint hover:text-foreground active:scale-[0.98]"
             >
               New analysis
             </Button>
@@ -164,27 +164,27 @@ function Loading({
   const activeLabel = LOAD_STEPS[activeStep];
 
   return (
-    <div className="mx-auto grid w-full max-w-[900px] items-center gap-7 px-0 py-4 animate-fade-in sm:px-2 sm:py-8 md:grid-cols-[0.9fr_1.1fr]">
-      <div className="space-y-5 text-left">
+    <div className="mx-auto grid w-full max-w-[900px] items-center gap-5 px-0 py-2 animate-fade-in sm:px-2 sm:py-8 md:grid-cols-[0.9fr_1.1fr] md:gap-7">
+      <div className="space-y-4 text-left md:space-y-5">
         <div className="inline-flex items-center gap-2 rounded-full border border-primary/10 bg-white/60 px-3 py-2 text-[12px] font-semibold text-muted-foreground shadow-soft backdrop-blur-xl">
           <span className="h-1.5 w-1.5 rounded-full bg-primary animate-breathe" />
           {company} · {role}
         </div>
         <div className="space-y-3">
-          <h2 className="font-display text-[32px] font-[780] leading-[1.06] text-foreground sm:text-[38px] md:text-[48px]">
+          <h2 className="font-display text-[30px] font-[780] leading-[1.06] text-foreground sm:text-[38px] md:text-[48px]">
             Preparing your next move
           </h2>
           <p className="max-w-[430px] text-[15px] leading-[1.65] text-muted-foreground">
             $JOB is using your answers to turn the asset read into a focused decision memo.
           </p>
         </div>
-        <div className="air-card inline-flex max-w-full items-center gap-2 rounded-[24px] px-4 py-3">
+        <div className="air-card inline-flex max-w-full items-center gap-2 rounded-[22px] px-4 py-3 md:rounded-[24px]">
           <Sparkles className="h-4 w-4 shrink-0 text-primary" />
           <span className="min-w-0 truncate text-[13px] font-semibold text-foreground/78">
             {decision.intent} · {decision.subIntent}
           </span>
         </div>
-        <div className="air-card max-w-[430px] overflow-hidden p-4">
+        <div className="air-card max-w-[430px] overflow-hidden p-3.5 md:p-4">
           <div className="flex items-center justify-between gap-4 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
             <span>Decision engine</span>
             <span>{progress}%</span>
@@ -206,14 +206,14 @@ function Loading({
         </div>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-2.5 md:space-y-3">
         {LOAD_STEPS.map((label, index) => {
           const isComplete = index < activeStep || isFinished || !animationsEnabled;
           const isCurrent = index === activeStep && !isFinished && animationsEnabled;
           return (
             <div
               key={label}
-              className={`relative overflow-hidden rounded-[28px] border border-border/[0.03] px-4 py-4 backdrop-blur-2xl transition-all duration-700 animate-fade-in-soft ${
+              className={`relative overflow-hidden rounded-[24px] border border-border/[0.03] px-4 py-3.5 backdrop-blur-2xl transition-all duration-700 animate-fade-in-soft md:rounded-[28px] md:py-4 ${
                 isCurrent
                   ? "scale-[1.012] bg-white/[0.52] opacity-100 shadow-floating"
                   : isComplete
@@ -385,16 +385,16 @@ function RecommendationView({
   const becauseResearchShows = getBecauseResearchShows(data, analysis);
 
   return (
-    <section className="mx-auto max-w-[880px] space-y-10">
+    <section className="mx-auto max-w-[880px] space-y-8 md:space-y-10">
       <div ref={refs.current[0]} className={revealed >= 1 ? (focusIdx === 0 ? "dim-active" : "") : "hidden"}>
         {revealed >= 1 && (
-          <div className="space-y-7 animate-fade-in-up py-2 text-center">
-            <div className="space-y-4">
+          <div className="space-y-6 animate-fade-in-up py-2 text-center md:space-y-7">
+            <div className="space-y-3.5 md:space-y-4">
               <div className="eyebrow">Recommended move</div>
-              <h2 className="break-words font-display text-[36px] font-[780] leading-[1.05] text-foreground text-elegant sm:text-[48px] md:text-[62px] md:leading-[1.02]">
+              <h2 className="break-words font-display text-[32px] font-[780] leading-[1.05] text-foreground text-elegant min-[390px]:text-[36px] sm:text-[48px] md:text-[62px] md:leading-[1.02]">
                 {headline}
               </h2>
-              <p className="mx-auto max-w-[720px] text-[16px] leading-[1.65] text-foreground/76 md:text-[18px]">
+              <p className="mx-auto max-w-[720px] text-[15px] leading-[1.65] text-foreground/76 md:text-[18px]">
                 {stripMarkdown(data.recommendedMove)}
               </p>
             </div>
@@ -449,7 +449,7 @@ function RecommendationView({
               {data.alternativePaths.slice(0, 3).map((p, i) => (
                 <div
                   key={i}
-                  className="space-y-2 rounded-[28px] border border-border/[0.065] bg-white/[0.84] p-4 shadow-soft backdrop-blur-2xl transition-all duration-500 hover:-translate-y-0.5 hover:bg-white/[0.9] hover:shadow-elevated animate-fade-in-soft"
+                  className="space-y-2 rounded-[24px] border border-border/[0.065] bg-white/[0.84] p-4 shadow-soft backdrop-blur-2xl transition-all duration-500 active:scale-[0.99] hover:bg-white/[0.9] hover:shadow-elevated animate-fade-in-soft md:rounded-[28px] md:hover:-translate-y-0.5"
                   style={{ animationDelay: `${i * 100}ms` }}
                 >
                   <div className="flex items-center gap-2">
@@ -483,7 +483,7 @@ function SummaryCard({
   accent: string;
 }) {
   return (
-    <div className="rounded-[28px] border border-border/[0.06] bg-white/[0.82] p-4 shadow-soft backdrop-blur-2xl md:p-5">
+    <div className="rounded-[24px] border border-border/[0.06] bg-white/[0.82] p-4 shadow-soft backdrop-blur-2xl md:rounded-[28px] md:p-5">
       <div className="mb-4 flex items-center gap-2.5">
         <Icon className={`h-4 w-4 ${accent}`} />
         <span className="eyebrow">{title}</span>
@@ -512,7 +512,7 @@ function Block({
   children: React.ReactNode;
 }) {
   return (
-    <div className="section-plain space-y-5 animate-fade-in-up border-t border-border/[0.055] py-5">
+    <div className="section-plain space-y-4 animate-fade-in-up border-t border-border/[0.055] py-5 md:space-y-5">
       <div className="flex items-center gap-2.5">
         <Icon className={`w-3.5 h-3.5 ${accent}`} />
         <span className="eyebrow">{title}</span>
@@ -532,7 +532,7 @@ function MiniCard({
   accent: string;
 }) {
   return (
-    <div className="min-h-[150px] space-y-3 rounded-[28px] border border-border/[0.065] bg-white/[0.84] p-4 shadow-soft backdrop-blur-2xl transition-all duration-500 hover:-translate-y-0.5 hover:bg-white/[0.9] hover:shadow-elevated animate-fade-in-soft">
+    <div className="min-h-[132px] space-y-3 rounded-[24px] border border-border/[0.065] bg-white/[0.84] p-4 shadow-soft backdrop-blur-2xl transition-all duration-500 active:scale-[0.99] hover:bg-white/[0.9] hover:shadow-elevated animate-fade-in-soft md:min-h-[150px] md:rounded-[28px] md:hover:-translate-y-0.5">
       <span className={`inline-flex h-7 w-7 items-center justify-center rounded-full bg-white/55 text-[12px] font-semibold ${accent}`}>
         {index}
       </span>
@@ -553,7 +553,7 @@ function ActionRow({
   accent: string;
 }) {
   return (
-    <div className="rounded-[26px] border border-border/[0.065] bg-white/[0.84] p-4 shadow-soft backdrop-blur-2xl transition-all duration-500 hover:-translate-y-0.5 hover:bg-white/[0.9] hover:shadow-elevated">
+    <div className="rounded-[24px] border border-border/[0.065] bg-white/[0.84] p-4 shadow-soft backdrop-blur-2xl transition-all duration-500 active:scale-[0.99] hover:bg-white/[0.9] hover:shadow-elevated md:rounded-[26px] md:hover:-translate-y-0.5">
       <div className="flex gap-3">
         <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-tint text-[12px] font-semibold text-primary-strong">
           {index}
@@ -711,11 +711,11 @@ function FloatingChat({
     <div className="fixed bottom-0 left-0 right-0 z-40 pointer-events-none">
       <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-background via-background/85 to-transparent pointer-events-none" />
 
-      <div className="relative flex justify-center px-3 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-4 pointer-events-auto sm:px-6 sm:pb-7">
-        <div className="w-full max-w-[760px] space-y-3">
+      <div className="relative flex justify-center px-3 pb-[calc(0.85rem+env(safe-area-inset-bottom))] pt-4 pointer-events-auto sm:px-6 sm:pb-7">
+        <div className="w-full max-w-[760px] space-y-2.5 sm:space-y-3">
           {open && messages.length > 0 && (
-            <div className="air-card overflow-hidden rounded-[30px] animate-fade-in-up">
-              <div className="flex items-center justify-between px-5 py-3.5 border-b hairline">
+            <div className="air-card overflow-hidden rounded-[26px] animate-fade-in-up sm:rounded-[30px]">
+              <div className="flex items-center justify-between border-b hairline px-4 py-3 sm:px-5 sm:py-3.5">
                 <div className="flex items-center gap-2">
                   <Sparkles className={`w-3.5 h-3.5 text-primary ${loading ? "animate-breathe" : ""}`} />
                   <span className="text-[12px] font-semibold tracking-tight text-foreground">
@@ -729,7 +729,7 @@ function FloatingChat({
                   hide
                 </button>
               </div>
-              <div ref={scrollRef} className="max-h-[min(420px,52dvh)] space-y-3 overflow-y-auto p-4 sm:max-h-[min(440px,52vh)] sm:p-5">
+              <div ref={scrollRef} className="max-h-[min(340px,46dvh)] space-y-3 overflow-y-auto p-3.5 sm:max-h-[min(440px,52vh)] sm:p-5">
                 {messages.map((m, i) => (
                   <div
                     key={i}
@@ -738,7 +738,7 @@ function FloatingChat({
                     }`}
                   >
                     <div
-                      className={`max-w-[90%] rounded-[22px] px-4 py-3 text-[14px] leading-[1.6] sm:max-w-[88%] sm:rounded-[24px] ${
+                      className={`max-w-[92%] rounded-[20px] px-3.5 py-2.5 text-[14px] leading-[1.6] sm:max-w-[88%] sm:rounded-[24px] sm:px-4 sm:py-3 ${
                         m.role === "user"
                           ? "bg-primary text-primary-foreground whitespace-pre-wrap"
                           : "bg-white/60 text-foreground/90 border border-border/[0.06]"
@@ -778,7 +778,7 @@ function FloatingChat({
               e.preventDefault();
               send();
             }}
-            className="surface-floating flex items-center gap-2 rounded-[30px] p-2 pl-4 sm:rounded-full sm:pl-6"
+            className="surface-floating flex items-center gap-2 rounded-[26px] p-2 pl-4 sm:rounded-full sm:pl-6"
             onFocus={() => messages.length > 0 && setOpen(true)}
           >
             <Sparkles className="w-4 h-4 text-primary shrink-0" />

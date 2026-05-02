@@ -246,6 +246,15 @@
     box-shadow: var(--shadow-elevated);
   }
 
+  @media (max-width: 767px) {
+    html { scroll-behavior: auto; }
+
+    .lift-on-hover:hover {
+      transform: none;
+      box-shadow: inherit;
+    }
+  }
+
   /* Reactive Signal Field — fixed fullscreen, airy and decorative */
   .signal-grid {
     position: fixed;

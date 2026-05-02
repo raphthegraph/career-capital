@@ -144,6 +144,7 @@ export default function Index() {
       canGoBack={phase !== "landing"}
       canGoForward={(phase === "verdict" && verdictCanContinue) || (phase === "dashboard" && Boolean(decision))}
       animationsEnabled={animationsEnabled}
+      mobileControlsPlacement={phase === "decision" ? "top" : "bottom"}
       onBack={goBack}
       onForward={goForward}
       onToggleAnimations={() => setAnimationsEnabled((enabled) => !enabled)}
